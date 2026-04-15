@@ -15,9 +15,10 @@ export default function SplashScreen() {
     <div className={`splash ${phase === 'fading' ? 'splash-fading' : ''}`}>
       <div className="splash-glow" aria-hidden="true" />
       <div className="splash-inner">
-        <img src="/logo.jpg" alt="Madinah Dawah Graduates" className="splash-logo" />
-        <div className="splash-arabic">بِسْمِ اللَّهِ</div>
-        <div className="splash-ring" aria-hidden="true" />
+        <div className="splash-logo-wrap">
+          <img src="/logo.jpg" alt="Madinah Dawah Graduates" className="splash-logo" />
+          <div className="splash-ring" aria-hidden="true" />
+        </div>
       </div>
     </div>
   )
