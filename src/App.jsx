@@ -1,5 +1,13 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import Header from './components/Header.jsx'
+import SplashScreen from './components/SplashScreen.jsx'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
 import SponsorDashboard from './pages/SponsorDashboard.jsx'
 import GraduateProfile from './pages/GraduateProfile.jsx'
 import ReportView from './pages/ReportView.jsx'
@@ -9,6 +17,8 @@ import BrowseGraduates from './pages/BrowseGraduates.jsx'
 export default function App() {
   return (
     <div className="app-shell">
+      <SplashScreen />
+      <ScrollToTop />
       <Header />
       <main>
         <Routes>
