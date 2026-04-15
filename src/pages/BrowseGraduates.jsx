@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { seekingSponsors } from '../data.js'
+import Avatar from '../components/Avatar.jsx'
 
 export default function BrowseGraduates() {
   return (
@@ -28,7 +29,7 @@ export default function BrowseGraduates() {
           <div className="graduate-grid">
             {seekingSponsors.map(g => (
               <article className="g-card" key={g.name}>
-                <div className="avatar">{g.initials}</div>
+                <Avatar size={60} />
                 <div className="g-card-body">
                   <div className="g-card-name">{g.name}</div>
                   <div className="g-card-meta">

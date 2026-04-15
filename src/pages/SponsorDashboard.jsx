@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { currentGraduate, recentReports } from '../data.js'
+import Avatar from '../components/Avatar.jsx'
 
 export default function SponsorDashboard() {
   const g = currentGraduate
@@ -22,7 +23,7 @@ export default function SponsorDashboard() {
           </div>
 
           <article className="card graduate-card">
-            <div className="avatar">{g.initials}</div>
+            <Avatar size={84} />
             <div>
               <h3>{g.name}</h3>
               <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>{g.university}</div>

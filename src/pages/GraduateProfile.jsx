@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { currentGraduate } from '../data.js'
+import Avatar from '../components/Avatar.jsx'
 
 export default function GraduateProfile() {
   const g = currentGraduate
@@ -12,7 +13,7 @@ export default function GraduateProfile() {
         <button onClick={() => nav(-1)} className="back-link">← Back</button>
 
         <div className="profile-hero">
-          <div className="avatar">{g.initials}</div>
+          <Avatar size={116} />
           <div className="ornament" aria-hidden="true">
             <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z" fill="currentColor"/></svg>
           </div>
