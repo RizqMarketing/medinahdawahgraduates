@@ -102,7 +102,7 @@ export default function GraduateForm({
         <div className="form-row">
           <label className="info-label" htmlFor="full_name">Full name</label>
           <input id="full_name" className="text-input" value={fullName}
-            onChange={e => setFullName(e.target.value)} required autoFocus />
+            onChange={e => setFullName(e.target.value)} required />
         </div>
 
         <div className="form-row">

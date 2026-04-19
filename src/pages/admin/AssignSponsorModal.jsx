@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { listAllSponsors, createSponsorship } from '../../lib/api.js'
+import { useModalBackButton } from '../../lib/useModalBackButton.js'
 
 export default function AssignSponsorModal({ graduate, onClose, onAssigned }) {
+  useModalBackButton(onClose)
   const [sponsors, setSponsors] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState('')

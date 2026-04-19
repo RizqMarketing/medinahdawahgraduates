@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { inviteUser } from '../../lib/api.js'
+import { useModalBackButton } from '../../lib/useModalBackButton.js'
 
 export default function InviteSponsorModal({ sponsor, onClose, onInvited }) {
+  useModalBackButton(onClose)
   const [stage, setStage] = useState('form')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState(sponsor.phone || '')

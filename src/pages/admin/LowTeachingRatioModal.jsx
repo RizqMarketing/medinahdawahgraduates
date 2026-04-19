@@ -1,11 +1,13 @@
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { useModalBackButton } from '../../lib/useModalBackButton.js'
 
 function initialsFrom(name) {
   return (name || '?').split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
 }
 
 export default function LowTeachingRatioModal({ graduates, monthLabel, onClose }) {
+  useModalBackButton(onClose)
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
