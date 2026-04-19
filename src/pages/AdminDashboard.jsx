@@ -1,41 +1,121 @@
-import { useState } from 'react'
-import { allGraduates } from '../data.js'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { listAllGraduatesForAdmin, getAdminRollup } from '../lib/api.js'
+import MonthPicker from '../components/MonthPicker.jsx'
+import LoadingPage from '../components/LoadingPage.jsx'
+import { monthIdNow, monthIdRange, formatMonthId, isCurrentMonth } from '../lib/months.js'
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
+
+function displayName(g) {
+  return g.full_name || g.profile?.full_name || g.slug || '—'
+}
 
 export default function AdminDashboard() {
   const [filter, setFilter] = useState('all')
+  const [query, setQuery] = useState('')
+  const [month, setMonth] = useState(monthIdNow())
+  const [state, setState] = useState({ status: 'loading', graduates: [], rollup: {}, error: null })
 
-  const filtered = allGraduates.filter(g => {
-    if (filter === 'all') return true
-    return g.status === filter
+  useEffect(() => {
+    let cancelled = false
+    const { start } = monthIdRange(month)
+    setState(s => ({ ...s, status: 'loading' }))
+    Promise.all([listAllGraduatesForAdmin(), getAdminRollup(start)])
+      .then(([graduates, rollup]) => {
+        if (cancelled) return
+        setState({ status: 'ok', graduates, rollup, error: null })
+      })
+      .catch(error => {
+        if (cancelled) return
+        setState(s => ({ ...s, status: 'error', error }))
+      })
+    return () => { cancelled = true }
+  }, [month])
+
+  const monthLabel = formatMonthId(month)
+  const viewingCurrent = isCurrentMonth(month)
+
+  const rows = useMemo(() => {
+    return state.graduates.map(g => ({
+      ...g,
+      hours: Number(state.rollup[g.id]?.hours_this_month || 0),
+      reportedToday: !!state.rollup[g.id]?.reported_today,
+      active_days: Number(state.rollup[g.id]?.active_days || 0),
+    }))
+  }, [state.graduates, state.rollup])
+
+  const activeCount = rows.filter(r => r.status === 'active').length
+  const reportedToday = rows.filter(r => r.status === 'active' && r.reportedToday).length
+  const pending = rows.filter(r => r.status === 'active' && !r.reportedToday)
+  const pendingCount = pending.length
+  const totalHours = rows.reduce((sum, r) => sum + r.hours, 0)
+
+  const normalized = (s) => (s || '').toLowerCase().trim()
+  const q = normalized(query)
+  const filtered = rows.filter(r => {
+    if (filter === 'reported' && viewingCurrent && !r.reportedToday) return false
+    if (filter === 'pending'  && viewingCurrent && (r.status !== 'active' || r.reportedToday)) return false
+    if (filter === 'reported' && !viewingCurrent && !(r.active_days > 0)) return false
+    if (filter === 'pending'  && !viewingCurrent && (r.status !== 'active' || (r.active_days || 0) > 0)) return false
+    if (!q) return true
+    return (
+      normalized(displayName(r)).includes(q) ||
+      normalized(r.country).includes(q) ||
+      normalized(r.status).includes(q)
+    )
   })
 
-  const pending = allGraduates.filter(g => g.status === 'pending')
+  if (state.status === 'loading') {
+    return <LoadingPage message="Loading dashboard…" />
+  }
+
+  if (state.status === 'error') {
+    return (
+      <div className="page"><div className="container">
+        <div className="alert-card">
+          <div className="alert-title">Could not load dashboard</div>
+          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, marginTop: 12 }}>
+            {state.error?.message || String(state.error)}
+          </pre>
+        </div>
+      </div></div>
+    )
+  }
 
   return (
     <div className="page">
       <div className="container">
-        <div style={{ marginBottom: 40 }}>
-          <p className="eyebrow">Control room · April 2026</p>
+        <div style={{ marginBottom: 24 }}>
+          <p className="eyebrow">Control room · {monthLabel}</p>
           <h1 className="page-title">Admin dashboard</h1>
-          <p className="page-subtitle">The work continues, alhamdulillah. Here's where everything stands today.</p>
+          <p className="page-subtitle">
+            {viewingCurrent
+              ? "The work continues, alhamdulillah. Here's where everything stands today."
+              : `Historical view of ${monthLabel}.`}
+          </p>
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <MonthPicker value={month} onChange={setMonth} />
         </div>
 
         <div className="stats-grid stats-grid-4">
           <div className="stat-card">
-            <div className="stat-number">19</div>
+            <div className="stat-number">{activeCount}</div>
             <div className="stat-label">Active graduates</div>
           </div>
           <div className="stat-card accent-green">
-            <div className="stat-number">17</div>
-            <div className="stat-label">Reported today</div>
+            <div className="stat-number">{viewingCurrent ? reportedToday : rows.filter(r => r.active_days > 0).length}</div>
+            <div className="stat-label">{viewingCurrent ? 'Reported today' : 'Reported this month'}</div>
           </div>
           <div className="stat-card accent-gold">
-            <div className="stat-number">2</div>
-            <div className="stat-label">Pending reports</div>
+            <div className="stat-number">{viewingCurrent ? pendingCount : rows.filter(r => r.status === 'active' && (r.active_days || 0) === 0).length}</div>
+            <div className="stat-label">{viewingCurrent ? 'Pending reports' : 'Silent this month'}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number">2,847</div>
-            <div className="stat-label">Hours this month</div>
+            <div className="stat-number">{totalHours.toLocaleString()}</div>
+            <div className="stat-label">Hours {viewingCurrent ? 'this month' : 'in ' + monthLabel}</div>
           </div>
         </div>
 
@@ -49,43 +129,86 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="data-table">
-            <div className="table-header">
-              <span></span>
-              <span>Name</span>
-              <span>Location</span>
-              <span>Hours</span>
-              <span style={{ textAlign: 'right' }}>Today</span>
-            </div>
-            {filtered.map(g => (
-              <div className="table-row" key={g.name}>
-                <span className={`dot ${g.status === 'reported' ? 'dot-active' : 'dot-pending'}`} />
-                <span className="cell-name">{g.name}</span>
-                <span style={{ color: 'var(--text-secondary)' }}>{g.country}</span>
-                <span className="cell-hours">{g.hours}/168</span>
-                <span className="cell-status" style={{ color: g.status === 'reported' ? 'var(--success)' : 'var(--warning)' }}>
-                  {g.status === 'reported' ? '✓' : '⏳'}
-                </span>
+          {rows.length > 3 && (
+            <>
+              <div className="sponsors-search" style={{ marginBottom: 10 }}>
+                <svg className="sponsors-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input
+                  type="search"
+                  className="sponsors-search-input"
+                  placeholder="Search graduates…"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                />
+                {query && (
+                  <button
+                    type="button"
+                    className="sponsors-search-clear"
+                    onClick={() => setQuery('')}
+                    aria-label="Clear search"
+                  >×</button>
+                )}
               </div>
-            ))}
-          </div>
+              <div className="sponsors-search-hint" style={{ marginBottom: 16 }}>
+                Searches name, country, and status
+              </div>
+            </>
+          )}
+
+          {filtered.length === 0 ? (
+            <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
+              No graduates match this filter yet.
+            </div>
+          ) : (
+            <div className="data-table data-table-graduates">
+              <div className="table-header">
+                <span></span>
+                <span>Name</span>
+                <span>Location</span>
+                <span>Hours</span>
+                <span style={{ textAlign: 'right' }}>Today</span>
+              </div>
+              {filtered.map(g => (
+                <Link to={`/admin/graduates/${g.slug}`} className="table-row table-row-link" key={g.id}>
+                  <span className={`dot ${g.reportedToday ? 'dot-active' : 'dot-pending'}`} />
+                  <span className="cell-name">{displayName(g)}</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>{g.country}</span>
+                  <span className="cell-hours">{g.hours}/{g.target_hours_monthly}</span>
+                  <span className="cell-status" style={{ color: g.reportedToday ? 'var(--success)' : 'var(--warning)' }}>
+                    {g.reportedToday ? '✓' : '⏳'}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
-        {pending.length > 0 && (
+        {pendingCount > 0 && (
           <section className="section">
             <div className="alert-card">
-              <div className="alert-title">Pending reports — {pending.length} graduates</div>
+              <div className="alert-title">Pending reports — {pendingCount} graduate{pendingCount === 1 ? '' : 's'}</div>
               <ul className="alert-list">
                 {pending.map(p => (
-                  <li key={p.name}>{p.name} — no report submitted today</li>
+                  <li key={p.id}>{displayName(p)} — no report submitted today</li>
                 ))}
               </ul>
-              <div style={{ marginTop: 18 }}>
-                <button className="btn btn-secondary">Send reminder</button>
-              </div>
             </div>
           </section>
         )}
+
+        <section className="section">
+          <div className="admin-toolbar">
+            <h2 className="section-title">Quick actions</h2>
+          </div>
+          <div className="action-row">
+            <Link to="/admin/graduates/new" className="btn btn-primary">Add graduate</Link>
+            <Link to="/admin/sponsors" className="btn btn-secondary">View sponsors</Link>
+            <Link to="/admin/sponsors/new" className="btn btn-secondary">Add sponsor</Link>
+            <Link to={`/admin/months/${month}`} className="btn btn-secondary">Monthly totals</Link>
+          </div>
+        </section>
       </div>
     </div>
   )

@@ -1,6 +1,8 @@
-import { NavLink } from 'react-router-dom'
-import { useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../ThemeContext.jsx'
+import { useAuth } from '../contexts/AuthContext.jsx'
+import UserMenu from './UserMenu.jsx'
 
 function SunIcon() {
   return (
@@ -26,28 +28,53 @@ function MenuIcon() {
 
 export default function Header() {
   const { theme, toggle } = useTheme()
+  const { role, session } = useAuth()
   const [open, setOpen] = useState(false)
+  const location = useLocation()
+
+  useEffect(() => { setOpen(false) }, [location.pathname, role, session?.user?.id])
+
+  const homeFor = role === 'admin' ? '/admin'
+                : role === 'graduate' ? '/graduate-home'
+                : '/sponsor'
 
   return (
     <header className="header">
       <div className="header-inner">
-        <NavLink to="/sponsor" className="brand" onClick={() => setOpen(false)}>
+        <NavLink to={homeFor} className="brand" onClick={() => setOpen(false)}>
           <img src="/logo.jpg" alt="Madinah Dawah Graduates" className="brand-logo" />
           <div className="brand-name">Madinah Dawah Graduates</div>
         </NavLink>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
-          <nav className={`nav nav-links ${open ? 'open' : ''}`}>
-            <NavLink to="/sponsor" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Dashboard</NavLink>
-            <NavLink to="/graduates" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Graduates</NavLink>
-            <NavLink to="/admin" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Admin</NavLink>
-          </nav>
+          {session && (
+            <nav className={`nav nav-links ${open ? 'open' : ''}`}>
+              {role === 'sponsor' && (
+                <NavLink to="/sponsor" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Dashboard</NavLink>
+              )}
+              {role === 'admin' && (
+                <>
+                  <NavLink to="/admin" end className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Dashboard</NavLink>
+                  <NavLink to="/admin/sponsors" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Sponsors</NavLink>
+                </>
+              )}
+              {role === 'graduate' && (
+                <>
+                  <NavLink to="/graduate-home" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Home</NavLink>
+                  <NavLink to="/reports/new" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Submit report</NavLink>
+                </>
+              )}
+            </nav>
+          )}
           <button className="theme-toggle" onClick={toggle} aria-label="Toggle theme" title={theme === 'light' ? 'Switch to dark' : 'Switch to light'}>
             {theme === 'light' ? <MoonIcon /> : <SunIcon />}
           </button>
-          <button className="menu-toggle" onClick={() => setOpen(o => !o)} aria-label="Menu">
-            <MenuIcon />
-          </button>
+          <UserMenu />
+          {session && (
+            <button className="menu-toggle" onClick={() => setOpen(o => !o)} aria-label="Menu">
+              <MenuIcon />
+            </button>
+          )}
         </div>
       </div>
     </header>
