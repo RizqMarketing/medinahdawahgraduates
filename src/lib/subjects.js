@@ -14,7 +14,7 @@ export function subjectFromActivityType(activityType) {
   if (/khutbah|jumu'?ah|friday/.test(s))                     return 'Khutbah'
   if (/sirah|seerah/.test(s))                                return 'Sirah'
   if (/arabic/.test(s))                                      return 'Arabic'
-  if (/umrah|hajj/.test(s))                                  return 'Umrah / Hajj'
+  if (/umrah|hajj/.test(s))                                  return 'Teaching at Umrah / Hajj'
   if (/visit|community|dawah|da'?wah|nasihah|advice|lecture|event|outreach|new muslim/.test(s))
                                                              return 'Dawah'
   if (/translation/.test(s))                                 return 'Translation'
