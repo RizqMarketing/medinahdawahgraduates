@@ -117,7 +117,7 @@ export default function AdminMonthTotals() {
         <div className="month-stats-grid">
           <div className="month-stat month-stat-primary">
             <div className="month-stat-number">{totalHours.toLocaleString()}</div>
-            <div className="month-stat-label">Total dawah hours</div>
+            <div className="month-stat-label">Total hours of service</div>
             {deltaPct !== null && (
               <div className={`month-stat-delta ${deltaPct > 0 ? 'delta-up' : deltaPct < 0 ? 'delta-down' : 'delta-same'}`}>
                 {deltaPct > 0 ? '↑' : deltaPct < 0 ? '↓' : '→'}

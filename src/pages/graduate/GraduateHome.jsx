@@ -140,7 +140,7 @@ export default function GraduateHome() {
           </div>
           <div className="card" style={{ padding: 24 }}>
             <div className="progress-label">
-              <span>Dawah hours</span>
+              <span>Hours of service</span>
               <span><strong>{hours}</strong> / {target}</span>
             </div>
             <div className="progress"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>

@@ -131,7 +131,7 @@ export default function SponsorDashboard() {
               By Allah's permission, {g.full_name}'s {formatMonthId(lastMonthId())}:
             </div>
             <div className="recap-stats">
-              <span><strong>{lastMonthRecap.totalHours}</strong> dawah hours</span>
+              <span><strong>{lastMonthRecap.totalHours}</strong> hours of service</span>
               <span><strong>{lastMonthRecap.activeDays}</strong> active days</span>
               <span><strong>{lastMonthRecap.reportsCount}</strong> reports</span>
               {lastMonthRecap.studentsReached > 0 && (
@@ -282,8 +282,8 @@ export default function SponsorDashboard() {
                   </svg>
                 </div>
                 <div className="impact-number">{Math.round(impact.totalHours).toLocaleString()}</div>
-                <div className="impact-label">Dawah hours</div>
-                <div className="impact-sub">given to the ummah</div>
+                <div className="impact-label">Hours of service</div>
+                <div className="impact-sub">in the path of Allah</div>
               </div>
 
               <div className="impact-divider" aria-hidden="true" />

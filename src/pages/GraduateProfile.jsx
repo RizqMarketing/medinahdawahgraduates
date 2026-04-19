@@ -141,7 +141,7 @@ export default function GraduateProfile() {
           <h2 className="section-title" style={{ marginBottom: 16 }}>This month</h2>
           <div className="card" style={{ padding: 24 }}>
             <div className="progress-label">
-              <span>Dawah hours</span>
+              <span>Hours of service</span>
               <span><strong>{monthlyHours}</strong> / {target}</span>
             </div>
             <div className="progress"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
