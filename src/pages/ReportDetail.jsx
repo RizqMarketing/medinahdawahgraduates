@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext.jsx'
 import ReportMediaItem from '../components/ReportMediaItem.jsx'
 import LoadingPage from '../components/LoadingPage.jsx'
 import { categoryLabel, COUNTED_CATEGORIES } from '../lib/categories.js'
+import { formatHoursMinutes, formatHoursMinutesShort } from '../lib/format.js'
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
@@ -120,12 +121,12 @@ export default function ReportDetail() {
 
         <div className="report-stats-row">
           <div className="stat-chip stat-chip-accent">
-            <div className="stat-chip-number">{totalHours.toFixed(2)}</div>
-            <div className="stat-chip-label">Hours</div>
+            <div className="stat-chip-number">{formatHoursMinutes(totalHours)}</div>
+            <div className="stat-chip-label">Total time</div>
           </div>
           {hasUncounted && (
             <div className="stat-chip">
-              <div className="stat-chip-number">{countedHours.toFixed(2)}</div>
+              <div className="stat-chip-number">{formatHoursMinutes(countedHours)}</div>
               <div className="stat-chip-label">Counted toward 132</div>
             </div>
           )}
@@ -150,8 +151,7 @@ export default function ReportDetail() {
                 return (
                   <div key={a.id} className="activity-row">
                     <div className="activity-row-hours">
-                      <div className="activity-row-hours-num">{Number(a.hours).toFixed(2)}</div>
-                      <div className="activity-row-hours-unit">hrs</div>
+                      <div className="activity-row-hours-num">{formatHoursMinutesShort(a.hours)}</div>
                     </div>
                     <div className="activity-row-body">
                       <div className="activity-row-type">

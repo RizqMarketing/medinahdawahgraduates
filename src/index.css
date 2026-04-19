@@ -1866,7 +1866,7 @@ input[type="time"].text-input {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 70px;
+  min-width: 86px;
   padding: 14px 0;
   background: color-mix(in srgb, var(--accent-green, #2e8b57) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-green, #2e8b57) 30%, var(--card-border));
@@ -1875,10 +1875,11 @@ input[type="time"].text-input {
 }
 .activity-row-hours-num {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 500;
   line-height: 1;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 .activity-row-hours-unit {
   font-size: 11px;

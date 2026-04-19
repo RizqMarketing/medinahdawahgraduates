@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { kindFromMime } from '../../lib/api.js'
 import { CATEGORIES, suggestCategory } from '../../lib/categories.js'
+import { formatHoursMinutes } from '../../lib/format.js'
 
 const ACTIVITY_SUGGESTIONS = [
   'Tajweed lesson',
@@ -202,7 +203,7 @@ export default function ReportForm({
         <div className="section-header" style={{ marginBottom: 12 }}>
           <h2 className="section-title">Activities</h2>
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            Total: <strong style={{ color: 'var(--text-primary)' }}>{totalHours.toFixed(2)}</strong> hours
+            Total: <strong style={{ color: 'var(--text-primary)' }}>{formatHoursMinutes(totalHours)}</strong>
           </div>
         </div>
 

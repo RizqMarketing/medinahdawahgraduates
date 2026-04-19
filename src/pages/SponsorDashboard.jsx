@@ -12,6 +12,7 @@ import LoadingPage from '../components/LoadingPage.jsx'
 import {
   monthIdNow, monthIdRange, formatMonthId, isCurrentMonth, lastMonthId,
 } from '../lib/months.js'
+import { formatHoursMinutes } from '../lib/format.js'
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
@@ -208,7 +209,7 @@ export default function SponsorDashboard() {
                           : 'Daily report'}
                       </div>
                       <div className="report-sub">
-                        {r.total_hours} hours · {(r.activities || []).length} activities
+                        {formatHoursMinutes(r.total_hours)} · {(r.activities || []).length} activities
                       </div>
                     </div>
                   </Link>

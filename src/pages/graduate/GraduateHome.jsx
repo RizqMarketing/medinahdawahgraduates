@@ -8,6 +8,7 @@ import {
   getReportForToday,
 } from '../../lib/api.js'
 import { getDailyGreeting } from '../../lib/dailyGreeting.js'
+import { formatHoursMinutes } from '../../lib/format.js'
 import MonthPicker from '../../components/MonthPicker.jsx'
 import ReportHeatmap from '../../components/ReportHeatmap.jsx'
 import LoadingPage from '../../components/LoadingPage.jsx'
@@ -188,7 +189,7 @@ export default function GraduateHome() {
                           : 'Daily report'}
                       </div>
                       <div className="report-sub">
-                        {r.total_hours} hours · {(r.activities || []).length} activities
+                        {formatHoursMinutes(r.total_hours)} · {(r.activities || []).length} activities
                         {r.location ? ` · ${r.location}` : ''}
                       </div>
                     </div>
