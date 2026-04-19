@@ -281,7 +281,7 @@ export default function SponsorDashboard() {
                     <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                   </svg>
                 </div>
-                <div className="impact-number">{impact.totalHours}</div>
+                <div className="impact-number">{Math.round(impact.totalHours).toLocaleString()}</div>
                 <div className="impact-label">Dawah hours</div>
                 <div className="impact-sub">given to the ummah</div>
               </div>
