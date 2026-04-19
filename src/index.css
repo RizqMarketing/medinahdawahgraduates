@@ -2359,6 +2359,54 @@ input[type="time"].text-input {
   flex-wrap: wrap;
   margin-bottom: 18px;
 }
+
+.section-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.subject-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+}
+.subject-row { display: flex; flex-direction: column; gap: 6px; }
+.subject-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 14px;
+}
+.subject-row-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.subject-row-value {
+  color: var(--text-secondary);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+.subject-row-bar {
+  height: 6px;
+  background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.subject-row-fill {
+  height: 100%;
+  background: linear-gradient(90deg,
+    var(--accent-green, #2e8b57),
+    color-mix(in srgb, var(--accent-green, #2e8b57) 60%, var(--text-primary))
+  );
+  border-radius: 999px;
+  transition: width 300ms ease;
+}
 @media (max-width: 540px) {
   .month-label { min-width: 100px; padding: 0 10px; }
 }

@@ -1,6 +1,7 @@
 import { supabase } from './supabase.js'
 import { compressImage } from './compress.js'
 import { monthIdRange } from './months.js'
+import { breakdownBySubject } from './subjects.js'
 
 const roundHours = (n) => Math.round(Number(n || 0) * 100) / 100
 
@@ -141,7 +142,7 @@ export async function getMySponsorship() {
 export async function getSponsorImpactStats(sponsorshipStartDate, graduateId) {
   const { data: reports, error } = await supabase
     .from('reports')
-    .select('id, report_date, activities(hours)')
+    .select('id, report_date, activities(hours, students_count)')
     .eq('graduate_id', graduateId)
     .gte('report_date', sponsorshipStartDate)
   if (error) throw error
@@ -151,10 +152,14 @@ export async function getSponsorImpactStats(sponsorshipStartDate, graduateId) {
     (sum, r) => sum + (r.activities || []).reduce((a, x) => a + Number(x.hours || 0), 0),
     0
   ))
+  const studentsReached = reports.reduce(
+    (sum, r) => sum + (r.activities || []).reduce((a, x) => a + (x.students_count || 0), 0),
+    0
+  )
   const startDate = new Date(sponsorshipStartDate + 'T00:00:00')
   const now = new Date()
   const monthsSponsored = Math.max(1, Math.round((now - startDate) / (1000 * 60 * 60 * 24 * 30)))
-  return { reportsCount, activeDays, totalHours, monthsSponsored }
+  return { reportsCount, activeDays, totalHours, studentsReached, monthsSponsored }
 }
 
 export async function getGraduateMonthSummary(graduateId, monthId) {
@@ -175,6 +180,19 @@ export async function getGraduateMonthSummary(graduateId, monthId) {
     (s, r) => s + (r.activities || []).reduce((a, x) => a + (x.students_count || 0), 0), 0
   )
   return { totalHours, activeDays, reportsCount: reports.length, studentsReached }
+}
+
+export async function getGraduateMonthBreakdown(graduateId, monthId) {
+  const { start, end } = monthIdRange(monthId)
+  const { data, error } = await supabase
+    .from('reports')
+    .select('activities(hours, activity_type)')
+    .eq('graduate_id', graduateId)
+    .gte('report_date', start)
+    .lt('report_date', end)
+  if (error) throw error
+  const allActivities = (data || []).flatMap(r => r.activities || [])
+  return breakdownBySubject(allActivities)
 }
 
 export async function listReportsForGraduateInMonth(graduateId, monthId) {

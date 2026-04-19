@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   getMySponsorship, getSponsorImpactStats,
   getMonthlyHoursForGraduate, listReportsForGraduateInMonth,
-  getGraduateMonthSummary,
+  getGraduateMonthSummary, getGraduateMonthBreakdown,
 } from '../lib/api.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import MonthPicker from '../components/MonthPicker.jsx'
@@ -26,7 +26,8 @@ export default function SponsorDashboard() {
   const [sponsor, setSponsor] = useState(null)
   const [active, setActive] = useState(null)
   const [monthlyHours, setMonthlyHours] = useState(0)
-  const [impact, setImpact] = useState({ monthsSponsored: 0, totalHours: 0, reportsCount: 0, activeDays: 0 })
+  const [impact, setImpact] = useState({ monthsSponsored: 0, totalHours: 0, reportsCount: 0, activeDays: 0, studentsReached: 0 })
+  const [breakdown, setBreakdown] = useState([])
   const [reports, setReports] = useState([])
   const [month, setMonth] = useState(monthIdNow())
   const [lastMonthRecap, setLastMonthRecap] = useState(null)
@@ -44,15 +45,17 @@ export default function SponsorDashboard() {
 
         if (activeSponsorship?.graduate) {
           const { start, end } = monthIdRange(month)
-          const [m, imp, reps] = await Promise.all([
+          const [m, imp, reps, brk] = await Promise.all([
             getMonthlyHoursForGraduate(activeSponsorship.graduate.id, { start, end }),
             getSponsorImpactStats(activeSponsorship.started_on, activeSponsorship.graduate.id),
             listReportsForGraduateInMonth(activeSponsorship.graduate.id, month),
+            getGraduateMonthBreakdown(activeSponsorship.graduate.id, month),
           ])
           if (cancelled) return
           setMonthlyHours(m)
           setImpact(imp)
           setReports(reps)
+          setBreakdown(brk)
 
           if (!lastMonthRecap && isCurrentMonth(month)) {
             const now = new Date()
@@ -184,6 +187,34 @@ export default function SponsorDashboard() {
           <ReportHeatmap reports={reports} monthId={month} graduateSlug={g.slug} />
         </section>
 
+        {breakdown.length > 0 && (
+          <section className="section">
+            <div className="section-header">
+              <h2 className="section-title">Where the hours went</h2>
+              <div className="section-sub">{viewingCurrent ? 'This month' : monthLabel}</div>
+            </div>
+            <div className="subject-breakdown">
+              {(() => {
+                const total = breakdown.reduce((s, b) => s + b.hours, 0)
+                return breakdown.map(b => {
+                  const pctNum = total > 0 ? (b.hours / total) * 100 : 0
+                  return (
+                    <div key={b.subject} className="subject-row">
+                      <div className="subject-row-head">
+                        <span className="subject-row-name">{b.subject}</span>
+                        <span className="subject-row-value">{formatHoursMinutes(b.hours)}</span>
+                      </div>
+                      <div className="subject-row-bar">
+                        <div className="subject-row-fill" style={{ width: `${Math.max(2, pctNum)}%` }} />
+                      </div>
+                    </div>
+                  )
+                })
+              })()}
+            </div>
+          </section>
+        )}
+
         <section className="section">
           <div className="section-header">
             <h2 className="section-title">{viewingCurrent ? 'Recent reports' : `Latest in ${monthLabel}`}</h2>
@@ -267,6 +298,22 @@ export default function SponsorDashboard() {
                 <div className="impact-label">Active days</div>
                 <div className="impact-sub">of your graduate's work</div>
               </div>
+
+              {impact.studentsReached > 0 && (
+                <>
+                  <div className="impact-divider" aria-hidden="true" />
+                  <div className="impact-stat">
+                    <div className="impact-icon" aria-hidden="true">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      </svg>
+                    </div>
+                    <div className="impact-number">{impact.studentsReached.toLocaleString()}</div>
+                    <div className="impact-label">Students reached</div>
+                    <div className="impact-sub">by Allah's permission</div>
+                  </div>
+                </>
+              )}
             </div>
             <div className="impact-footer">
               <span className="arabic">وَمَا عِندَ اللَّهِ خَيْرٌ وَأَبْقَىٰ</span>
