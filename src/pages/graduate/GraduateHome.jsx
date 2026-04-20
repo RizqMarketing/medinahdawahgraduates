@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import i18n from '../../i18n.js'
 import {
   getMyGraduate,
   getMyMonthlyHours,
@@ -86,8 +87,10 @@ export default function GraduateHome() {
           {t('graduateHome.assalamGreeting')}<em>{firstName}</em>
         </h1>
         <p className="page-subtitle">
-          {/* Daily du'a stays in Arabic in both language modes. */}
-          <span className="arabic" translate="no">{getDailyGreeting()}</span>
+          {/* Daily du'a — dailyGreeting.js picks EN or AR based on i18n.language.
+             Apply .arabic class only when showing Arabic so the English version
+             uses the normal UI font. */}
+          <span className={i18n.language?.startsWith('ar') ? 'arabic' : ''} translate="no">{getDailyGreeting()}</span>
         </p>
 
         {showMonthEndBanner && (

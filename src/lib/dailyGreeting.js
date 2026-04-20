@@ -1,4 +1,17 @@
-const MESSAGES = [
+import i18n from '../i18n.js'
+
+// Daily du'a rotation — shown on the graduate home page. 32 entries per
+// language, both arrays kept the same length so day-N picks the same
+// du'a across languages. Arabic entries use standard du'a phrasings
+// (not literal translations of the English) so they read naturally.
+//
+// Per the project convention, these stay in the ACTIVE language rather
+// than being forced Arabic in both modes — a graduate using the English
+// UI sees transliterated/English-styled du'as, an Arabic user sees them
+// in Arabic. The footer ayah in App.jsx and the impact ayah in
+// SponsorDashboard are the ones that stay Arabic-only.
+
+const MESSAGES_EN = [
   'May Allah bless your efforts today.',
   'May Allah put barakah in every hour you give.',
   'May Allah make your tongue a means of guidance today.',
@@ -29,6 +42,43 @@ const MESSAGES = [
   'May Allah give you strength when fatigue tries to visit.',
   'May Allah protect your heart from riya and your work from waste.',
   'May Allah bless your Fajr and ease your Isha.',
+  'May Allah grant you a heart attached to the masjid.',
+  'May Allah make your knowledge a light on the Day of Judgement.',
+]
+
+const MESSAGES_AR = [
+  'بارك الله في جهدك اليوم.',
+  'بارك الله لك في كل ساعة تبذلها.',
+  'جعل الله لسانك سبباً لهداية الخلق.',
+  'جزاك الله خيراً على ما لا يطّلع عليه إلا هو.',
+  'ثبّت الله نيّتك وقوّى صبرك.',
+  'يسّر الله لك طريق العلم.',
+  'تقبّل الله منك في السرّ والعلن.',
+  'رزقك الله الإخلاص في كل كلمة تُعلّمها.',
+  'رفع الله قدرك بما تقدّم لدينه.',
+  'جعل الله عملك اليوم ثقيلاً في ميزان حسناتك.',
+  'أعاذك الله من فتور القلب وكسل الجوارح.',
+  'رزقك الله علماً نافعاً وعملاً خالصاً.',
+  'غفر الله لك ما مضى وهداك في ما بقي.',
+  'أسكن الله حبّ الحق في قلوب من تُعلّمهم.',
+  'جعل الله المسجد راحةً لقلبك اليوم.',
+  'بارك الله لك في أهلك وأنت تخدم الأمة.',
+  'جعلك الله ممّن يُعلّم لوجهه الكريم.',
+  'أجرك الله على كل خطوة نحو الحلقة.',
+  'اشرح الله صدرك وأطلق لسانك بالحق.',
+  'تقبّل الله منك دعوتك خفيةً وافرةً.',
+  'ثبّت الله قدمك على منهج السلف الصالح.',
+  'رزقك الله إخلاصاً يليق بجهدك.',
+  'رزقك الله حكمة السابقين من أهل العلم.',
+  'جعل الله ما تُعلّمه اليوم باقياً بعدك.',
+  'جمعك الله بالنبي ﷺ في جنّات النعيم.',
+  'جعل الله عملك صدقةً جاريةً إلى يوم الدين.',
+  'رزقك الله صحبةً تُذكّرك به كلّما نسيت.',
+  'قوّاك الله حين يحاول التعب زيارتك.',
+  'أعاذ الله قلبك من الرياء وعملك من الضياع.',
+  'بارك الله لك في فجرك ويسّر لك عشاءك.',
+  'رزقك الله قلباً معلّقاً بالمسجد.',
+  'جعل الله علمك نوراً يوم القيامة.',
 ]
 
 function dayOfYear() {
@@ -39,5 +89,7 @@ function dayOfYear() {
 }
 
 export function getDailyGreeting() {
-  return MESSAGES[dayOfYear() % MESSAGES.length]
+  const lang = i18n.language?.startsWith('ar') ? 'ar' : 'en'
+  const pool = lang === 'ar' ? MESSAGES_AR : MESSAGES_EN
+  return pool[dayOfYear() % pool.length]
 }
