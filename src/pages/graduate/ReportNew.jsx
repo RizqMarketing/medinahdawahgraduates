@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import ReportForm from './ReportForm.jsx'
 import {
   getMyGraduate, createReport,
@@ -7,6 +8,7 @@ import {
 } from '../../lib/api.js'
 
 export default function ReportNew() {
+  const { t } = useTranslation()
   const nav = useNavigate()
   const [graduate, setGraduate] = useState(null)
   const [loadErr, setLoadErr] = useState(null)
@@ -14,14 +16,14 @@ export default function ReportNew() {
   useEffect(() => {
     getMyGraduate()
       .then(g => {
-        if (!g) throw new Error('Your graduate record could not be found. Please contact admin.')
+        if (!g) throw new Error(t('reportPages.noRecord'))
         setGraduate(g)
       })
       .catch(err => setLoadErr(err))
   }, [])
 
   const handleSubmit = async ({ report_date, overall_text, activities, newMediaFiles, newLinks, setStatus }) => {
-    if (!graduate) throw new Error('Your graduate record is not loaded yet')
+    if (!graduate) throw new Error(t('reportPages.noRecordYet'))
 
     const report = await createReport({
       graduate_id: graduate.id,
@@ -33,7 +35,7 @@ export default function ReportNew() {
 
     const mediaRows = []
     for (let i = 0; i < newMediaFiles.length; i++) {
-      setStatus?.(`Uploading file ${i + 1} of ${newMediaFiles.length}…`)
+      setStatus?.(t('reportPages.uploadingOfTotal', { current: i + 1, total: newMediaFiles.length }))
       try {
         const { storage_path, kind } = await uploadReportMedia({
           graduateId: graduate.id,
@@ -47,7 +49,7 @@ export default function ReportNew() {
       mediaRows.push({ report_id: report.id, kind: 'link', external_url: l.url, caption: l.caption || null })
     }
     if (mediaRows.length) {
-      setStatus?.('Saving media…')
+      setStatus?.(t('reportPages.savingMedia'))
       try { await insertReportMediaRows(mediaRows) }
       catch (err) { console.error('Media insert failed:', err) }
     }
@@ -59,7 +61,7 @@ export default function ReportNew() {
     return (
       <div className="page"><div className="container">
         <div className="alert-card">
-          <div className="alert-title">Could not load your record</div>
+          <div className="alert-title">{t('reportPages.couldNotLoad')}</div>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, marginTop: 12 }}>
             {loadErr.message}
           </pre>
@@ -71,17 +73,17 @@ export default function ReportNew() {
   return (
     <div className="page">
       <div className="container" style={{ maxWidth: 720 }}>
-        <button onClick={() => nav('/graduate-home')} className="back-link">← Back</button>
-        <p className="eyebrow">Daily report</p>
-        <h1 className="page-title">Submit report</h1>
+        <button onClick={() => nav('/graduate-home')} className="back-link">{t('reportPages.backHome')}</button>
+        <p className="eyebrow">{t('reportPages.eyebrow')}</p>
+        <h1 className="page-title">{t('reportPages.newTitle')}</h1>
         <p className="page-subtitle" style={{ marginBottom: 28 }}>
-          Record your dawah work — teaching, preparation, visits, or anything you gave to the ummah.
+          {t('reportPages.newSubtitle')}
         </p>
 
         <ReportForm
           mode="new"
-          submitLabel="Submit report"
-          submittingText="Submitting…"
+          submitLabel={t('reportForm.submitReport')}
+          submittingText={t('reportForm.submittingDefault')}
           onSubmit={handleSubmit}
           onCancel={() => nav('/graduate-home')}
         />

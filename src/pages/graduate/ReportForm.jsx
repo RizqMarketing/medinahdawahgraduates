@@ -1,28 +1,16 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { kindFromMime } from '../../lib/api.js'
 import { CATEGORIES, suggestCategory } from '../../lib/categories.js'
-import { formatHoursMinutes } from '../../lib/format.js'
+import { formatHoursMinutes, formatNumber } from '../../lib/format.js'
 
-const ACTIVITY_SUGGESTIONS = [
-  'Tajweed lesson',
-  'Quran memorisation',
-  'Tawheed class',
-  'Fiqh class',
-  'Aqeedah lesson',
-  'Friday khutbah',
-  'Khutbah preparation',
-  'Lesson preparation',
-  'Village visit',
-  'Community lecture',
-  'One-on-one teaching',
-  'Children\'s class',
-  'Adults\' class',
-  'Nasihah / advice session',
-  'New Muslim support',
-  'Dawah conversation',
-  'Translation work',
-  'Writing / content',
-  'Community event',
+// Activity-type suggestions — rendered via i18n so both English and Arabic
+// graduates see suggestions in their language.
+const ACTIVITY_SUGGESTION_KEYS = [
+  'tajweedLesson','quranMemorisation','tawheedClass','fiqhClass','aqeedahLesson',
+  'fridayKhutbah','khutbahPrep','lessonPrep','villageVisit','communityLecture',
+  'oneOnOne','childrensClass','adultsClass','nasihahSession','newMuslimSupport',
+  'dawahConversation','translationWork','writingContent','communityEvent',
 ]
 
 export function today() { return new Date().toISOString().slice(0, 10) }
@@ -68,13 +56,14 @@ function activityFromDb(a) {
 }
 
 export default function ReportForm({
-  mode = 'new',            // 'new' | 'edit'
-  initial = {},            // { report_date, overall_text, activities: [...], media: [...] }
-  submitLabel = 'Submit report',
-  onSubmit,                // async ({ report_date, overall_text, activities, newMediaFiles, newLinks, removedMediaIds }) => void
+  mode = 'new',
+  initial = {},
+  submitLabel,
+  onSubmit,
   onCancel,
-  submittingText = 'Submitting…',
+  submittingText,
 }) {
+  const { t } = useTranslation()
   const [reportDate, setReportDate] = useState(initial.report_date || today())
   const [overallText, setOverallText] = useState(initial.overall_text || '')
   const [activities, setActivities] = useState(
@@ -147,7 +136,7 @@ export default function ReportForm({
     setError(null)
 
     if (activities.some(a => !a.activity_type.trim())) {
-      return setError('Please give each activity a type')
+      return setError(t('reportForm.eachActivityType'))
     }
 
     const prepared = activities.map(a => ({
@@ -162,7 +151,7 @@ export default function ReportForm({
     }))
 
     if (prepared.some(a => a.hours <= 0)) {
-      return setError('Each activity needs at least some hours (or valid start/end times)')
+      return setError(t('reportForm.eachActivityHours'))
     }
 
     setSubmitting(true)
@@ -177,49 +166,52 @@ export default function ReportForm({
         setStatus,
       })
     } catch (err) {
-      setError(err?.message || 'Could not save')
+      setError(err?.message || t('reportForm.couldNotSave'))
       setSubmitting(false)
       setStatus('')
     }
   }
 
+  const effectiveSubmit = submitLabel || t('reportForm.submitReport')
+  const effectiveSubmitting = submittingText || t('reportForm.submittingDefault')
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="card" style={{ padding: 24, marginBottom: 20 }}>
         <div className="form-row" style={{ marginBottom: 0 }}>
-          <label className="info-label" htmlFor="report_date">Date</label>
+          <label className="info-label" htmlFor="report_date">{t('reportForm.dateLabel')}</label>
           <input id="report_date" type="date" className="text-input"
             value={reportDate} onChange={e => setReportDate(e.target.value)}
-            max={today()} required />
+            max={today()} required dir="ltr" />
           <div className="form-hint" style={{ marginTop: 6 }}>
             {reportDate === today()
-              ? 'Today'
-              : 'Backdated — pick an earlier day if you missed one'}
+              ? t('reportForm.dateHintToday')
+              : t('reportForm.dateHintBackdated')}
           </div>
         </div>
       </div>
 
       <div style={{ marginBottom: 20 }}>
         <div className="section-header" style={{ marginBottom: 12 }}>
-          <h2 className="section-title">Activities</h2>
+          <h2 className="section-title">{t('reportForm.activities')}</h2>
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            Total: <strong style={{ color: 'var(--text-primary)' }}>{formatHoursMinutes(totalHours)}</strong>
+            {t('reportForm.totalLabel')} <strong style={{ color: 'var(--text-primary)' }}>{formatHoursMinutes(totalHours)}</strong>
           </div>
         </div>
 
         {activities.map((a, i) => (
           <div key={i} className="card activity-card" style={{ padding: 20, marginBottom: 12 }}>
             <div className="activity-card-header">
-              <span className="activity-index">Activity {i + 1}</span>
+              <span className="activity-index">{t('reportForm.activityN', { n: i + 1 })}</span>
               {activities.length > 1 && (
                 <button type="button" className="file-clear"
-                  onClick={() => removeActivity(i)}>Remove</button>
+                  onClick={() => removeActivity(i)}>{t('reportForm.remove')}</button>
               )}
             </div>
 
             <div className="form-row-grid">
               <div className="form-row">
-                <label className="info-label">Type</label>
+                <label className="info-label">{t('reportForm.typeLabel')}</label>
                 <input className="text-input" list={`act-suggestions-${i}`}
                   value={a.activity_type}
                   onChange={e => {
@@ -228,26 +220,28 @@ export default function ReportForm({
                     if (!a.categoryTouched) patch.category = suggestCategory(next)
                     setActivity(i, patch)
                   }}
-                  placeholder="Tajweed lesson" required />
+                  placeholder={t('reportForm.typePlaceholder')} required />
                 <datalist id={`act-suggestions-${i}`}>
-                  {ACTIVITY_SUGGESTIONS.map(s => <option key={s} value={s} />)}
+                  {ACTIVITY_SUGGESTION_KEYS.map(k => (
+                    <option key={k} value={t(`activitySuggestions.${k}`)} />
+                  ))}
                 </datalist>
               </div>
 
               <div className="form-row">
-                <label className="info-label">Category</label>
+                <label className="info-label">{t('reportForm.categoryLabel')}</label>
                 <select className="text-input"
                   value={a.category}
                   onChange={e => setActivity(i, { category: e.target.value, categoryTouched: true })}>
                   {CATEGORIES.map(c => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
+                    <option key={c.value} value={c.value}>{t(c.labelKey)}</option>
                   ))}
                 </select>
                 <div className="form-hint" style={{ marginTop: 6 }}>
-                  {CATEGORIES.find(c => c.value === a.category)?.hint}
+                  {t(CATEGORIES.find(c => c.value === a.category)?.hintKey || 'category.teachingHint')}
                   {a.category === 'other' && (
                     <> <strong style={{ color: 'var(--accent-warning, #e0a84a)' }}>
-                      — hours won't count toward the 132-hour standard.
+                      {t('reportForm.otherWarning')}
                     </strong></>
                   )}
                 </div>
@@ -258,42 +252,42 @@ export default function ReportForm({
               <button type="button"
                 className={`entry-mode-tab ${a.entryMode === 'hours' ? 'active' : ''}`}
                 onClick={() => setActivity(i, { entryMode: 'hours' })}>
-                Enter hours
+                {t('reportForm.enterHours')}
               </button>
               <button type="button"
                 className={`entry-mode-tab ${a.entryMode === 'times' ? 'active' : ''}`}
                 onClick={() => setActivity(i, { entryMode: 'times' })}>
-                Enter start/end time
+                {t('reportForm.enterTimes')}
               </button>
             </div>
 
             {a.entryMode === 'hours' ? (
               <div className="form-row">
-                <label className="info-label">Hours</label>
+                <label className="info-label">{t('reportForm.hoursLabel')}</label>
                 <input type="number" step="0.25" min="0" max="24" className="text-input"
                   value={a.hours}
                   onChange={e => setActivity(i, { hours: e.target.value })}
-                  placeholder="2.5" />
+                  placeholder={t('reportForm.hoursPlaceholder')} dir="ltr" />
               </div>
             ) : (
               <>
                 <div className="form-row-grid">
                   <div className="form-row">
-                    <label className="info-label">Start</label>
+                    <label className="info-label">{t('reportForm.startLabel')}</label>
                     <input type="time" className="text-input"
                       value={a.start_time}
-                      onChange={e => setActivity(i, { start_time: e.target.value })} />
+                      onChange={e => setActivity(i, { start_time: e.target.value })} dir="ltr" />
                   </div>
                   <div className="form-row">
-                    <label className="info-label">End</label>
+                    <label className="info-label">{t('reportForm.endLabel')}</label>
                     <input type="time" className="text-input"
                       value={a.end_time}
-                      onChange={e => setActivity(i, { end_time: e.target.value })} />
+                      onChange={e => setActivity(i, { end_time: e.target.value })} dir="ltr" />
                   </div>
                 </div>
                 {a.start_time && a.end_time && (
                   <div className="form-hint" style={{ marginTop: -10, marginBottom: 14 }}>
-                    = {hoursFromTimes(a.start_time, a.end_time)} hours
+                    {t('reportForm.equalsHours', { hours: formatNumber(hoursFromTimes(a.start_time, a.end_time)) })}
                   </div>
                 )}
               </>
@@ -301,41 +295,41 @@ export default function ReportForm({
 
             <div className="form-row-grid">
               <div className="form-row">
-                <label className="info-label">Students (optional)</label>
+                <label className="info-label">{t('reportForm.studentsOptional')}</label>
                 <input type="number" min="0" className="text-input"
                   value={a.students_count}
                   onChange={e => setActivity(i, { students_count: e.target.value })}
-                  placeholder="25" />
+                  placeholder={t('reportForm.studentsPlaceholder')} dir="ltr" />
               </div>
               <div className="form-row">
-                <label className="info-label">Location (optional)</label>
+                <label className="info-label">{t('reportForm.locationOptional')}</label>
                 <input className="text-input"
                   value={a.location}
                   onChange={e => setActivity(i, { location: e.target.value })}
-                  placeholder="Main masjid" />
+                  placeholder={t('reportForm.locationPlaceholder')} />
               </div>
             </div>
 
             <div className="form-row">
-              <label className="info-label">Details (optional)</label>
+              <label className="info-label">{t('reportForm.detailsOptional')}</label>
               <textarea className="text-input" rows={3}
                 value={a.notes}
                 onChange={e => setActivity(i, { notes: e.target.value })}
-                placeholder="e.g. what was taught, what was prepared, who you visited, or any context you want to share" />
+                placeholder={t('reportForm.detailsPlaceholder')} />
             </div>
           </div>
         ))}
 
         <button type="button" className="btn btn-secondary" onClick={addActivity}
           style={{ width: '100%' }}>
-          + Add another activity
+          {t('reportForm.addAnother')}
         </button>
       </div>
 
       <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-        <h2 className="section-title" style={{ marginBottom: 14 }}>Photos, videos, voice notes</h2>
+        <h2 className="section-title" style={{ marginBottom: 14 }}>{t('reportForm.mediaSection')}</h2>
         <p className="form-hint" style={{ marginBottom: 14 }}>
-          Optional — share media from your day. Max 50 MB per file.
+          {t('reportForm.mediaHint')}
         </p>
 
         {existingMedia.length > 0 && (
@@ -348,7 +342,7 @@ export default function ReportForm({
                 </span>
                 <button type="button" className="file-clear"
                   onClick={() => removeExistingMedia(m.id)}>
-                  Remove
+                  {t('reportForm.remove')}
                 </button>
               </li>
             ))}
@@ -372,10 +366,10 @@ export default function ReportForm({
             </svg>
           </div>
           <div className="dropzone-primary">
-            {dragOver ? 'Drop to add' : 'Drag files here, or click to browse'}
+            {dragOver ? t('reportForm.dropToAdd') : t('reportForm.dragOrClick')}
           </div>
           <div className="dropzone-sub">
-            Images, videos, voice notes · up to 50 MB each
+            {t('reportForm.mediaTypesHint')}
           </div>
         </label>
         <input id="media" type="file"
@@ -394,11 +388,11 @@ export default function ReportForm({
                 <span className="media-picker-kind">{kindFromMime(f.type) || 'file'}</span>
                 <span className="media-picker-name">{f.name}</span>
                 <span className="media-picker-size">
-                  {(f.size / 1024 / 1024).toFixed(1)} MB
+                  <bdi>{(f.size / 1024 / 1024).toFixed(1)} MB</bdi>
                 </span>
                 <button type="button" className="file-clear"
                   onClick={() => setMediaFiles(list => list.filter((_, idx) => idx !== i))}>
-                  Remove
+                  {t('reportForm.remove')}
                 </button>
               </li>
             ))}
@@ -406,11 +400,11 @@ export default function ReportForm({
         )}
 
         <div style={{ marginTop: 20 }}>
-          <div className="info-label" style={{ marginBottom: 8 }}>Or paste a link (YouTube, Facebook, etc.)</div>
+          <div className="info-label" style={{ marginBottom: 8 }}>{t('reportForm.orPasteLink')}</div>
           <div className="link-row">
-            <input className="text-input" placeholder="https://..."
-              value={linkUrl} onChange={e => setLinkUrl(e.target.value)} />
-            <input className="text-input" placeholder="Short caption"
+            <input className="text-input" placeholder={t('reportForm.linkPlaceholder')}
+              value={linkUrl} onChange={e => setLinkUrl(e.target.value)} dir="ltr" />
+            <input className="text-input" placeholder={t('reportForm.linkCaption')}
               value={linkCaption} onChange={e => setLinkCaption(e.target.value)} />
             <button type="button" className="btn btn-secondary"
               onClick={() => {
@@ -419,7 +413,7 @@ export default function ReportForm({
                 setLinks(arr => [...arr, { url: u, caption: linkCaption.trim() || null }])
                 setLinkUrl(''); setLinkCaption('')
               }}>
-              Add link
+              {t('reportForm.addLink')}
             </button>
           </div>
           {links.length > 0 && (
@@ -430,7 +424,7 @@ export default function ReportForm({
                   <span className="media-picker-name">{l.caption || l.url}</span>
                   <button type="button" className="file-clear"
                     onClick={() => setLinks(arr => arr.filter((_, idx) => idx !== i))}>
-                    Remove
+                    {t('reportForm.remove')}
                   </button>
                 </li>
               ))}
@@ -441,10 +435,10 @@ export default function ReportForm({
 
       <div className="card" style={{ padding: 24, marginBottom: 20 }}>
         <div className="form-row" style={{ marginBottom: 0 }}>
-          <label className="info-label" htmlFor="overall">Overall summary (optional)</label>
+          <label className="info-label" htmlFor="overall">{t('reportForm.overallOptional')}</label>
           <textarea id="overall" className="text-input" rows={6}
             value={overallText} onChange={e => setOverallText(e.target.value)}
-            placeholder="A few sentences about the day — how it went, what Allah made easy, any reflections" />
+            placeholder={t('reportForm.overallPlaceholder')} />
         </div>
       </div>
 
@@ -456,11 +450,11 @@ export default function ReportForm({
 
       <div className="action-row">
         <button type="submit" className="btn btn-primary" disabled={submitting}>
-          {submitting ? (status || submittingText) : submitLabel}
+          {submitting ? (status || effectiveSubmitting) : effectiveSubmit}
         </button>
         {onCancel && (
           <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={submitting}>
-            Cancel
+            {t('reportForm.cancel')}
           </button>
         )}
       </div>

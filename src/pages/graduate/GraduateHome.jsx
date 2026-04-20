@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   getMyGraduate,
   getMyMonthlyHours,
@@ -8,7 +9,7 @@ import {
   getReportForToday,
 } from '../../lib/api.js'
 import { getDailyGreeting } from '../../lib/dailyGreeting.js'
-import { formatHoursMinutes } from '../../lib/format.js'
+import { formatHoursMinutes, formatNumber } from '../../lib/format.js'
 import MonthPicker from '../../components/MonthPicker.jsx'
 import ReportHeatmap from '../../components/ReportHeatmap.jsx'
 import LoadingPage from '../../components/LoadingPage.jsx'
@@ -16,15 +17,10 @@ import {
   monthIdNow, monthIdRange, formatMonthId, isCurrentMonth, daysLeftInMonth,
 } from '../../lib/months.js'
 
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
-
-function formatDate(isoDate) {
-  if (!isoDate) return ''
-  const d = new Date(isoDate + 'T00:00:00')
-  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()].slice(0, 3)}`
-}
+const MONTH_KEYS = ['january','february','march','april','may','june','july','august','september','october','november','december']
 
 export default function GraduateHome() {
+  const { t } = useTranslation()
   const [state, setState] = useState({ status: 'loading', error: null })
   const [graduate, setGraduate] = useState(null)
   const [hours, setHours] = useState(0)
@@ -37,7 +33,7 @@ export default function GraduateHome() {
     ;(async () => {
       try {
         const g = graduate || await getMyGraduate()
-        if (!g) throw new Error('Your graduate record could not be found. Please contact admin.')
+        if (!g) throw new Error(t('graduateHome.noGraduateRecord'))
         if (cancelled) return
         setGraduate(g)
         const { start, end } = monthIdRange(month)
@@ -65,7 +61,7 @@ export default function GraduateHome() {
     return (
       <div className="page"><div className="container">
         <div className="alert-card">
-          <div className="alert-title">Could not load your page</div>
+          <div className="alert-title">{t('graduateHome.couldNotLoad')}</div>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, marginTop: 12 }}>
             {state.error?.message || String(state.error)}
           </pre>
@@ -80,21 +76,25 @@ export default function GraduateHome() {
   const viewingCurrent = isCurrentMonth(month)
   const daysLeft = daysLeftInMonth()
   const showMonthEndBanner = viewingCurrent && daysLeft <= 3 && hours < target
+  const firstName = graduate.full_name?.split(' ')[0] || t('graduateHome.akhiFallback')
 
   return (
     <div className="page">
       <div className="container">
         <p className="eyebrow">{monthLabel}</p>
         <h1 className="page-title">
-          Assalamu alaykum, <em>{graduate.full_name?.split(' ')[0] || 'akhi'}</em>
+          {t('graduateHome.assalamGreeting')}<em>{firstName}</em>
         </h1>
-        <p className="page-subtitle">{getDailyGreeting()}</p>
+        <p className="page-subtitle">
+          {/* Daily du'a stays in Arabic in both language modes. */}
+          <span className="arabic">{getDailyGreeting()}</span>
+        </p>
 
         {showMonthEndBanner && (
           <div className="month-end-banner">
             {daysLeft === 0
-              ? `Last day of ${monthLabel} — you're at ${hours} hours. May Allah accept.`
-              : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left in ${monthLabel}. You're at ${hours} / ${target} hours.`}
+              ? t('graduateHome.lastDayBanner', { month: monthLabel, hours: formatNumber(hours) })
+              : t('graduateHome.daysLeftBanner', { count: daysLeft, month: monthLabel, hours: formatNumber(hours), target: formatNumber(target) })}
           </div>
         )}
 
@@ -103,28 +103,28 @@ export default function GraduateHome() {
             <div className="card" style={{ padding: 24 }}>
             {todayReport ? (
               <>
-                <div className="info-label">Today's report</div>
+                <div className="info-label">{t('graduateHome.todaysReport')}</div>
                 <div style={{ fontSize: 16, marginTop: 4, color: 'var(--success)' }}>
-                  ✓ Submitted, alhamdulillah
+                  {t('graduateHome.submittedAlhamd')}
                 </div>
                 <div className="action-row" style={{ marginTop: 18 }}>
                   <Link to={`/graduate/${graduate.slug}/reports/${todayReport.report_date}`} className="btn btn-primary">
-                    View / edit today's report
+                    {t('graduateHome.viewEditToday')}
                   </Link>
                   <Link to="/reports/new" className="btn btn-secondary">
-                    Submit for a different day
+                    {t('graduateHome.submitDifferentDay')}
                   </Link>
                 </div>
               </>
             ) : (
               <>
-                <div className="info-label">Today's report</div>
+                <div className="info-label">{t('graduateHome.todaysReport')}</div>
                 <div style={{ fontSize: 16, marginTop: 4, color: 'var(--text-secondary)' }}>
-                  Not yet submitted. Take a moment when you're done, in sha Allah.
+                  {t('graduateHome.notYetSubmitted')}
                 </div>
                 <div className="action-row" style={{ marginTop: 18 }}>
                   <Link to="/reports/new" className="btn btn-primary">
-                    Submit today's report
+                    {t('graduateHome.submitTodayBtn')}
                   </Link>
                 </div>
               </>
@@ -135,62 +135,71 @@ export default function GraduateHome() {
 
         <section className="section">
           <div className="section-header section-header-wrap" style={{ marginBottom: 16 }}>
-            <h2 className="section-title">{viewingCurrent ? 'This month' : monthLabel}</h2>
+            <h2 className="section-title">{viewingCurrent ? t('graduateHome.thisMonth') : monthLabel}</h2>
             <MonthPicker value={month} onChange={setMonth} />
           </div>
           <div className="card" style={{ padding: 24 }}>
             <div className="progress-label">
-              <span>Hours of service</span>
-              <span><strong>{hours}</strong> / {target}</span>
+              <span>{t('graduateHome.hoursOfService')}</span>
+              <span><strong><bdi>{formatNumber(hours)}</bdi></strong> / <bdi>{formatNumber(target)}</bdi></span>
             </div>
             <div className="progress"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
             <div className="stats-grid" style={{ marginTop: 24 }}>
               <div className="stat-card">
-                <div className="stat-number">{reports.length}</div>
-                <div className="stat-label">{viewingCurrent ? 'Active days this month' : 'Active days'}</div>
+                <div className="stat-number"><bdi>{formatNumber(reports.length)}</bdi></div>
+                <div className="stat-label">{viewingCurrent ? t('graduateHome.activeDaysThisMonth') : t('graduateHome.activeDays')}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{pct}%</div>
-                <div className="stat-label">Toward monthly standard</div>
+                <div className="stat-number"><bdi>{formatNumber(pct)}%</bdi></div>
+                <div className="stat-label">{t('graduateHome.towardStandard')}</div>
               </div>
             </div>
           </div>
         </section>
 
         <section className="section">
-          <h2 className="section-title" style={{ marginBottom: 16 }}>Activity calendar</h2>
+          <h2 className="section-title" style={{ marginBottom: 16 }}>{t('graduateHome.activityCalendar')}</h2>
           <ReportHeatmap reports={reports} monthId={month} graduateSlug={graduate.slug} />
         </section>
 
         <section className="section">
           <div className="section-header">
-            <h2 className="section-title">{viewingCurrent ? 'Recent reports' : `Latest in ${monthLabel}`}</h2>
+            <h2 className="section-title">{viewingCurrent ? t('graduateHome.recentReports') : t('graduateHome.latestIn', { month: monthLabel })}</h2>
           </div>
           {reports.length === 0 ? (
             <div className="card" style={{ padding: 24, color: 'var(--text-muted)' }}>
               {viewingCurrent
-                ? 'No reports yet this month. Your first one is waiting in sha Allah.'
-                : `No reports recorded in ${monthLabel}.`}
+                ? t('graduateHome.noReportsThisMonth')
+                : t('graduateHome.noReportsIn', { month: monthLabel })}
             </div>
           ) : (
             <div className="report-list">
               {reports.slice(0, 5).map(r => {
                 const d = new Date(r.report_date + 'T00:00:00')
+                const monthShort = t(`time.months.${MONTH_KEYS[d.getMonth()]}`).slice(0, 3)
                 return (
                   <Link key={r.id} to={`/graduate/${graduate.slug}/reports/${r.report_date}`} className="report-row">
                     <div className="report-date">
-                      <span className="day">{d.getDate()}</span>
-                      <span className="month">{MONTH_NAMES[d.getMonth()].slice(0, 3)}</span>
+                      <span className="day"><bdi>{formatNumber(d.getDate())}</bdi></span>
+                      <span className="month">{monthShort}</span>
                     </div>
                     <div>
                       <div className="report-title">
                         {r.overall_text
                           ? r.overall_text.slice(0, 64) + (r.overall_text.length > 64 ? '…' : '')
-                          : 'Daily report'}
+                          : t('graduateHome.dailyReport')}
                       </div>
                       <div className="report-sub">
-                        {formatHoursMinutes(r.total_hours)} · {(r.activities || []).length} activities
-                        {r.location ? ` · ${r.location}` : ''}
+                        {r.location
+                          ? t('graduateHome.reportSubWithLoc', {
+                              duration: formatHoursMinutes(r.total_hours),
+                              count: formatNumber((r.activities || []).length),
+                              location: r.location,
+                            })
+                          : t('graduateHome.reportSub', {
+                              duration: formatHoursMinutes(r.total_hours),
+                              count: formatNumber((r.activities || []).length),
+                            })}
                       </div>
                     </div>
                   </Link>
@@ -198,7 +207,7 @@ export default function GraduateHome() {
               })}
               {reports.length > 5 && (
                 <div style={{ textAlign: 'center', padding: '8px 0', fontSize: 13, color: 'var(--text-muted)' }}>
-                  {reports.length - 5} more {reports.length - 5 === 1 ? 'report' : 'reports'} this month — click any day on the calendar above
+                  {t('graduateHome.moreThisMonth', { count: reports.length - 5 })}
                 </div>
               )}
             </div>

@@ -1,20 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getReportBySlugAndDate } from '../lib/api.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import ReportMediaItem from '../components/ReportMediaItem.jsx'
 import LoadingPage from '../components/LoadingPage.jsx'
 import { categoryLabel, COUNTED_CATEGORIES } from '../lib/categories.js'
-import { formatHoursMinutes, formatHoursMinutesShort } from '../lib/format.js'
+import { formatHoursMinutes, formatHoursMinutesShort, formatNumber } from '../lib/format.js'
 
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const WEEKDAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
-
-function formatHuman(isoDate) {
-  if (!isoDate) return ''
-  const d = new Date(isoDate + 'T00:00:00')
-  return `${WEEKDAY_NAMES[d.getDay()]}, ${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
-}
+const MONTH_KEYS = ['january','february','march','april','may','june','july','august','september','october','november','december']
+const WEEKDAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat']
 
 function initialsFrom(name) {
   return (name || '?').split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
@@ -43,6 +38,7 @@ function PinIcon() {
 }
 
 export default function ReportDetail() {
+  const { t } = useTranslation()
   const { slug, date } = useParams()
   const nav = useNavigate()
   const { role, user } = useAuth()
@@ -61,7 +57,7 @@ export default function ReportDetail() {
     return (
       <div className="page"><div className="container">
         <div className="alert-card">
-          <div className="alert-title">Could not load report</div>
+          <div className="alert-title">{t('reportDetail.couldNotLoad')}</div>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, marginTop: 12 }}>
             {state.error?.message || String(state.error)}
           </pre>
@@ -84,10 +80,12 @@ export default function ReportDetail() {
   return (
     <div className="page">
       <div className="container">
-        <button onClick={() => nav(-1)} className="back-link">← Back</button>
+        <button onClick={() => nav(-1)} className="back-link">{t('reportDetail.back')}</button>
 
         {(() => {
           const d = new Date(r.report_date + 'T00:00:00')
+          const weekday = t(`time.weekdaysLong.${WEEKDAY_KEYS[d.getDay()]}`)
+          const month = t(`time.months.${MONTH_KEYS[d.getMonth()]}`)
           return (
             <div className="report-hero-v2">
               <div className="report-hero-avatar-v2">
@@ -97,12 +95,12 @@ export default function ReportDetail() {
               </div>
               <div className="report-hero-text-v2">
                 <div className="report-hero-weekday">
-                  {WEEKDAY_NAMES[d.getDay()]}
+                  {weekday}
                   <span className="report-hero-dot" aria-hidden="true" />
-                  Daily report
+                  {t('reportDetail.dailyReport')}
                 </div>
                 <h1 className="report-hero-date-v2">
-                  {MONTH_NAMES[d.getMonth()]} {d.getDate()}, {d.getFullYear()}
+                  {month} <bdi>{d.getDate()}, {d.getFullYear()}</bdi>
                 </h1>
                 <div className="report-hero-sub-v2">
                   <span className="report-hero-name">{r.graduate?.full_name}</span>
@@ -112,7 +110,7 @@ export default function ReportDetail() {
               </div>
               {canEdit && (
                 <Link to={`/graduate/${r.graduate.slug}/reports/${r.report_date}/edit`} className="btn btn-secondary report-hero-edit">
-                  Edit report
+                  {t('reportDetail.editReport')}
                 </Link>
               )}
             </div>
@@ -122,29 +120,29 @@ export default function ReportDetail() {
         <div className="report-stats-row">
           <div className="stat-chip stat-chip-accent">
             <div className="stat-chip-number">{formatHoursMinutes(totalHours)}</div>
-            <div className="stat-chip-label">Total time</div>
+            <div className="stat-chip-label">{t('reportDetail.totalTime')}</div>
           </div>
           {hasUncounted && (
             <div className="stat-chip">
               <div className="stat-chip-number">{formatHoursMinutes(countedHours)}</div>
-              <div className="stat-chip-label">Counted toward 132</div>
+              <div className="stat-chip-label">{t('reportDetail.countedToward132')}</div>
             </div>
           )}
           <div className="stat-chip">
-            <div className="stat-chip-number">{activities.length}</div>
-            <div className="stat-chip-label">{activities.length === 1 ? 'Activity' : 'Activities'}</div>
+            <div className="stat-chip-number"><bdi>{formatNumber(activities.length)}</bdi></div>
+            <div className="stat-chip-label">{activities.length === 1 ? t('reportDetail.activity') : t('reportDetail.activities')}</div>
           </div>
           {totalStudents > 0 && (
             <div className="stat-chip">
-              <div className="stat-chip-number">{totalStudents}</div>
-              <div className="stat-chip-label">Students reached</div>
+              <div className="stat-chip-number"><bdi>{formatNumber(totalStudents)}</bdi></div>
+              <div className="stat-chip-label">{t('reportDetail.studentsReached')}</div>
             </div>
           )}
         </div>
 
         {activities.length > 0 && (
           <section className="section">
-            <h2 className="section-title" style={{ marginBottom: 16 }}>Activities</h2>
+            <h2 className="section-title" style={{ marginBottom: 16 }}>{t('reportDetail.activities')}</h2>
             <div className="activities-list">
               {activities.map(a => {
                 const cat = a.category || 'teaching'
@@ -157,16 +155,16 @@ export default function ReportDetail() {
                       <div className="activity-row-type">
                         {a.activity_type}
                         <span className={`category-badge category-${cat}`}>
-                          {categoryLabel(cat)}
-                          {!COUNTED_CATEGORIES.has(cat) && <span className="category-badge-flag" title="Not counted toward 132-hour standard">·not counted</span>}
+                          {categoryLabel(cat, t)}
+                          {!COUNTED_CATEGORIES.has(cat) && <span className="category-badge-flag" title={t('reportDetail.notCountedTitle')}>{t('reportDetail.notCountedFlag')}</span>}
                         </span>
                       </div>
                       <div className="activity-row-meta">
                         {a.start_time && a.end_time && (
-                          <span><ClockIcon />{a.start_time.slice(0,5)}–{a.end_time.slice(0,5)}</span>
+                          <span><ClockIcon /><bdi>{a.start_time.slice(0,5)}–{a.end_time.slice(0,5)}</bdi></span>
                         )}
                         {a.students_count != null && (
-                          <span><UsersIcon />{a.students_count} students</span>
+                          <span><UsersIcon />{t('reportDetail.studentsShort', { count: formatNumber(a.students_count) })}</span>
                         )}
                         {a.location && (
                           <span><PinIcon />{a.location}</span>
@@ -183,7 +181,7 @@ export default function ReportDetail() {
 
         {r.overall_text && (
           <section className="section">
-            <h2 className="section-title" style={{ marginBottom: 16 }}>Summary</h2>
+            <h2 className="section-title" style={{ marginBottom: 16 }}>{t('reportDetail.summaryTitle')}</h2>
             <blockquote className="quote-block">
               {r.overall_text.split('\n').filter(Boolean).map((p, i) => <p key={i} style={{ marginBottom: 12 }}>{p}</p>)}
               <footer style={{ marginTop: 14, fontFamily: 'var(--font-body)', fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -202,7 +200,7 @@ export default function ReportDetail() {
             <>
               {visual.length > 0 && (
                 <section className="section">
-                  <h2 className="section-title" style={{ marginBottom: 16 }}>Photos & videos</h2>
+                  <h2 className="section-title" style={{ marginBottom: 16 }}>{t('reportDetail.photosVideos')}</h2>
                   <div className="media-grid">
                     {visual.map(m => <ReportMediaItem key={m.id} item={m} />)}
                   </div>
@@ -210,7 +208,7 @@ export default function ReportDetail() {
               )}
               {voices.length > 0 && (
                 <section className="section">
-                  <h2 className="section-title" style={{ marginBottom: 16 }}>Voice notes</h2>
+                  <h2 className="section-title" style={{ marginBottom: 16 }}>{t('reportDetail.voiceNotes')}</h2>
                   <div className="voice-list">
                     {voices.map(m => <ReportMediaItem key={m.id} item={m} />)}
                   </div>
@@ -218,7 +216,7 @@ export default function ReportDetail() {
               )}
               {links.length > 0 && (
                 <section className="section">
-                  <h2 className="section-title" style={{ marginBottom: 16 }}>External links</h2>
+                  <h2 className="section-title" style={{ marginBottom: 16 }}>{t('reportDetail.externalLinks')}</h2>
                   <div className="links-grid">
                     {links.map(m => <ReportMediaItem key={m.id} item={m} />)}
                   </div>

@@ -1,39 +1,36 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
-const paragraphs = [
-  'Assalamu alaykum wa rahmatullahi wa barakatuh. May Allah reward you with goodness.',
-  'Today I held a lesson in the masjid titled "At-Tayrah" because many people believe in bad omens during this month. The lesson was from 5:45 AM to 7:35 AM.',
-  'I taught the first group Quran reading from 8:05 AM to 10:30 AM, and they were 25 students.',
-  'I taught the second group Surah Al-Fatihah from beginning to end. There were 4 of them, from 10:35 AM to 11:45 AM.',
-  'After that, I taught Tawheed — "What a person must know" — from 11:55 AM to 1:25 PM.',
-  'At 3:00 PM, with the second group, I taught them the same surah again until 4:10 PM.',
-  'I taught them — meaning the second group — reading from 4:15 PM to 6:30 PM, and they were 18 students.',
-  'From 6:40 PM to 9:05 PM, I taught the same Tawheed topic in their native language.',
-]
-
-const tags = ['Tajweed', 'Tawheed', 'Quran', 'Children', 'Adults']
+const TAGS = ['tajweed','aqeedah','quran','quran','quran'] // subject keys
 
 export default function ReportView() {
+  const { t } = useTranslation()
   const nav = useNavigate()
+  const paragraphs = [
+    t('reportView.p1'), t('reportView.p2'), t('reportView.p3'), t('reportView.p4'),
+    t('reportView.p5'), t('reportView.p6'), t('reportView.p7'), t('reportView.p8'),
+  ]
   return (
     <div className="page">
       <div className="container">
-        <button onClick={() => nav(-1)} className="back-link">← Back to reports</button>
+        <button onClick={() => nav(-1)} className="back-link">{t('reportView.back')}</button>
 
         <div className="report-header">
           <div>
-            <p className="eyebrow">Daily report</p>
-            <h1 className="page-title" style={{ fontSize: 34 }}>April 14, 2026</h1>
+            <p className="eyebrow">{t('reportView.eyebrow')}</p>
+            <h1 className="page-title" style={{ fontSize: 34 }}>
+              {t('time.months.april')} <bdi>14, 2026</bdi>
+            </h1>
           </div>
           <div className="report-meta">
-            <div><div className="info-label">From</div><strong>Musa Mohsin</strong></div>
-            <div><div className="info-label">Location</div><strong>Main Masjid, Dar es Salaam</strong></div>
-            <div><div className="info-label">Hours logged</div><strong>6.5 hours</strong></div>
+            <div><div className="info-label">{t('reportView.from')}</div><strong>Musa Mohsin</strong></div>
+            <div><div className="info-label">{t('reportView.location')}</div><strong>Main Masjid, Dar es Salaam</strong></div>
+            <div><div className="info-label">{t('reportView.hoursLogged')}</div><strong><bdi>6.5</bdi> {t('common.hours')}</strong></div>
           </div>
         </div>
 
         <div className="video-placeholder">
-          <button className="play-btn" aria-label="Play video">
+          <button className="play-btn" aria-label={t('reportView.playVideo')}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
           </button>
         </div>
@@ -43,7 +40,7 @@ export default function ReportView() {
         </div>
 
         <div className="tag-row">
-          {tags.map(t => <span key={t} className="tag">{t}</span>)}
+          {TAGS.map((tag, i) => <span key={i} className="tag">{t(`subject.${tag}`)}</span>)}
         </div>
       </div>
     </div>
