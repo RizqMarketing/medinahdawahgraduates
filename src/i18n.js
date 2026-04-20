@@ -8,13 +8,17 @@ export const SUPPORTED_LANGS = ['en', 'ar']
 export const RTL_LANGS = new Set(['ar'])
 export const STORAGE_KEY = 'mdg.lang'
 
-// Apply <html dir> + <html lang> whenever the language changes.
-// Called once at init and again on every changeLanguage.
+// Apply <html dir> + <html lang> + translate="no" whenever the language
+// changes. Called once at init and again on every changeLanguage.
+// translate="no" stops browser auto-translation from silently rewriting
+// our Arabic idioms and language-toggle controls.
 export function applyDocumentDirection(lang) {
   const dir = RTL_LANGS.has(lang) ? 'rtl' : 'ltr'
   if (typeof document !== 'undefined') {
     document.documentElement.setAttribute('dir', dir)
     document.documentElement.setAttribute('lang', lang)
+    document.documentElement.setAttribute('translate', 'no')
+    document.documentElement.classList.add('notranslate')
   }
 }
 
