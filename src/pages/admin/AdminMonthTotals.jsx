@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { listAllGraduatesForAdmin, getAdminRollup } from '../../lib/api.js'
 import MonthPicker from '../../components/MonthPicker.jsx'
 import LoadingPage from '../../components/LoadingPage.jsx'
+import { formatNumber } from '../../lib/format.js'
 import SilentGraduatesModal from './SilentGraduatesModal.jsx'
 import LowTeachingRatioModal from './LowTeachingRatioModal.jsx'
 import {
@@ -10,6 +12,7 @@ import {
 } from '../../lib/months.js'
 
 export default function AdminMonthTotals() {
+  const { t } = useTranslation()
   const { monthId } = useParams()
   const nav = useNavigate()
   const month = monthId || monthIdNow()
@@ -31,8 +34,8 @@ export default function AdminMonthTotals() {
   }, [month])
 
   const target = 132
-  const LOW_RATIO_THRESHOLD = 0.5      // flag when teaching / logged < 50%
-  const LOW_RATIO_MIN_HOURS = 10       // only flag if graduate actually logged ≥10 hrs
+  const LOW_RATIO_THRESHOLD = 0.5
+  const LOW_RATIO_MIN_HOURS = 10
 
   const rows = useMemo(() => {
     return state.graduates.map(g => {
@@ -86,12 +89,12 @@ export default function AdminMonthTotals() {
     nav(`/admin/months/${newMonth}`, { replace: true })
   }
 
-  if (state.status === 'loading') return <LoadingPage message="Loading month…" />
+  if (state.status === 'loading') return <LoadingPage />
   if (state.status === 'error') {
     return (
       <div className="page"><div className="container">
         <div className="alert-card">
-          <div className="alert-title">Could not load</div>
+          <div className="alert-title">{t('admin.couldNotLoad')}</div>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, marginTop: 12 }}>
             {state.error?.message || String(state.error)}
           </pre>
@@ -100,14 +103,18 @@ export default function AdminMonthTotals() {
     )
   }
 
+  const monthLabel = formatMonthId(month)
+
   return (
     <div className="page">
       <div className="container">
-        <button onClick={() => nav('/admin')} className="back-link">← Back to dashboard</button>
-        <p className="eyebrow">Monthly totals</p>
-        <h1 className="page-title">{formatMonthId(month)}</h1>
+        <button onClick={() => nav('/admin')} className="back-link">{t('common.backToDashboard')}</button>
+        <p className="eyebrow">{t('admin.monthTotalsEyebrow')}</p>
+        <h1 className="page-title">{monthLabel}</h1>
         <p className="page-subtitle">
-          {isCurrentMonth(month) ? 'Live — updates as reports come in.' : `Historical view of ${formatMonthId(month)}.`}
+          {isCurrentMonth(month)
+            ? t('admin.liveMonthSub')
+            : t('admin.historicalMonthSub', { month: monthLabel })}
         </p>
 
         <div style={{ marginTop: 24, marginBottom: 24 }}>
@@ -116,35 +123,37 @@ export default function AdminMonthTotals() {
 
         <div className="month-stats-grid">
           <div className="month-stat month-stat-primary">
-            <div className="month-stat-number">{totalHours.toLocaleString()}</div>
-            <div className="month-stat-label">Total hours of service</div>
+            <div className="month-stat-number"><bdi>{formatNumber(totalHours)}</bdi></div>
+            <div className="month-stat-label">{t('admin.totalHoursOfService')}</div>
             {deltaPct !== null && (
               <div className={`month-stat-delta ${deltaPct > 0 ? 'delta-up' : deltaPct < 0 ? 'delta-down' : 'delta-same'}`}>
-                {deltaPct > 0 ? '↑' : deltaPct < 0 ? '↓' : '→'}
-                {' '}
-                {deltaPct === 0 ? 'same as last month' : `${Math.abs(deltaPct)}% vs last month`}
+                {deltaPct > 0 ? t('admin.deltaUp', { pct: Math.abs(deltaPct) })
+                  : deltaPct < 0 ? t('admin.deltaDown', { pct: Math.abs(deltaPct) })
+                  : t('admin.deltaSame')}
               </div>
             )}
           </div>
 
           <div className="month-stat">
-            <div className="month-stat-number">{hitTarget}<span className="month-stat-of">/{activeGraduates}</span></div>
-            <div className="month-stat-label">Met 132-hour standard</div>
+            <div className="month-stat-number">
+              <bdi>{formatNumber(hitTarget)}</bdi><span className="month-stat-of">/<bdi>{formatNumber(activeGraduates)}</bdi></span>
+            </div>
+            <div className="month-stat-label">{t('admin.metStandard')}</div>
             <div className="month-stat-progress">
               <div className="month-stat-progress-fill" style={{ width: `${hitPct}%` }} />
             </div>
             <div className="month-stat-sub">
-              {hitPct}% of active graduates
+              {t('admin.pctOfActive', { pct: hitPct })}
               {totalCounted < totalHours - 0.5 && (
-                <> · {Math.round(totalHours - totalCounted)} hrs excluded as non-counted</>
+                <> · {t('admin.hrsExcluded', { hours: Math.round(totalHours - totalCounted) })}</>
               )}
             </div>
           </div>
 
           <div className="month-stat">
-            <div className="month-stat-number">{totalStudents.toLocaleString()}</div>
-            <div className="month-stat-label">Students reached</div>
-            <div className="month-stat-sub">across all activities</div>
+            <div className="month-stat-number"><bdi>{formatNumber(totalStudents)}</bdi></div>
+            <div className="month-stat-label">{t('admin.studentsReached')}</div>
+            <div className="month-stat-sub">{t('admin.acrossAllActivities')}</div>
           </div>
 
           <button
@@ -152,14 +161,14 @@ export default function AdminMonthTotals() {
             className={`month-stat month-stat-warning ${silent > 0 ? 'month-stat-clickable' : ''}`}
             onClick={silent > 0 ? () => setShowSilent(true) : undefined}
             disabled={silent === 0}
-            style={{ textAlign: 'left', cursor: silent > 0 ? 'pointer' : 'default' }}
+            style={{ textAlign: 'start', cursor: silent > 0 ? 'pointer' : 'default' }}
           >
-            <div className="month-stat-number">{silent}</div>
-            <div className="month-stat-label">Silent graduates</div>
+            <div className="month-stat-number"><bdi>{formatNumber(silent)}</bdi></div>
+            <div className="month-stat-label">{t('admin.silentGraduates')}</div>
             <div className="month-stat-sub">
               {silent === 0
-                ? 'Everyone reported at least once'
-                : <>Tap to see who{silent === 1 ? '' : ''} · {silent === 1 ? '1 graduate' : `${silent} graduates`} with no reports</>}
+                ? t('admin.everyoneReported')
+                : <>{t('admin.tapSeeWho')} · {silent === 1 ? t('admin.oneGradNoReports') : t('admin.manyGradsNoReports', { count: silent })}</>}
             </div>
           </button>
 
@@ -168,34 +177,34 @@ export default function AdminMonthTotals() {
             className={`month-stat month-stat-warning ${lowRatio > 0 ? 'month-stat-clickable' : ''}`}
             onClick={lowRatio > 0 ? () => setShowLowRatio(true) : undefined}
             disabled={lowRatio === 0}
-            style={{ textAlign: 'left', cursor: lowRatio > 0 ? 'pointer' : 'default' }}
+            style={{ textAlign: 'start', cursor: lowRatio > 0 ? 'pointer' : 'default' }}
           >
-            <div className="month-stat-number">{lowRatio}</div>
-            <div className="month-stat-label">Low teaching ratio</div>
+            <div className="month-stat-number"><bdi>{formatNumber(lowRatio)}</bdi></div>
+            <div className="month-stat-label">{t('admin.lowTeachingRatio')}</div>
             <div className="month-stat-sub">
               {lowRatio === 0
-                ? 'Everyone active is mostly teaching'
-                : <>Tap to review · less than 50% of logged time was teaching</>}
+                ? t('admin.everyoneTeaching')
+                : t('admin.tapReview')}
             </div>
           </button>
 
           <div className="month-stat">
-            <div className="month-stat-number">{totalReports}</div>
-            <div className="month-stat-label">Reports submitted</div>
-            <div className="month-stat-sub">{avgHours} hrs avg per reporting graduate</div>
+            <div className="month-stat-number"><bdi>{formatNumber(totalReports)}</bdi></div>
+            <div className="month-stat-label">{t('admin.reportsSubmitted')}</div>
+            <div className="month-stat-sub">{t('admin.hrsAvgPerReporting', { hours: formatNumber(avgHours) })}</div>
           </div>
 
           {topGraduate && (
             <div className="month-stat month-stat-accent">
               <div className="month-stat-number" style={{ fontSize: 22 }}>{topGraduate.full_name}</div>
-              <div className="month-stat-label">Top by counted hours</div>
-              <div className="month-stat-sub">{topGraduate.counted_hours} hours · {topGraduate.country}</div>
+              <div className="month-stat-label">{t('admin.topByCountedHours')}</div>
+              <div className="month-stat-sub">{t('admin.topSubline', { hours: formatNumber(topGraduate.counted_hours), country: topGraduate.country })}</div>
             </div>
           )}
         </div>
 
         <section className="section">
-          <h2 className="section-title" style={{ marginBottom: 16 }}>Ranked by hours</h2>
+          <h2 className="section-title" style={{ marginBottom: 16 }}>{t('admin.rankedByHours')}</h2>
           <div className="leaderboard">
             {rows.map((g, i) => {
               const rank = i + 1
@@ -207,38 +216,39 @@ export default function AdminMonthTotals() {
               const hasUncounted = g.hours > g.counted_hours + 0.01
               return (
                 <Link key={g.id} to={`/admin/graduates/${g.slug}`} className={`leaderboard-row tier-${tier}`}>
-                  <div className={`leaderboard-rank ${rankClass}`}>{rank}</div>
+                  <div className={`leaderboard-rank ${rankClass}`}><bdi>{formatNumber(rank)}</bdi></div>
                   <div className="leaderboard-info">
                     <div className="leaderboard-name">
                       {g.full_name}
                       {g.lowTeaching && (
-                        <span className="teaching-ratio-warn" title={`${g.teaching_hours.toFixed(1)} teaching hrs of ${g.hours.toFixed(1)} logged`}>
-                          ⚠ {g.teachingPct}% teaching
+                        <span className="teaching-ratio-warn" title={`${formatNumber(g.teaching_hours.toFixed(1))} / ${formatNumber(g.hours.toFixed(1))}`}>
+                          {t('admin.teachingWarn', { pct: g.teachingPct })}
                         </span>
                       )}
                     </div>
                     <div className="leaderboard-meta">
                       {g.country}
                       <span className="leaderboard-meta-dot" aria-hidden="true" />
-                      {g.active_days} active {g.active_days === 1 ? 'day' : 'days'}
+                      <bdi>{formatNumber(g.active_days)}</bdi>{' '}
+                      {g.active_days === 1 ? t('admin.activeDayShort') : t('admin.activeDaysShort')}
                       {g.students_reached > 0 && (
                         <>
                           <span className="leaderboard-meta-dot" aria-hidden="true" />
-                          {g.students_reached} students
+                          {t('admin.studentsShort', { count: formatNumber(g.students_reached) })}
                         </>
                       )}
                       {hasUncounted && (
                         <>
                           <span className="leaderboard-meta-dot" aria-hidden="true" />
-                          {(g.hours - g.counted_hours).toFixed(1)} hrs not counted
+                          {t('admin.hrsNotCounted', { hours: formatNumber((g.hours - g.counted_hours).toFixed(1)) })}
                         </>
                       )}
                     </div>
                   </div>
                   <div className="leaderboard-hours">
-                    <strong>{g.counted_hours}</strong>
-                    <span>/ {target}</span>
-                    <div className="leaderboard-hours-label">hours</div>
+                    <strong><bdi>{formatNumber(g.counted_hours)}</bdi></strong>
+                    <span>/ <bdi>{formatNumber(target)}</bdi></span>
+                    <div className="leaderboard-hours-label">{t('common.hours')}</div>
                   </div>
                 </Link>
               )
@@ -249,7 +259,7 @@ export default function AdminMonthTotals() {
         {showSilent && (
           <SilentGraduatesModal
             graduates={silentList}
-            monthLabel={formatMonthId(month)}
+            monthLabel={monthLabel}
             onClose={() => setShowSilent(false)}
           />
         )}
@@ -257,7 +267,7 @@ export default function AdminMonthTotals() {
         {showLowRatio && (
           <LowTeachingRatioModal
             graduates={lowRatioList}
-            monthLabel={formatMonthId(month)}
+            monthLabel={monthLabel}
             onClose={() => setShowLowRatio(false)}
           />
         )}

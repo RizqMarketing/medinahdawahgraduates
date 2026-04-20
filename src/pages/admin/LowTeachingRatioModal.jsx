@@ -1,26 +1,29 @@
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useModalBackButton } from '../../lib/useModalBackButton.js'
+import { formatNumber } from '../../lib/format.js'
 
 function initialsFrom(name) {
   return (name || '?').split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
 }
 
 export default function LowTeachingRatioModal({ graduates, monthLabel, onClose }) {
+  const { t } = useTranslation()
   useModalBackButton(onClose)
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
+        <button className="modal-close" onClick={onClose} aria-label={t('common.close')}>×</button>
 
-        <h2 className="modal-title">Low teaching ratio — {monthLabel}</h2>
+        <h2 className="modal-title">{t('admin.lowRatioModalTitle', { month: monthLabel })}</h2>
         <p className="modal-subtitle">
-          {graduates.length} {graduates.length === 1 ? 'graduate' : 'graduates'} logged most of their hours outside of direct teaching. Worth a conversation to make sure the work still aligns with the project's vision.
+          {t('admin.lowRatioModalSubtitle', { count: graduates.length })}
         </p>
 
         {graduates.length === 0 ? (
           <div style={{ color: 'var(--text-muted)', padding: '8px 0' }}>
-            Everyone active is mostly teaching this month, alhamdulillah.
+            {t('admin.lowRatioModalEmpty')}
           </div>
         ) : (
           <div className="silent-list">
@@ -34,17 +37,21 @@ export default function LowTeachingRatioModal({ graduates, monthLabel, onClose }
                 <div className="silent-info">
                   <div className="silent-name">{g.full_name}</div>
                   <div className="silent-meta">
-                    {g.teaching_hours.toFixed(1)} teaching / {g.hours.toFixed(1)} logged · {g.teachingPct}% teaching
+                    {t('admin.lowRatioRowMeta', {
+                      teaching: formatNumber(g.teaching_hours.toFixed(1)),
+                      logged: formatNumber(g.hours.toFixed(1)),
+                      pct: g.teachingPct,
+                    })}
                   </div>
                 </div>
-                <span className="silent-arrow" aria-hidden="true">›</span>
+                <span className="silent-arrow icon-flip" aria-hidden="true">›</span>
               </Link>
             ))}
           </div>
         )}
 
         <div className="form-hint" style={{ marginTop: 16 }}>
-          Based on activity categories the graduate selected when submitting reports. Click a name to review their month in detail.
+          {t('admin.lowRatioModalHint')}
         </div>
       </div>
     </div>,

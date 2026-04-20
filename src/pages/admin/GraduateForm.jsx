@@ -1,24 +1,19 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { slugify } from '../../lib/slug.js'
 
-const MONTHS = [
-  'January','February','March','April','May','June',
-  'July','August','September','October','November','December'
-]
-
-const STATUSES = [
-  { value: 'active',  label: 'Active — currently teaching' },
-  { value: 'seeking', label: 'Seeking sponsor' },
-  { value: 'paused', label: 'Paused' },
-  { value: 'alumni', label: 'Alumni' },
+const MONTH_KEYS = [
+  'january','february','march','april','may','june',
+  'july','august','september','october','november','december',
 ]
 
 export default function GraduateForm({
   initial = {},
-  submitLabel = 'Save graduate',
+  submitLabel,
   onSubmit,
   onCancel,
 }) {
+  const { t } = useTranslation()
   const [fullName, setFullName] = useState(initial.full_name || '')
   const [slug, setSlug] = useState(initial.slug || '')
   const [slugTouched, setSlugTouched] = useState(!!initial.slug)
@@ -54,9 +49,9 @@ export default function GraduateForm({
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
-    if (!fullName.trim()) return setError('Full name is required')
-    if (!country.trim()) return setError('Country is required')
-    if (!slug.trim()) return setError('Slug is required')
+    if (!fullName.trim()) return setError(t('adminGradForm.errFullNameRequired'))
+    if (!country.trim()) return setError(t('adminGradForm.errCountryRequired'))
+    if (!slug.trim()) return setError(t('adminGradForm.errSlugRequired'))
 
     const focusAreas = focusText
       .split('\n')
@@ -83,10 +78,12 @@ export default function GraduateForm({
     try {
       await onSubmit(payload)
     } catch (err) {
-      setError(err?.message || 'Could not save')
+      setError(err?.message || t('adminGradForm.errCouldNotSave'))
       setSubmitting(false)
     }
   }
+
+  const label = submitLabel || t('adminGradForm.submitSave')
 
   return (
     <form onSubmit={handleSubmit}>
@@ -97,112 +94,115 @@ export default function GraduateForm({
       )}
 
       <div className="card" style={{ padding: 28, marginBottom: 24 }}>
-        <h2 className="section-title" style={{ marginBottom: 20 }}>Basics</h2>
+        <h2 className="section-title" style={{ marginBottom: 20 }}>{t('adminGradForm.sectionBasics')}</h2>
 
         <div className="form-row">
-          <label className="info-label" htmlFor="full_name">Full name</label>
+          <label className="info-label" htmlFor="full_name">{t('adminGradForm.fullName')}</label>
           <input id="full_name" className="text-input" value={fullName}
             onChange={e => setFullName(e.target.value)} required />
         </div>
 
         <div className="form-row">
-          <label className="info-label" htmlFor="slug">Slug (URL identifier)</label>
+          <label className="info-label" htmlFor="slug">{t('adminGradForm.slug')}</label>
           <input id="slug" className="text-input" value={slug}
-            onChange={e => { setSlug(e.target.value); setSlugTouched(true) }} required />
-          <div className="form-hint">Used in profile URL: /graduate/{slug || '…'}</div>
+            onChange={e => { setSlug(e.target.value); setSlugTouched(true) }} required dir="ltr" />
+          <div className="form-hint">{t('adminGradForm.slugHint', { slug: slug || '…' })}</div>
         </div>
 
         <div className="form-row-grid">
           <div className="form-row">
-            <label className="info-label" htmlFor="country">Country</label>
+            <label className="info-label" htmlFor="country">{t('adminGradForm.country')}</label>
             <input id="country" className="text-input" value={country}
-              onChange={e => setCountry(e.target.value)} placeholder="Tanzania" required />
+              onChange={e => setCountry(e.target.value)} placeholder={t('adminGradForm.countryPlaceholder')} required />
           </div>
           <div className="form-row">
-            <label className="info-label" htmlFor="teaching_location">Teaching location</label>
+            <label className="info-label" htmlFor="teaching_location">{t('adminGradForm.teachingLocation')}</label>
             <input id="teaching_location" className="text-input" value={teachingLocation}
-              onChange={e => setTeachingLocation(e.target.value)} placeholder="Dar es Salaam" />
+              onChange={e => setTeachingLocation(e.target.value)} placeholder={t('adminGradForm.teachingLocationPlaceholder')} />
           </div>
         </div>
 
         <div className="form-row">
-          <label className="info-label" htmlFor="status">Status</label>
+          <label className="info-label" htmlFor="status">{t('adminGradForm.status')}</label>
           <select id="status" className="text-input" value={status}
             onChange={e => setStatus(e.target.value)}>
-            {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            <option value="active">{t('graduateStatus.activeLong')}</option>
+            <option value="seeking">{t('graduateStatus.seeking')}</option>
+            <option value="paused">{t('graduateStatus.paused')}</option>
+            <option value="alumni">{t('graduateStatus.alumni')}</option>
           </select>
         </div>
       </div>
 
       <div className="card" style={{ padding: 28, marginBottom: 24 }}>
-        <h2 className="section-title" style={{ marginBottom: 20 }}>Credentials</h2>
+        <h2 className="section-title" style={{ marginBottom: 20 }}>{t('adminGradForm.sectionCredentials')}</h2>
 
         <div className="form-row">
-          <label className="info-label" htmlFor="university">University</label>
+          <label className="info-label" htmlFor="university">{t('adminGradForm.university')}</label>
           <input id="university" className="text-input" value={university}
             onChange={e => setUniversity(e.target.value)} />
         </div>
 
         <div className="form-row-grid">
           <div className="form-row">
-            <label className="info-label" htmlFor="grad_year">Graduation year</label>
+            <label className="info-label" htmlFor="grad_year">{t('adminGradForm.gradYear')}</label>
             <input id="grad_year" className="text-input" type="number" min="2000" max="2100"
-              value={gradYear} onChange={e => setGradYear(e.target.value)} placeholder="2025" />
+              value={gradYear} onChange={e => setGradYear(e.target.value)} placeholder={t('adminGradForm.gradYearPlaceholder')} dir="ltr" />
           </div>
           <div className="form-row">
-            <label className="info-label" htmlFor="grad_month">Graduation month</label>
+            <label className="info-label" htmlFor="grad_month">{t('adminGradForm.gradMonth')}</label>
             <select id="grad_month" className="text-input" value={gradMonth}
               onChange={e => setGradMonth(e.target.value)}>
-              <option value="">—</option>
-              {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+              <option value="">{t('common.dash')}</option>
+              {MONTH_KEYS.map((key, i) => <option key={key} value={i + 1}>{t(`time.months.${key}`)}</option>)}
             </select>
           </div>
         </div>
 
         <div className="form-row-grid">
           <div className="form-row">
-            <label className="info-label" htmlFor="duration">Duration (years)</label>
+            <label className="info-label" htmlFor="duration">{t('adminGradForm.durationYears')}</label>
             <input id="duration" className="text-input" type="number" step="0.1" min="0" max="20"
-              value={duration} onChange={e => setDuration(e.target.value)} placeholder="5.5" />
+              value={duration} onChange={e => setDuration(e.target.value)} placeholder={t('adminGradForm.durationPlaceholder')} dir="ltr" />
           </div>
           <div className="form-row">
-            <label className="info-label" htmlFor="gpa">GPA</label>
+            <label className="info-label" htmlFor="gpa">{t('adminGradForm.gpa')}</label>
             <input id="gpa" className="text-input" type="number" step="0.01" min="0" max="5"
-              value={gpa} onChange={e => setGpa(e.target.value)} placeholder="4.80" />
+              value={gpa} onChange={e => setGpa(e.target.value)} placeholder={t('adminGradForm.gpaPlaceholder')} dir="ltr" />
           </div>
         </div>
       </div>
 
       <div className="card" style={{ padding: 28, marginBottom: 24 }}>
-        <h2 className="section-title" style={{ marginBottom: 20 }}>Teaching & story</h2>
+        <h2 className="section-title" style={{ marginBottom: 20 }}>{t('adminGradForm.sectionTeachingStory')}</h2>
 
         <div className="form-row">
-          <label className="info-label" htmlFor="focus_areas">Teaching focus (one per line)</label>
+          <label className="info-label" htmlFor="focus_areas">{t('adminGradForm.focusAreas')}</label>
           <textarea id="focus_areas" className="text-input" rows={4}
             value={focusText} onChange={e => setFocusText(e.target.value)}
-            placeholder={'Tajweed lessons for children\nTawheed and Fiqh for adults\nFriday khutbahs'} />
+            placeholder={t('adminGradForm.focusPlaceholder')} />
         </div>
 
         <div className="form-row">
-          <label className="info-label" htmlFor="story">Story (in their own words)</label>
+          <label className="info-label" htmlFor="story">{t('adminGradForm.story')}</label>
           <textarea id="story" className="text-input" rows={6}
             value={story} onChange={e => setStory(e.target.value)}
-            placeholder="Optional — a short paragraph about their journey" />
+            placeholder={t('adminGradForm.storyPlaceholder')} />
         </div>
       </div>
 
       <div className="card" style={{ padding: 28, marginBottom: 24 }}>
-        <h2 className="section-title" style={{ marginBottom: 20 }}>Photo</h2>
+        <h2 className="section-title" style={{ marginBottom: 20 }}>{t('adminGradForm.sectionPhoto')}</h2>
 
         <div className="photo-upload-row">
           <div className="photo-preview">
             {photoPreview
-              ? <img src={photoPreview} alt="Preview" />
-              : <span className="photo-preview-empty">No photo</span>}
+              ? <img src={photoPreview} alt={t('common.photo')} />
+              : <span className="photo-preview-empty">{t('adminGradForm.photoPreviewEmpty')}</span>}
           </div>
           <div className="photo-upload-controls">
             <label htmlFor="photo" className="btn btn-secondary file-btn">
-              {photoFile ? 'Change photo' : 'Choose photo'}
+              {photoFile ? t('adminGradForm.changePhoto') : t('adminGradForm.choosePhoto')}
             </label>
             <input id="photo" type="file" accept="image/jpeg,image/png,image/webp"
               className="visually-hidden"
@@ -210,14 +210,14 @@ export default function GraduateForm({
             {photoFile && (
               <button type="button" className="btn-ghost file-clear"
                 onClick={() => { setPhotoFile(null); setPhotoPreview(initial.photo_url || null) }}>
-                Remove
+                {t('adminGradForm.removePhoto')}
               </button>
             )}
             <div className="file-name">
-              {photoFile ? photoFile.name : 'No file chosen'}
+              {photoFile ? photoFile.name : t('adminGradForm.noFileChosen')}
             </div>
             <div className="form-hint" style={{ marginTop: 6 }}>
-              JPG, PNG, or WebP · max 2 MB · optional, can be added later
+              {t('adminGradForm.photoHint')}
             </div>
           </div>
         </div>
@@ -225,10 +225,10 @@ export default function GraduateForm({
 
       <div className="action-row">
         <button type="submit" className="btn btn-primary" disabled={submitting}>
-          {submitting ? 'Saving…' : submitLabel}
+          {submitting ? t('common.saving') : label}
         </button>
         <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={submitting}>
-          Cancel
+          {t('adminGradForm.cancel')}
         </button>
       </div>
     </form>

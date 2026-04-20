@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import SponsorForm from './SponsorForm.jsx'
 import { createSponsor } from '../../lib/api.js'
 
 export default function AdminSponsorNew() {
+  const { t } = useTranslation()
   const nav = useNavigate()
 
   const handleSubmit = async (payload) => {
@@ -13,15 +15,15 @@ export default function AdminSponsorNew() {
   return (
     <div className="page">
       <div className="container" style={{ maxWidth: 640 }}>
-        <button onClick={() => nav('/admin/sponsors')} className="back-link">← Back to sponsors</button>
-        <p className="eyebrow">Admin</p>
-        <h1 className="page-title">Add sponsor</h1>
+        <button onClick={() => nav('/admin/sponsors')} className="back-link">{t('adminSponsorDetail.backToSponsors')}</button>
+        <p className="eyebrow">{t('adminGradForm.eyebrow')}</p>
+        <h1 className="page-title">{t('adminSponsorForm.addTitle')}</h1>
         <p className="page-subtitle" style={{ marginBottom: 32 }}>
-          Create the record. A login account can be created later from the sponsor's detail page.
+          {t('adminSponsorForm.addSubtitle')}
         </p>
 
         <SponsorForm
-          submitLabel="Add sponsor"
+          submitLabel={t('adminSponsorForm.submitAdd')}
           onSubmit={handleSubmit}
           onCancel={() => nav('/admin/sponsors')}
         />

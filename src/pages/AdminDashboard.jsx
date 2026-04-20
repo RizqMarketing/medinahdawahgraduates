@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { listAllGraduatesForAdmin, getAdminRollup, getAdminRollupRange } from '../lib/api.js'
 import MonthPicker from '../components/MonthPicker.jsx'
 import DayPicker from '../components/DayPicker.jsx'
 import LoadingPage from '../components/LoadingPage.jsx'
+import { formatNumber } from '../lib/format.js'
 import {
   monthIdNow, monthIdRange, formatMonthId, isCurrentMonth,
   dayIdNow, dayIdRange, formatDayId, isToday,
 } from '../lib/months.js'
 
-function displayName(g) {
-  return g.full_name || g.profile?.full_name || g.slug || '—'
+function displayName(g, dash) {
+  return g.full_name || g.profile?.full_name || g.slug || dash
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState('all')
   const [query, setQuery] = useState('')
   const [mode, setMode] = useState('month') // 'month' | 'day'
@@ -56,7 +59,6 @@ export default function AdminDashboard() {
 
   const activeCount = rows.filter(r => r.status === 'active').length
 
-  // In day mode, "reported" = has reports_count > 0 (i.e. submitted a report that day)
   const reportedInPeriod = mode === 'day'
     ? rows.filter(r => r.status === 'active' && r.reports_count > 0).length
     : rows.filter(r => r.status === 'active' && r.reportedToday).length
@@ -66,16 +68,15 @@ export default function AdminDashboard() {
   const pendingCount = pending.length
   const totalHours = rows.reduce((sum, r) => sum + r.hours, 0)
 
-  // "Reported" flag per row for this view
   const rowReported = (r) =>
     mode === 'day' ? r.reports_count > 0 : r.reportedToday
 
   const normalized = (s) => (s || '').toLowerCase().trim()
   const q = normalized(query)
+  const dash = t('common.dash')
   const filtered = rows.filter(r => {
     const reported = rowReported(r)
     if (mode === 'month' && !viewingCurrent) {
-      // historical month: "reported" means reported at least once in that month
       if (filter === 'reported' && !(r.active_days > 0)) return false
       if (filter === 'pending'  && (r.status !== 'active' || (r.active_days || 0) > 0)) return false
     } else {
@@ -84,21 +85,21 @@ export default function AdminDashboard() {
     }
     if (!q) return true
     return (
-      normalized(displayName(r)).includes(q) ||
+      normalized(displayName(r, dash)).includes(q) ||
       normalized(r.country).includes(q) ||
       normalized(r.status).includes(q)
     )
   })
 
   if (state.status === 'loading') {
-    return <LoadingPage message="Loading dashboard…" />
+    return <LoadingPage />
   }
 
   if (state.status === 'error') {
     return (
       <div className="page"><div className="container">
         <div className="alert-card">
-          <div className="alert-title">Could not load dashboard</div>
+          <div className="alert-title">{t('admin.couldNotLoadDashboard')}</div>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, marginTop: 12 }}>
             {state.error?.message || String(state.error)}
           </pre>
@@ -107,14 +108,16 @@ export default function AdminDashboard() {
     )
   }
 
-  // Labels that adapt to the current period mode
+  // Stats labels adapt to current period mode
   const reportedLabel = mode === 'day'
-    ? (isToday(day) ? 'Reported today' : 'Reported that day')
-    : (viewingCurrent ? 'Reported today' : 'Reported this month')
+    ? (isToday(day) ? t('admin.reportedToday') : t('admin.reportedThatDay'))
+    : (viewingCurrent ? t('admin.reportedToday') : t('admin.reportedThisMonth'))
   const pendingLabel = mode === 'day'
-    ? (isToday(day) ? 'Pending today' : 'Silent that day')
-    : (viewingCurrent ? 'Pending reports' : 'Silent this month')
-  const hoursLabel = mode === 'day' ? `Hours on ${periodLabel.split('·').pop().trim()}` : `Hours ${viewingCurrent ? 'this month' : 'in ' + periodLabel}`
+    ? (isToday(day) ? t('admin.pendingToday') : t('admin.silentThatDay'))
+    : (viewingCurrent ? t('admin.pendingReports') : t('admin.silentThisMonth'))
+  const hoursLabel = mode === 'day'
+    ? t('admin.hoursOnDate', { date: periodLabel.split('·').pop().trim() })
+    : (viewingCurrent ? t('admin.hoursThisMonth') : t('admin.hoursInPeriod', { period: periodLabel }))
 
   const reportedStat = mode === 'month' && viewingCurrent
     ? reportedInPeriod
@@ -127,35 +130,35 @@ export default function AdminDashboard() {
         ? rows.filter(r => r.status === 'active' && (r.active_days || 0) === 0).length
         : pendingCount)
 
+  const subtitle = viewingCurrent
+    ? t('admin.liveSubtitle')
+    : (mode === 'day'
+        ? t('admin.daySnapshotSubtitle', { period: periodLabel })
+        : t('admin.historicalSubtitle', { period: periodLabel }))
+
   return (
     <div className="page">
       <div className="container">
         <div style={{ marginBottom: 24 }}>
-          <p className="eyebrow">Control room · {periodLabel}</p>
-          <h1 className="page-title">Admin dashboard</h1>
-          <p className="page-subtitle">
-            {viewingCurrent
-              ? "The work continues, alhamdulillah. Here's where everything stands today."
-              : mode === 'day'
-                ? `Snapshot of ${periodLabel}.`
-                : `Historical view of ${periodLabel}.`}
-          </p>
+          <p className="eyebrow">{t('admin.controlRoom')} · <bdi>{periodLabel}</bdi></p>
+          <h1 className="page-title">{t('admin.dashboardTitle')}</h1>
+          <p className="page-subtitle">{subtitle}</p>
         </div>
 
         <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div className="filter-tabs" role="tablist" aria-label="Period mode">
+          <div className="filter-tabs" role="tablist" aria-label={t('nav.language') /* period mode */}>
             <button
               className={`filter-tab ${mode === 'month' ? 'active' : ''}`}
               onClick={() => setMode('month')}
               role="tab"
               aria-selected={mode === 'month'}
-            >Month</button>
+            >{t('time.monthMode')}</button>
             <button
               className={`filter-tab ${mode === 'day' ? 'active' : ''}`}
               onClick={() => setMode('day')}
               role="tab"
               aria-selected={mode === 'day'}
-            >Day</button>
+            >{t('time.dayMode')}</button>
           </div>
         </div>
 
@@ -167,30 +170,30 @@ export default function AdminDashboard() {
 
         <div className="stats-grid stats-grid-4">
           <div className="stat-card">
-            <div className="stat-number">{activeCount}</div>
-            <div className="stat-label">Active graduates</div>
+            <div className="stat-number"><bdi>{formatNumber(activeCount)}</bdi></div>
+            <div className="stat-label">{t('admin.activeGraduates')}</div>
           </div>
           <div className="stat-card accent-green">
-            <div className="stat-number">{reportedStat}</div>
+            <div className="stat-number"><bdi>{formatNumber(reportedStat)}</bdi></div>
             <div className="stat-label">{reportedLabel}</div>
           </div>
           <div className="stat-card accent-gold">
-            <div className="stat-number">{pendingStat}</div>
+            <div className="stat-number"><bdi>{formatNumber(pendingStat)}</bdi></div>
             <div className="stat-label">{pendingLabel}</div>
           </div>
           <div className="stat-card">
-            <div className="stat-number">{totalHours.toLocaleString()}</div>
+            <div className="stat-number"><bdi>{formatNumber(totalHours)}</bdi></div>
             <div className="stat-label">{hoursLabel}</div>
           </div>
         </div>
 
         <section className="section">
           <div className="admin-toolbar">
-            <h2 className="section-title">All graduates</h2>
+            <h2 className="section-title">{t('admin.allGraduatesHeader')}</h2>
             <div className="filter-tabs">
-              <button className={`filter-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
-              <button className={`filter-tab ${filter === 'reported' ? 'active' : ''}`} onClick={() => setFilter('reported')}>Reported</button>
-              <button className={`filter-tab ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>Pending</button>
+              <button className={`filter-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>{t('admin.filterAll')}</button>
+              <button className={`filter-tab ${filter === 'reported' ? 'active' : ''}`} onClick={() => setFilter('reported')}>{t('admin.filterReported')}</button>
+              <button className={`filter-tab ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>{t('admin.filterPending')}</button>
             </div>
           </div>
 
@@ -203,7 +206,7 @@ export default function AdminDashboard() {
                 <input
                   type="search"
                   className="sponsors-search-input"
-                  placeholder="Search graduates…"
+                  placeholder={t('admin.searchGraduatesPlaceholder')}
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                 />
@@ -212,37 +215,37 @@ export default function AdminDashboard() {
                     type="button"
                     className="sponsors-search-clear"
                     onClick={() => setQuery('')}
-                    aria-label="Clear search"
+                    aria-label={t('common.clear')}
                   >×</button>
                 )}
               </div>
               <div className="sponsors-search-hint" style={{ marginBottom: 16 }}>
-                Searches name, country, and status
+                {t('admin.searchHint')}
               </div>
             </>
           )}
 
           {filtered.length === 0 ? (
             <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
-              No graduates match this filter yet.
+              {t('admin.noGraduatesMatch')}
             </div>
           ) : (
             <div className="data-table data-table-graduates">
               <div className="table-header">
                 <span></span>
-                <span>Name</span>
-                <span>Location</span>
-                <span>Hours</span>
-                <span style={{ textAlign: 'right' }}>{mode === 'day' ? 'Day' : 'Today'}</span>
+                <span>{t('admin.tableName')}</span>
+                <span>{t('admin.tableLocation')}</span>
+                <span>{t('admin.tableHours')}</span>
+                <span style={{ textAlign: 'end' }}>{mode === 'day' ? t('admin.tableDay') : t('admin.tableToday')}</span>
               </div>
               {filtered.map(g => {
                 const reported = rowReported(g)
                 return (
                   <Link to={`/admin/graduates/${g.slug}`} className="table-row table-row-link" key={g.id}>
                     <span className={`dot ${reported ? 'dot-active' : 'dot-pending'}`} />
-                    <span className="cell-name">{displayName(g)}</span>
+                    <span className="cell-name">{displayName(g, dash)}</span>
                     <span style={{ color: 'var(--text-secondary)' }}>{g.country}</span>
-                    <span className="cell-hours">{g.hours}/{g.target_hours_monthly}</span>
+                    <span className="cell-hours"><bdi>{formatNumber(g.hours)}/{formatNumber(g.target_hours_monthly)}</bdi></span>
                     <span className="cell-status" style={{ color: reported ? 'var(--success)' : 'var(--warning)' }}>
                       {reported ? '✓' : '⏳'}
                     </span>
@@ -256,10 +259,14 @@ export default function AdminDashboard() {
         {viewingCurrent && pendingCount > 0 && (
           <section className="section">
             <div className="alert-card">
-              <div className="alert-title">Pending reports — {pendingCount} graduate{pendingCount === 1 ? '' : 's'}</div>
+              <div className="alert-title">{t('admin.pendingAlert', { count: pendingCount })}</div>
               <ul className="alert-list">
                 {pending.map(p => (
-                  <li key={p.id}>{displayName(p)} — no report submitted {mode === 'day' ? 'that day' : 'today'}</li>
+                  <li key={p.id}>
+                    {mode === 'day'
+                      ? t('admin.noReportThatDay', { name: displayName(p, dash) })
+                      : t('admin.noReportToday', { name: displayName(p, dash) })}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -268,13 +275,13 @@ export default function AdminDashboard() {
 
         <section className="section">
           <div className="admin-toolbar">
-            <h2 className="section-title">Quick actions</h2>
+            <h2 className="section-title">{t('admin.quickActions')}</h2>
           </div>
           <div className="action-row">
-            <Link to="/admin/graduates/new" className="btn btn-primary">Add graduate</Link>
-            <Link to="/admin/sponsors" className="btn btn-secondary">View sponsors</Link>
-            <Link to="/admin/sponsors/new" className="btn btn-secondary">Add sponsor</Link>
-            <Link to={`/admin/months/${month}`} className="btn btn-secondary">Monthly totals</Link>
+            <Link to="/admin/graduates/new" className="btn btn-primary">{t('admin.addGraduate')}</Link>
+            <Link to="/admin/sponsors" className="btn btn-secondary">{t('admin.viewSponsors')}</Link>
+            <Link to="/admin/sponsors/new" className="btn btn-secondary">{t('admin.addSponsor')}</Link>
+            <Link to={`/admin/months/${month}`} className="btn btn-secondary">{t('admin.monthlyTotals')}</Link>
           </div>
         </section>
       </div>

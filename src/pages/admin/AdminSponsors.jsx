@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { listAllSponsors } from '../../lib/api.js'
+import { formatNumber } from '../../lib/format.js'
 
 export default function AdminSponsors() {
+  const { t } = useTranslation()
   const [state, setState] = useState({ status: 'loading', data: [], error: null })
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
@@ -39,13 +42,13 @@ export default function AdminSponsors() {
   }, [sponsors, query, filter])
 
   if (state.status === 'loading') {
-    return <div className="page"><div className="container"><p className="page-subtitle">Loading sponsors…</p></div></div>
+    return <div className="page"><div className="container"><p className="page-subtitle">{t('sponsorsPage.loadingSponsors')}</p></div></div>
   }
   if (state.status === 'error') {
     return (
       <div className="page"><div className="container">
         <div className="alert-card">
-          <div className="alert-title">Could not load sponsors</div>
+          <div className="alert-title">{t('sponsorsPage.couldNotLoad')}</div>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 13, marginTop: 12 }}>
             {state.error?.message || String(state.error)}
           </pre>
@@ -56,19 +59,26 @@ export default function AdminSponsors() {
 
   const activeCount = sponsors.filter(s => (s.sponsorships || []).some(sp => sp.status === 'active')).length
   const unassignedCount = sponsors.length - activeCount
+  const dash = t('common.dash')
+
+  const filterSuffix = filter !== 'all' ? t('sponsorsPage.inFilter', { filter: t(`sponsorsPage.filter${filter.charAt(0).toUpperCase() + filter.slice(1)}`) }) : ''
 
   return (
     <div className="page">
       <div className="container">
-        <p className="eyebrow">Sponsors</p>
-        <h1 className="page-title">All sponsors</h1>
+        <p className="eyebrow">{t('sponsorsPage.eyebrow')}</p>
+        <h1 className="page-title">{t('sponsorsPage.title')}</h1>
         <p className="page-subtitle">
-          {sponsors.length} total · {activeCount} currently sponsoring · {unassignedCount} unassigned
+          {t('sponsorsPage.subtitleCount', {
+            total: formatNumber(sponsors.length),
+            active: formatNumber(activeCount),
+            unassigned: formatNumber(unassignedCount),
+          })}
         </p>
 
         <div className="action-row" style={{ marginTop: 24 }}>
-          <Link to="/admin/sponsors/new" className="btn btn-primary">Add sponsor</Link>
-          <Link to="/admin" className="btn btn-secondary">← Dashboard</Link>
+          <Link to="/admin/sponsors/new" className="btn btn-primary">{t('sponsorsPage.addSponsor')}</Link>
+          <Link to="/admin" className="btn btn-secondary">{t('sponsorsPage.backDashboard')}</Link>
         </div>
 
         {sponsors.length > 0 && (
@@ -81,7 +91,7 @@ export default function AdminSponsors() {
                 <input
                   type="search"
                   className="sponsors-search-input"
-                  placeholder="Search sponsors…"
+                  placeholder={t('sponsorsPage.searchPlaceholder')}
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                 />
@@ -90,18 +100,18 @@ export default function AdminSponsors() {
                     type="button"
                     className="sponsors-search-clear"
                     onClick={() => setQuery('')}
-                    aria-label="Clear search"
+                    aria-label={t('sponsorsPage.clearSearch')}
                   >×</button>
                 )}
               </div>
               <div className="filter-tabs">
-                <button className={`filter-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
-                <button className={`filter-tab ${filter === 'active' ? 'active' : ''}`} onClick={() => setFilter('active')}>Sponsoring</button>
-                <button className={`filter-tab ${filter === 'unassigned' ? 'active' : ''}`} onClick={() => setFilter('unassigned')}>Unassigned</button>
+                <button className={`filter-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>{t('sponsorsPage.filterAll')}</button>
+                <button className={`filter-tab ${filter === 'active' ? 'active' : ''}`} onClick={() => setFilter('active')}>{t('sponsorsPage.filterActive')}</button>
+                <button className={`filter-tab ${filter === 'unassigned' ? 'active' : ''}`} onClick={() => setFilter('unassigned')}>{t('sponsorsPage.filterUnassigned')}</button>
               </div>
             </div>
             <div className="sponsors-search-hint">
-              Searches name, country, phone, and the graduate they sponsor
+              {t('sponsorsPage.searchHint')}
             </div>
           </>
         )}
@@ -109,24 +119,24 @@ export default function AdminSponsors() {
         <section className="section">
           {sponsors.length === 0 ? (
             <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
-              No sponsors yet. Add your first sponsor to start.
+              {t('sponsorsPage.emptyNoSponsors')}
             </div>
           ) : filtered.length === 0 ? (
             <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
-              No sponsors match "{query}" {filter !== 'all' ? `in ${filter}` : ''}.
+              {t('sponsorsPage.emptyNoMatch', { query, filterSuffix })}
             </div>
           ) : (
             <>
               <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
-                Showing {filtered.length} of {sponsors.length}
+                {t('sponsorsPage.showingOf', { shown: formatNumber(filtered.length), total: formatNumber(sponsors.length) })}
               </div>
               <div className="data-table">
                 <div className="table-header">
                   <span></span>
-                  <span>Name</span>
-                  <span>Country</span>
-                  <span>Sponsoring</span>
-                  <span style={{ textAlign: 'right' }}></span>
+                  <span>{t('sponsorsPage.tableName')}</span>
+                  <span>{t('sponsorsPage.tableCountry')}</span>
+                  <span>{t('sponsorsPage.tableSponsoring')}</span>
+                  <span style={{ textAlign: 'end' }}></span>
                 </div>
                 {filtered.map(s => {
                   const active = (s.sponsorships || []).filter(sp => sp.status === 'active')
@@ -135,11 +145,11 @@ export default function AdminSponsors() {
                     <Link key={s.id} to={`/admin/sponsors/${s.id}`} className="table-row table-row-link">
                       <span className={`dot ${active.length ? 'dot-active' : 'dot-pending'}`} />
                       <span className="cell-name">{s.full_name}</span>
-                      <span style={{ color: 'var(--text-secondary)' }}>{s.country || '—'}</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>{s.country || dash}</span>
                       <span style={{ color: 'var(--text-secondary)' }}>
-                        {sponsoredName || <em style={{ color: 'var(--text-muted)', fontStyle: 'normal' }}>—</em>}
+                        {sponsoredName || <em style={{ color: 'var(--text-muted)', fontStyle: 'normal' }}>{dash}</em>}
                       </span>
-                      <span style={{ textAlign: 'right', color: 'var(--text-muted)', fontSize: 13 }}>›</span>
+                      <span className="icon-flip" style={{ textAlign: 'end', color: 'var(--text-muted)', fontSize: 13 }}>›</span>
                     </Link>
                   )
                 })}

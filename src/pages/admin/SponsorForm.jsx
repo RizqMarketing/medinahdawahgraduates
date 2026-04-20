@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function SponsorForm({
   initial = {},
-  submitLabel = 'Save sponsor',
+  submitLabel,
   onSubmit,
   onCancel,
 }) {
+  const { t } = useTranslation()
   const [fullName, setFullName] = useState(initial.full_name || '')
   const [country, setCountry] = useState(initial.country || '')
   const [phone, setPhone] = useState(initial.phone || '')
@@ -15,7 +17,7 @@ export default function SponsorForm({
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
-    if (!fullName.trim()) return setError('Full name is required')
+    if (!fullName.trim()) return setError(t('adminSponsorForm.errFullNameRequired'))
 
     setSubmitting(true)
     try {
@@ -25,10 +27,12 @@ export default function SponsorForm({
         phone: phone.trim() || null,
       })
     } catch (err) {
-      setError(err?.message || 'Could not save')
+      setError(err?.message || t('adminSponsorForm.errCouldNotSave'))
       setSubmitting(false)
     }
   }
+
+  const label = submitLabel || t('adminSponsorForm.submitSave')
 
   return (
     <form onSubmit={handleSubmit}>
@@ -40,31 +44,31 @@ export default function SponsorForm({
 
       <div className="card" style={{ padding: 28, marginBottom: 24 }}>
         <div className="form-row">
-          <label className="info-label" htmlFor="full_name">Full name</label>
+          <label className="info-label" htmlFor="full_name">{t('adminSponsorForm.fullName')}</label>
           <input id="full_name" className="text-input" value={fullName}
             onChange={e => setFullName(e.target.value)} required />
         </div>
 
         <div className="form-row-grid">
           <div className="form-row">
-            <label className="info-label" htmlFor="country">Country</label>
+            <label className="info-label" htmlFor="country">{t('adminSponsorForm.countryLabel')}</label>
             <input id="country" className="text-input" value={country}
-              onChange={e => setCountry(e.target.value)} placeholder="Netherlands" />
+              onChange={e => setCountry(e.target.value)} placeholder={t('adminSponsorForm.countryPlaceholder')} />
           </div>
           <div className="form-row">
-            <label className="info-label" htmlFor="phone">Phone (for WhatsApp)</label>
+            <label className="info-label" htmlFor="phone">{t('adminSponsorForm.phone')}</label>
             <input id="phone" type="tel" className="text-input" value={phone}
-              onChange={e => setPhone(e.target.value)} placeholder="+31..." />
+              onChange={e => setPhone(e.target.value)} placeholder={t('adminSponsorForm.phonePlaceholder')} dir="ltr" />
           </div>
         </div>
       </div>
 
       <div className="action-row">
         <button type="submit" className="btn btn-primary" disabled={submitting}>
-          {submitting ? 'Saving…' : submitLabel}
+          {submitting ? t('common.saving') : label}
         </button>
         <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={submitting}>
-          Cancel
+          {t('adminSponsorForm.cancel')}
         </button>
       </div>
     </form>
