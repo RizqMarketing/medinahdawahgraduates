@@ -2123,6 +2123,23 @@ input[type="time"].text-input {
   .impact-card { padding: 32px 22px 24px; }
   .impact-title { font-size: 19px; }
   .impact-number { font-size: 38px; }
+
+  /* Mobile: stats stack vertically. A subtle divider between each
+     restores the rhythm that the desktop row layout has naturally. */
+  .impact-grid {
+    flex-direction: column;
+    gap: 0;
+  }
+  .impact-stat {
+    max-width: none;
+    width: 100%;
+    padding: 20px 12px;
+    border-top: 1px solid var(--card-border);
+  }
+  .impact-stat:first-of-type {
+    border-top: none;
+    padding-top: 12px;
+  }
 }
 
 /* ============================================================
