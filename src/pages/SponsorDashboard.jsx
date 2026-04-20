@@ -102,7 +102,7 @@ export default function SponsorDashboard() {
       <div className="page">
         <div className="container">
           <p className="eyebrow">{t('sponsorDashboard.eyebrowMonth', { month: monthLabel })}</p>
-          <h1 className="page-title">{t('sponsorDashboard.assalam')}<em>{firstName}</em></h1>
+          <h1 className="page-title" translate="no">{t('sponsorDashboard.assalam')}<em>{firstName}</em></h1>
           <p className="page-subtitle" style={{ marginBottom: 32 }}>
             {t('sponsorDashboard.noActiveSponsorship')}
           </p>
@@ -121,7 +121,7 @@ export default function SponsorDashboard() {
         <div className="greeting">
           <div>
             <p className="eyebrow">{t('sponsorDashboard.eyebrowMonth', { month: monthLabel })}</p>
-            <h1 className="page-title">{t('sponsorDashboard.assalam')}<em>{firstName}</em></h1>
+            <h1 className="page-title" translate="no">{t('sponsorDashboard.assalam')}<em>{firstName}</em></h1>
           </div>
         </div>
 
@@ -321,8 +321,8 @@ export default function SponsorDashboard() {
               )}
             </div>
             <div className="impact-footer">
-              <span className="arabic">وَمَا عِندَ اللَّهِ خَيْرٌ وَأَبْقَىٰ</span>
-              <span className="impact-footer-translation">{t('sponsorDashboard.impactAyahTranslation')}</span>
+              <span className="arabic" translate="no">وَمَا عِندَ اللَّهِ خَيْرٌ وَأَبْقَىٰ</span>
+              <span className="impact-footer-translation" translate="no">{t('sponsorDashboard.impactAyahTranslation')}</span>
             </div>
           </div>
         </section>

@@ -107,8 +107,8 @@ export default function App() {
       </main>
       <footer className="footer">
         <div className="container">
-          <span className="arabic">وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ</span>
-          <div>{t('common.builtForUmmah')} · <bdi>{new Date().getFullYear()}</bdi></div>
+          <span className="arabic" translate="no">وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ</span>
+          <div translate="no">{t('common.builtForUmmah')} · <bdi>{new Date().getFullYear()}</bdi></div>
         </div>
       </footer>
     </div>

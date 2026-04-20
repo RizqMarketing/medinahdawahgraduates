@@ -82,12 +82,12 @@ export default function GraduateHome() {
     <div className="page">
       <div className="container">
         <p className="eyebrow">{monthLabel}</p>
-        <h1 className="page-title">
+        <h1 className="page-title" translate="no">
           {t('graduateHome.assalamGreeting')}<em>{firstName}</em>
         </h1>
         <p className="page-subtitle">
           {/* Daily du'a stays in Arabic in both language modes. */}
-          <span className="arabic">{getDailyGreeting()}</span>
+          <span className="arabic" translate="no">{getDailyGreeting()}</span>
         </p>
 
         {showMonthEndBanner && (

@@ -10,7 +10,7 @@ export default function BrowseGraduates() {
     <div className="page">
       <div className="container">
         <div className="browse-hero">
-          <span className="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span>
+          <span className="bismillah" translate="no">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</span>
           <div className="ornament" aria-hidden="true">
             <svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z" fill="currentColor"/></svg>
           </div>

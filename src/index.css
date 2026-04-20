@@ -3097,6 +3097,13 @@ input[type="time"].text-input {
   transform: scaleX(-1);
 }
 
+/* Tell browser translation extensions to leave Arabic/quranic content alone. */
+.arabic, .bismillah {
+  /* translate="no" is the HTML attribute form — this CSS hint also
+     prevents translation in browsers that support it. */
+  -webkit-translate: no;
+}
+
 /* Keep the Quranic footer ayah visually centered regardless of dir */
 .footer .arabic { direction: rtl; }
 
