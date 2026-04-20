@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import Header from './components/Header.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
 import { useAuth } from './contexts/AuthContext.jsx'
@@ -41,7 +40,6 @@ import ReportEdit from './pages/graduate/ReportEdit.jsx'
 import ReportDetail from './pages/ReportDetail.jsx'
 
 export default function App() {
-  const { t } = useTranslation()
   return (
     <div className="app-shell">
       <SplashScreen />
@@ -108,7 +106,6 @@ export default function App() {
       <footer className="footer">
         <div className="container">
           <span className="arabic" translate="no">وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ</span>
-          <div translate="no">{t('common.builtForUmmah')} · <bdi>{new Date().getFullYear()}</bdi></div>
         </div>
       </footer>
     </div>
