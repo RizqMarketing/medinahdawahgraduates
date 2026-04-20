@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../ThemeContext.jsx'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import UserMenu from './UserMenu.jsx'
@@ -26,9 +27,34 @@ function MenuIcon() {
   )
 }
 
+function LangToggle() {
+  const { i18n, t } = useTranslation()
+  const current = i18n.language?.startsWith('ar') ? 'ar' : 'en'
+  const pick = (lng) => {
+    if (lng !== current) i18n.changeLanguage(lng)
+  }
+  return (
+    <div className="lang-toggle" role="group" aria-label={t('nav.switchLanguage')}>
+      <button
+        type="button"
+        className={`lang-toggle-option ${current === 'en' ? 'active' : ''}`}
+        onClick={() => pick('en')}
+        aria-pressed={current === 'en'}
+      >EN</button>
+      <button
+        type="button"
+        className={`lang-toggle-option ${current === 'ar' ? 'active' : ''}`}
+        onClick={() => pick('ar')}
+        aria-pressed={current === 'ar'}
+      >عربي</button>
+    </div>
+  )
+}
+
 export default function Header() {
   const { theme, toggle } = useTheme()
   const { role, session } = useAuth()
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const location = useLocation()
 
@@ -42,36 +68,42 @@ export default function Header() {
     <header className="header">
       <div className="header-inner">
         <NavLink to={homeFor} className="brand" onClick={() => setOpen(false)}>
-          <img src="/logo.jpg" alt="Madinah Dawah Graduates" className="brand-logo" />
-          <div className="brand-name">Madinah Dawah Graduates</div>
+          <img src="/logo.jpg" alt={t('common.appName')} className="brand-logo" />
+          <div className="brand-name">{t('common.appName')}</div>
         </NavLink>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
           {session && (
             <nav className={`nav nav-links ${open ? 'open' : ''}`}>
               {role === 'sponsor' && (
-                <NavLink to="/sponsor" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Dashboard</NavLink>
+                <NavLink to="/sponsor" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>{t('nav.dashboard')}</NavLink>
               )}
               {role === 'admin' && (
                 <>
-                  <NavLink to="/admin" end className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Dashboard</NavLink>
-                  <NavLink to="/admin/sponsors" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Sponsors</NavLink>
+                  <NavLink to="/admin" end className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>{t('nav.dashboard')}</NavLink>
+                  <NavLink to="/admin/sponsors" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>{t('nav.sponsors')}</NavLink>
                 </>
               )}
               {role === 'graduate' && (
                 <>
-                  <NavLink to="/graduate-home" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Home</NavLink>
-                  <NavLink to="/reports/new" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>Submit report</NavLink>
+                  <NavLink to="/graduate-home" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>{t('nav.home')}</NavLink>
+                  <NavLink to="/reports/new" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setOpen(false)}>{t('nav.submitReport')}</NavLink>
                 </>
               )}
             </nav>
           )}
-          <button className="theme-toggle" onClick={toggle} aria-label="Toggle theme" title={theme === 'light' ? 'Switch to dark' : 'Switch to light'}>
+          <LangToggle />
+          <button
+            className="theme-toggle"
+            onClick={toggle}
+            aria-label={t('nav.toggleTheme')}
+            title={theme === 'light' ? t('nav.switchToDark') : t('nav.switchToLight')}
+          >
             {theme === 'light' ? <MoonIcon /> : <SunIcon />}
           </button>
           <UserMenu />
           {session && (
-            <button className="menu-toggle" onClick={() => setOpen(o => !o)} aria-label="Menu">
+            <button className="menu-toggle" onClick={() => setOpen(o => !o)} aria-label={t('nav.menu')}>
               <MenuIcon />
             </button>
           )}

@@ -1,7 +1,24 @@
-export const MONTH_NAMES = [
-  'January','February','March','April','May','June',
-  'July','August','September','October','November','December'
+import i18n from '../i18n.js'
+
+// Canonical month keys — used to look up localized names via i18n.
+const MONTH_KEYS = [
+  'january','february','march','april','may','june',
+  'july','august','september','october','november','december',
 ]
+const WEEKDAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat']
+
+// Returns the localized month name for the given 1-based month number.
+function monthName(monthOneBased) {
+  return i18n.t(`time.months.${MONTH_KEYS[monthOneBased - 1]}`)
+}
+function weekdayShort(dayOfWeek) {
+  return i18n.t(`time.weekdaysShort.${WEEKDAY_KEYS[dayOfWeek]}`)
+}
+
+// Kept as a backwards-compat export for any caller still importing MONTH_NAMES.
+// Note: this snapshot does NOT react to language changes. Prefer calling
+// `monthName()` / `formatMonthId()` which always read the current locale.
+export const MONTH_NAMES = MONTH_KEYS.map((_, i) => monthName(i + 1))
 
 export function monthIdNow() {
   const d = new Date()
@@ -28,7 +45,7 @@ export function monthIdNext(id) {
 
 export function formatMonthId(id) {
   const { year, month } = parseMonthId(id)
-  return `${MONTH_NAMES[month - 1]} ${year}`
+  return `${monthName(month)} ${year}`
 }
 
 export function monthIdRange(id) {
@@ -100,8 +117,7 @@ export function formatDayId(id) {
   const date = new Date(Date.UTC(y, m - 1, d))
   const today = dayIdNow()
   const yesterday = shiftDayId(today, -1)
-  if (id === today) return `Today · ${MONTH_NAMES[m - 1]} ${d}`
-  if (id === yesterday) return `Yesterday · ${MONTH_NAMES[m - 1]} ${d}`
-  const weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getUTCDay()]
-  return `${weekday}, ${MONTH_NAMES[m - 1]} ${d}, ${y}`
+  if (id === today) return `${i18n.t('time.today')} · ${monthName(m)} ${d}`
+  if (id === yesterday) return `${i18n.t('time.yesterday')} · ${monthName(m)} ${d}`
+  return `${weekdayShort(date.getUTCDay())}, ${monthName(m)} ${d}, ${y}`
 }

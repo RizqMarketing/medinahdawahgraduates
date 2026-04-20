@@ -33,6 +33,7 @@
   --font-display: 'Outfit', system-ui, sans-serif;
   --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-arabic: 'Amiri', serif;
+  --font-ar-ui: 'Tajawal', 'Outfit', system-ui, sans-serif;
 
   --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.07 0 0 0 0 0.06 0 0 0 0.06 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
 }
@@ -3072,4 +3073,83 @@ input[type="time"].text-input {
   font-size: 12px;
   color: var(--text-muted);
   letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   RTL / Arabic support
+   ============================================================ */
+
+/* Arabic UI uses Tajawal for clean body + heading readability.
+   Amiri stays reserved for quranic content via .arabic class. */
+[dir="rtl"] {
+  --font-display: var(--font-ar-ui);
+  --font-body: var(--font-ar-ui);
+}
+[dir="rtl"] body { font-family: var(--font-ar-ui); }
+
+/* Default: mirror directional icons (chevrons, back arrows).
+   Opt-in via the .icon-flip class so non-directional icons
+   (theme toggle, menu burger) stay untouched. */
+[dir="rtl"] .icon-flip {
+  transform: scaleX(-1);
+}
+
+/* Keep the Quranic footer ayah visually centered regardless of dir */
+.footer .arabic { direction: rtl; }
+
+/* Mixed-direction numbers — wrap values in <bdi> in JSX.
+   This utility is a fallback for raw numeric spans. */
+.num-ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
+
+/* Language toggle pill */
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: transparent;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  height: 34px;
+}
+.lang-toggle-option {
+  background: transparent;
+  border: 0;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+  letter-spacing: 0.02em;
+}
+.lang-toggle-option.active {
+  background: var(--accent-green-soft);
+  color: var(--accent-green);
+}
+.lang-toggle-option:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+/* RTL fixes that logical properties can't express */
+
+/* Sponsors search icon is absolutely-positioned on the left (LTR).
+   In RTL it needs to move to the right. */
+[dir="rtl"] .sponsors-search-icon {
+  left: auto;
+  right: 12px;
+}
+[dir="rtl"] .sponsors-search-clear {
+  right: auto;
+  left: 10px;
+}
+[dir="rtl"] .sponsors-search-input {
+  padding-left: 32px;
+  padding-right: 36px;
 }

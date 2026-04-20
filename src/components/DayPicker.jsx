@@ -1,10 +1,12 @@
 import { useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   dayIdPrev, dayIdNext, formatDayId,
   isToday, isFutureDay, dayIdNow,
 } from '../lib/months.js'
 
 export default function DayPicker({ value, onChange, allowFuture = false }) {
+  const { t } = useTranslation()
   const inputRef = useRef(null)
 
   const onPrev = () => onChange(dayIdPrev(value))
@@ -25,8 +27,8 @@ export default function DayPicker({ value, onChange, allowFuture = false }) {
 
   return (
     <div className="day-picker">
-      <button type="button" className="month-nav" onClick={onPrev} aria-label="Previous day">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <button type="button" className="month-nav" onClick={onPrev} aria-label={t('time.prevDay')}>
+        <svg className="icon-flip" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
       </button>
@@ -46,20 +48,20 @@ export default function DayPicker({ value, onChange, allowFuture = false }) {
           value={value}
           onChange={e => e.target.value && onChange(e.target.value)}
           max={allowFuture ? undefined : dayIdNow()}
-          aria-label="Pick a date"
+          aria-label={t('time.pickDate')}
         />
       </div>
 
       <button type="button" className="month-nav" onClick={onNext}
-        disabled={nextDisabled} aria-label="Next day">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        disabled={nextDisabled} aria-label={t('time.nextDay')}>
+        <svg className="icon-flip" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="9 18 15 12 9 6"/>
         </svg>
       </button>
 
       {!onCurrent && (
         <button type="button" className="month-today" onClick={onToday}>
-          Today
+          {t('time.today')}
         </button>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
 const roleHome = {
@@ -17,12 +18,13 @@ function rolePrefixFor(path) {
 }
 
 const QUICK_LOGINS = [
-  { label: 'Log in as graduate', email: 'graduate@mdg.test', password: 'Graduate123!' },
-  { label: 'Log in as admin',    email: 'admin@mdg.test',    password: 'Admin123!' },
-  { label: 'Log in as sponsor',  email: 'sponsor@mdg.test',  password: 'Sponsor123!' },
+  { key: 'quickLoginGraduate', email: 'graduate@mdg.test', password: 'Graduate123!' },
+  { key: 'quickLoginAdmin',    email: 'admin@mdg.test',    password: 'Admin123!' },
+  { key: 'quickLoginSponsor',  email: 'sponsor@mdg.test',  password: 'Sponsor123!' },
 ]
 
 export default function Login() {
+  const { t } = useTranslation()
   const { signIn, session, role, loading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -49,13 +51,13 @@ export default function Login() {
     try {
       await signIn(email.trim(), password)
     } catch (err) {
-      setError(err.message || 'Could not sign in')
+      setError(err.message || t('auth.couldNotSignIn'))
       setSubmitting(false)
     }
   }
 
   const handleQuickLogin = async (e) => {
-    const choice = QUICK_LOGINS.find(q => q.label === e.target.value)
+    const choice = QUICK_LOGINS.find(q => q.key === e.target.value)
     setQuickRole(e.target.value)
     if (!choice) return
     setError(null)
@@ -63,7 +65,7 @@ export default function Login() {
     try {
       await signIn(choice.email, choice.password)
     } catch (err) {
-      setError(err.message || 'Could not sign in')
+      setError(err.message || t('auth.couldNotSignIn'))
       setSubmitting(false)
       setQuickRole('')
     }
@@ -72,14 +74,14 @@ export default function Login() {
   return (
     <div className="page">
       <div className="container" style={{ maxWidth: 440 }}>
-        <p className="eyebrow">Sign in</p>
-        <h1 className="page-title">Welcome back</h1>
+        <p className="eyebrow">{t('auth.eyebrow')}</p>
+        <h1 className="page-title">{t('auth.title')}</h1>
         <p className="page-subtitle">
-          Assalamu alaykum. Enter your credentials to continue.
+          {t('auth.subtitle')}
         </p>
 
         <div className="card" style={{ marginTop: 32, padding: 20, background: 'var(--surface-2, rgba(255,255,255,0.03))' }}>
-          <label className="info-label" htmlFor="quick-login">Preview — quick sign-in</label>
+          <label className="info-label" htmlFor="quick-login">{t('auth.previewQuickLogin')}</label>
           <select
             id="quick-login"
             className="text-input"
@@ -88,18 +90,18 @@ export default function Login() {
             disabled={submitting}
             style={{ marginTop: 6 }}
           >
-            <option value="">Choose a role to preview…</option>
+            <option value="">{t('auth.chooseRolePreview')}</option>
             {QUICK_LOGINS.map(q => (
-              <option key={q.label} value={q.label}>{q.label}</option>
+              <option key={q.key} value={q.key}>{t(`auth.${q.key}`)}</option>
             ))}
           </select>
           <p style={{ fontSize: 12, opacity: 0.7, marginTop: 10, marginBottom: 0 }}>
-            Or use your own credentials below.
+            {t('auth.orUseCredentials')}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="card" style={{ marginTop: 16, padding: 28 }}>
-          <label className="info-label" htmlFor="email">Email</label>
+          <label className="info-label" htmlFor="email">{t('auth.emailLabel')}</label>
           <input
             id="email"
             type="email"
@@ -111,7 +113,7 @@ export default function Login() {
             style={{ marginTop: 6, marginBottom: 20 }}
           />
 
-          <label className="info-label" htmlFor="password">Password</label>
+          <label className="info-label" htmlFor="password">{t('auth.passwordLabel')}</label>
           <input
             id="password"
             type="password"
@@ -125,7 +127,7 @@ export default function Login() {
 
           {error && (
             <div className="alert-card" style={{ marginBottom: 20 }}>
-              <div className="alert-title">Sign-in failed</div>
+              <div className="alert-title">{t('auth.signInFailed')}</div>
               <div style={{ fontSize: 13, marginTop: 6 }}>{error}</div>
             </div>
           )}
@@ -136,7 +138,7 @@ export default function Login() {
             className="btn btn-primary"
             style={{ width: '100%' }}
           >
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting ? t('auth.signingIn') : t('auth.signInButton')}
           </button>
         </form>
       </div>
