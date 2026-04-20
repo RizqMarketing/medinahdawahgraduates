@@ -59,3 +59,49 @@ export function daysLeftInMonth() {
 export function lastMonthId() {
   return monthIdPrev(monthIdNow())
 }
+
+// ---- Day helpers (ISO date strings: 'YYYY-MM-DD') ----
+
+export function dayIdNow() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function shiftDayId(id, deltaDays) {
+  const [y, m, d] = id.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d))
+  date.setUTCDate(date.getUTCDate() + deltaDays)
+  const yy = date.getUTCFullYear()
+  const mm = String(date.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(date.getUTCDate()).padStart(2, '0')
+  return `${yy}-${mm}-${dd}`
+}
+
+export function dayIdPrev(id) { return shiftDayId(id, -1) }
+export function dayIdNext(id) { return shiftDayId(id, 1) }
+
+export function dayIdRange(id) {
+  return { start: id, end: shiftDayId(id, 1) }
+}
+
+export function isToday(id) {
+  return id === dayIdNow()
+}
+
+export function isFutureDay(id) {
+  return id > dayIdNow()
+}
+
+export function formatDayId(id) {
+  const [y, m, d] = id.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d))
+  const today = dayIdNow()
+  const yesterday = shiftDayId(today, -1)
+  if (id === today) return `Today · ${MONTH_NAMES[m - 1]} ${d}`
+  if (id === yesterday) return `Yesterday · ${MONTH_NAMES[m - 1]} ${d}`
+  const weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getUTCDay()]
+  return `${weekday}, ${MONTH_NAMES[m - 1]} ${d}, ${y}`
+}

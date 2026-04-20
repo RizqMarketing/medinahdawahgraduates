@@ -56,6 +56,18 @@ export async function getAdminRollup(targetMonthStart = null) {
   return byId
 }
 
+// Range variant — end is exclusive. Use for single-day views, last-7-days, etc.
+export async function getAdminRollupRange(rangeStart, rangeEnd) {
+  const { data, error } = await supabase.rpc('admin_graduate_rollup_range', {
+    range_start: rangeStart,
+    range_end: rangeEnd,
+  })
+  if (error) throw error
+  const byId = {}
+  for (const row of data) byId[row.graduate_id] = row
+  return byId
+}
+
 export async function createGraduate(input) {
   const { data, error } = await supabase
     .from('graduates')
