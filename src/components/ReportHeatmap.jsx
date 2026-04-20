@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { parseMonthId } from '../lib/months.js'
-
-const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+import { formatNumber } from '../lib/format.js'
 
 function intensityLevel(hours) {
   if (!hours || hours <= 0) return 0
@@ -12,6 +12,7 @@ function intensityLevel(hours) {
 }
 
 export default function ReportHeatmap({ reports = [], monthId, graduateSlug }) {
+  const { t } = useTranslation()
   const { year, month } = parseMonthId(monthId)
   const firstDay = new Date(year, month - 1, 1)
   const daysInMonth = new Date(year, month, 0).getDate()
@@ -45,15 +46,19 @@ export default function ReportHeatmap({ reports = [], monthId, graduateSlug }) {
     cells.push({ kind: 'pad', key: `pad-end-${cells.length}` })
   }
 
+  // Weekday initials pulled from i18n — single string like "SMTWTFS" (EN)
+  // or "حنثرخجس" (AR), split into 7 single-char labels.
+  const weekdayInitials = t('heatmap.weekdayInitials').split('')
+
   return (
     <div className="heatmap">
       <div className="heatmap-stats">
-        <span><strong>{totalActive}</strong> active day{totalActive === 1 ? '' : 's'}</span>
-        <span>of {daysInMonth}</span>
+        <span><strong><bdi>{formatNumber(totalActive)}</bdi></strong> {t('heatmap.activeDays', { count: totalActive })}</span>
+        <span>{t('heatmap.ofDays', { count: formatNumber(daysInMonth) })}</span>
       </div>
 
       <div className="heatmap-grid-header">
-        {WEEKDAY_LABELS.map((w, i) => <div key={i}>{w}</div>)}
+        {weekdayInitials.map((w, i) => <div key={i}>{w}</div>)}
       </div>
 
       <div className="heatmap-grid">
@@ -63,8 +68,8 @@ export default function ReportHeatmap({ reports = [], monthId, graduateSlug }) {
           }
           const level = intensityLevel(cell.hours)
           const title = cell.hours > 0
-            ? `${cell.date} · ${cell.hours.toFixed(1)} hours`
-            : `${cell.date} · no report`
+            ? t('heatmap.hoursTitle', { date: cell.date, hours: cell.hours.toFixed(1) })
+            : t('heatmap.noReportTitle', { date: cell.date })
 
           const inner = (
             <div
@@ -92,7 +97,7 @@ export default function ReportHeatmap({ reports = [], monthId, graduateSlug }) {
       </div>
 
       <div className="heatmap-legend">
-        <span>Less</span>
+        <span>{t('heatmap.lessLabel')}</span>
         <div className="heatmap-legend-scale">
           <div className="heatmap-cell heatmap-cell-level-0" />
           <div className="heatmap-cell heatmap-cell-level-1" />
@@ -100,7 +105,7 @@ export default function ReportHeatmap({ reports = [], monthId, graduateSlug }) {
           <div className="heatmap-cell heatmap-cell-level-3" />
           <div className="heatmap-cell heatmap-cell-level-4" />
         </div>
-        <span>More</span>
+        <span>{t('heatmap.moreLabel')}</span>
       </div>
     </div>
   )

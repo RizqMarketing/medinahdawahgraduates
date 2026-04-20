@@ -714,6 +714,17 @@ export default {
     notSignedIn: 'لم يتم تسجيل الدخول',
   },
 
+  heatmap: {
+    activeDays: 'يوم نشط واحد',
+    activeDays_other: '{{count}} أيام نشطة',
+    ofDays: 'من {{count}}',
+    lessLabel: 'أقل',
+    moreLabel: 'أكثر',
+    weekdayInitials: 'حنثرخجس',
+    hoursTitle: '{{date}} · {{hours}} ساعة',
+    noReportTitle: '{{date}} · لا يوجد تقرير',
+  },
+
   reportView: {
     back: '← العودة إلى التقارير',
     eyebrow: 'تقرير يومي',

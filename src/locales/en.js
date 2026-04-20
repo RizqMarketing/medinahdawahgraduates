@@ -711,6 +711,17 @@ export default {
     notSignedIn: 'Not signed in',
   },
 
+  heatmap: {
+    activeDays: '{{count}} active day',
+    activeDays_other: '{{count}} active days',
+    ofDays: 'of {{count}}',
+    lessLabel: 'Less',
+    moreLabel: 'More',
+    weekdayInitials: 'SMTWTFS',
+    hoursTitle: '{{date}} · {{hours}} hours',
+    noReportTitle: '{{date}} · no report',
+  },
+
   reportView: {
     back: '← Back to reports',
     eyebrow: 'Daily report',
