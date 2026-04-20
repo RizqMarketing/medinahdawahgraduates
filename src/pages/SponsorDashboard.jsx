@@ -22,7 +22,8 @@ function initialsFrom(name) {
 }
 
 export default function SponsorDashboard() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isArabic = i18n.language?.startsWith('ar')
   const { profile } = useAuth()
   const [state, setState] = useState({ status: 'loading', error: null })
   const [sponsor, setSponsor] = useState(null)
@@ -322,7 +323,13 @@ export default function SponsorDashboard() {
             </div>
             <div className="impact-footer">
               <span className="arabic" translate="no">وَمَا عِندَ اللَّهِ خَيْرٌ وَأَبْقَىٰ</span>
-              <span className="impact-footer-translation" translate="no">{t('sponsorDashboard.impactAyahTranslation')}</span>
+              {/* English translation helps EN readers understand the ayah;
+                  redundant in Arabic mode where the ayah itself is readable. */}
+              {!isArabic && (
+                <span className="impact-footer-translation" translate="no">
+                  {t('sponsorDashboard.impactAyahTranslation')}
+                </span>
+              )}
             </div>
           </div>
         </section>
