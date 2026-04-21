@@ -17,12 +17,31 @@ export function AuthProvider({ children }) {
       if (!data.session) setLoading(false)
     })
 
+    // Supabase fires onAuthStateChange for every token refresh (including
+    // on tab-focus revisit). If we call setSession with a fresh object on
+    // every event, the [session] useEffect below re-runs, flips loading
+    // back to true, and RequireAuth unmounts the page — which kills any
+    // in-progress form state (e.g. uploaded files on the report edit
+    // page). Only update the session when the user or token actually
+    // changes so same-user refreshes become no-ops.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession)
-      if (!newSession) {
-        setProfile(null)
-        setLoading(false)
-      }
+      setSession(prev => {
+        // Signed out
+        if (!newSession) {
+          setProfile(null)
+          setLoading(false)
+          return null
+        }
+        // Unchanged user + same access token → ignore (no-op keeps ref stable)
+        if (
+          prev &&
+          prev.user?.id === newSession.user?.id &&
+          prev.access_token === newSession.access_token
+        ) {
+          return prev
+        }
+        return newSession
+      })
     })
 
     return () => {
@@ -31,14 +50,24 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  // Fetch profile when the user changes. Keyed on user.id (stable string)
+  // rather than the session object so token refreshes don't re-trigger.
+  const userId = session?.user?.id
   useEffect(() => {
-    if (!session) return
+    if (!userId) return
     let cancelled = false
-    setLoading(true)
+    // Only show loading if we don't already have a profile for this user.
+    // Prevents the whole app from flashing "Loading…" on a token refresh.
+    setProfile(prev => {
+      if (!prev || prev.id !== userId) {
+        setLoading(true)
+      }
+      return prev
+    })
     supabase
       .from('profiles')
       .select('id, role, full_name, phone')
-      .eq('id', session.user.id)
+      .eq('id', userId)
       .maybeSingle()
       .then(({ data, error }) => {
         if (cancelled) return
@@ -47,7 +76,7 @@ export function AuthProvider({ children }) {
         setLoading(false)
       })
     return () => { cancelled = true }
-  }, [session])
+  }, [userId])
 
   const signIn = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
