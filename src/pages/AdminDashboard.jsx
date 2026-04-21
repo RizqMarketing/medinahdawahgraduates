@@ -240,14 +240,22 @@ export default function AdminDashboard() {
               </div>
               {filtered.map(g => {
                 const reported = rowReported(g)
+                // Pending/reported indicators only apply to active graduates.
+                // Seeking / paused / alumni aren't expected to report, so they
+                // get a neutral dash instead of a misleading hourglass.
+                const isActive = g.status === 'active'
                 return (
                   <Link to={`/admin/graduates/${g.slug}`} className="table-row table-row-link" key={g.id}>
-                    <span className={`dot ${reported ? 'dot-active' : 'dot-pending'}`} />
+                    <span className={`dot ${!isActive ? 'dot-muted' : reported ? 'dot-active' : 'dot-pending'}`} />
                     <span className="cell-name">{displayName(g, dash)}</span>
                     <span style={{ color: 'var(--text-secondary)' }}>{g.country}</span>
                     <span className="cell-hours"><bdi>{mode === 'day' ? formatNumber(g.hours) : `${formatNumber(g.hours)}/${formatNumber(g.target_hours_monthly)}`}</bdi></span>
-                    <span className="cell-status" style={{ color: reported ? 'var(--success)' : 'var(--warning)' }}>
-                      {reported ? '✓' : '⏳'}
+                    <span className="cell-status" style={{
+                      color: !isActive ? 'var(--text-muted)'
+                        : reported ? 'var(--success)'
+                        : 'var(--warning)'
+                    }}>
+                      {!isActive ? dash : reported ? '✓' : '⏳'}
                     </span>
                   </Link>
                 )
