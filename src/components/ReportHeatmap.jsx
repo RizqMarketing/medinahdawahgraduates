@@ -3,12 +3,17 @@ import { useTranslation } from 'react-i18next'
 import { parseMonthId } from '../lib/months.js'
 import { formatNumber } from '../lib/format.js'
 
+// Thresholds tuned to how a full-time teaching graduate actually spends
+// their day. Target is 132 hrs/month ≈ 4.4 hrs/day, so the middle of the
+// scale sits around "on-pace" — light days, regular days, strong days,
+// and exceptional days all get distinguishable cells.
 function intensityLevel(hours) {
   if (!hours || hours <= 0) return 0
-  if (hours <= 2) return 1
-  if (hours <= 5) return 2
-  if (hours <= 8) return 3
-  return 4
+  if (hours < 2)  return 1    // light: < 2 hrs
+  if (hours < 4)  return 2    // regular: 2–4 hrs (below daily pace)
+  if (hours < 6)  return 3    // strong: 4–6 hrs (on / above pace)
+  if (hours < 8)  return 4    // excellent: 6–8 hrs
+  return 5                     // exceptional: 8+ hrs
 }
 
 export default function ReportHeatmap({ reports = [], monthId, graduateSlug }) {
@@ -104,6 +109,7 @@ export default function ReportHeatmap({ reports = [], monthId, graduateSlug }) {
           <div className="heatmap-cell heatmap-cell-level-2" />
           <div className="heatmap-cell heatmap-cell-level-3" />
           <div className="heatmap-cell heatmap-cell-level-4" />
+          <div className="heatmap-cell heatmap-cell-level-5" />
         </div>
         <span>{t('heatmap.moreLabel')}</span>
       </div>

@@ -2372,25 +2372,34 @@ input[type="time"].text-input {
   outline: 2px solid var(--accent-gold, #c4a355);
   outline-offset: -2px;
 }
+/* 5-step heatmap gradient — mixed against --card-bg (not transparent)
+   so the low end has a visible floor even on dark theme, and the
+   contrast between consecutive steps is big enough to read at a glance. */
 .heatmap-cell-level-1 {
-  background: color-mix(in srgb, var(--accent-green, #2e8b57) 22%, transparent);
-  border-color: color-mix(in srgb, var(--accent-green, #2e8b57) 36%, var(--card-border));
+  background: color-mix(in srgb, var(--accent-green, #2e8b57) 18%, var(--card-bg));
+  border-color: color-mix(in srgb, var(--accent-green, #2e8b57) 32%, var(--card-border));
   color: var(--text-secondary);
 }
 .heatmap-cell-level-2 {
-  background: color-mix(in srgb, var(--accent-green, #2e8b57) 42%, transparent);
-  border-color: color-mix(in srgb, var(--accent-green, #2e8b57) 55%, var(--card-border));
+  background: color-mix(in srgb, var(--accent-green, #2e8b57) 38%, var(--card-bg));
+  border-color: color-mix(in srgb, var(--accent-green, #2e8b57) 52%, var(--card-border));
   color: var(--text-primary);
 }
 .heatmap-cell-level-3 {
-  background: color-mix(in srgb, var(--accent-green, #2e8b57) 62%, transparent);
-  border-color: color-mix(in srgb, var(--accent-green, #2e8b57) 75%, var(--card-border));
+  background: color-mix(in srgb, var(--accent-green, #2e8b57) 60%, var(--card-bg));
+  border-color: color-mix(in srgb, var(--accent-green, #2e8b57) 72%, var(--card-border));
   color: #fff;
 }
 .heatmap-cell-level-4 {
+  background: color-mix(in srgb, var(--accent-green, #2e8b57) 82%, var(--card-bg));
+  border-color: color-mix(in srgb, var(--accent-green, #2e8b57) 90%, var(--card-border));
+  color: #fff;
+}
+.heatmap-cell-level-5 {
   background: var(--accent-green, #2e8b57);
   border-color: var(--accent-green, #2e8b57);
   color: #fff;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-green, #2e8b57) 50%, transparent);
 }
 .heatmap-day { font-weight: 500; }
 
