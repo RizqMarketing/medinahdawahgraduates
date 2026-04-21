@@ -712,8 +712,8 @@ export default {
   },
 
   heatmap: {
-    activeDays: '{{count}} active day',
-    activeDays_other: '{{count}} active days',
+    activeDays: 'active day',
+    activeDays_other: 'active days',
     ofDays: 'of {{count}}',
     lessLabel: 'Less',
     moreLabel: 'More',

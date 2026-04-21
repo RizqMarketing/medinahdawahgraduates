@@ -715,8 +715,8 @@ export default {
   },
 
   heatmap: {
-    activeDays: 'يوم نشط واحد',
-    activeDays_other: '{{count}} أيام نشطة',
+    activeDays: 'يوم نشط',
+    activeDays_other: 'أيام نشطة',
     ofDays: 'من {{count}}',
     lessLabel: 'أقل',
     moreLabel: 'أكثر',
