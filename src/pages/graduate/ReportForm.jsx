@@ -264,7 +264,7 @@ export default function ReportForm({
             {a.entryMode === 'hours' ? (
               <div className="form-row">
                 <label className="info-label">{t('reportForm.hoursLabel')}</label>
-                <input type="number" step="0.25" min="0" max="24" className="text-input"
+                <input type="number" step="any" min="0" max="24" className="text-input"
                   value={a.hours}
                   onChange={e => setActivity(i, { hours: e.target.value })}
                   placeholder={t('reportForm.hoursPlaceholder')} dir="ltr" />
