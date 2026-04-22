@@ -583,7 +583,7 @@ function ProofSlot({ label, hint, accent, item, inputId, onAdd, onRemove, t }) {
           <input
             id={inputId}
             type="file"
-            accept="video/*"
+            accept="video/*,audio/*"
             className="visually-hidden"
             onChange={e => {
               const file = e.target.files?.[0]
