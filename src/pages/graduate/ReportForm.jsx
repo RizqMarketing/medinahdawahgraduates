@@ -58,6 +58,7 @@ function activityFromDb(a) {
 export default function ReportForm({
   mode = 'new',
   initial = {},
+  graduate = null,
   submitLabel,
   onSubmit,
   onCancel,
@@ -83,6 +84,12 @@ export default function ReportForm({
   const [error, setError] = useState(null)
   const [dragOver, setDragOver] = useState(false)
 
+  const wrapFile = (f, proof_type = null) => ({
+    file: f,
+    proof_type,
+    key: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${f.name}-${f.size}-${Math.random()}`,
+  })
+
   const acceptDroppedFiles = (files) => {
     const allowed = files.filter(f =>
       f.type.startsWith('image/') ||
@@ -90,7 +97,45 @@ export default function ReportForm({
       f.type.startsWith('audio/')
     )
     if (allowed.length === 0) return
-    setMediaFiles(list => [...list, ...allowed])
+    setMediaFiles(list => [...list, ...allowed.map(f => wrapFile(f))])
+  }
+
+  const addToSlot = (file, proof_type) => {
+    if (!file) return
+    setMediaFiles(list => [...list, wrapFile(file, proof_type)])
+  }
+
+  const removeNewMediaByKey = (key) => {
+    setMediaFiles(list => list.filter(m => m.key !== key))
+  }
+
+  const videoExempt = !!graduate?.video_exempt
+
+  const allMedia = [
+    ...existingMedia.map(m => ({
+      source: 'existing',
+      id: m.id,
+      kind: m.kind,
+      proof_type: m.proof_type || null,
+      label: m.kind === 'link' ? (m.caption || m.external_url) : (m.storage_path?.split('/').pop() || ''),
+      sizeMb: null,
+    })),
+    ...mediaFiles.map(m => ({
+      source: 'new',
+      key: m.key,
+      kind: kindFromMime(m.file.type) || 'file',
+      proof_type: m.proof_type || null,
+      label: m.file.name,
+      sizeMb: m.file.size / 1024 / 1024,
+    })),
+  ]
+  const mandatorySlot = allMedia.find(x => x.proof_type === 'mandatory_intro') || null
+  const studentsSlot = allMedia.find(x => x.proof_type === 'students_video') || null
+  const otherList = allMedia.filter(x => x.proof_type !== 'mandatory_intro' && x.proof_type !== 'students_video')
+
+  const removeMediaItem = (item) => {
+    if (item.source === 'existing') removeExistingMedia(item.id)
+    else removeNewMediaByKey(item.key)
   }
 
   const handleDragOver = (e) => {
@@ -328,76 +373,95 @@ export default function ReportForm({
 
       <div className="card" style={{ padding: 24, marginBottom: 20 }}>
         <h2 className="section-title" style={{ marginBottom: 14 }}>{t('reportForm.mediaSection')}</h2>
-        <p className="form-hint" style={{ marginBottom: 14 }}>
+        <p className="form-hint" style={{ marginBottom: 18 }}>
           {t('reportForm.mediaHint')}
         </p>
 
-        {existingMedia.length > 0 && (
-          <ul className="media-picker-list" style={{ marginBottom: 14 }}>
-            {existingMedia.map(m => (
-              <li key={m.id} className="media-picker-item">
-                <span className="media-picker-kind">{m.kind}</span>
-                <span className="media-picker-name">
-                  {m.kind === 'link' ? (m.caption || m.external_url) : m.storage_path?.split('/').pop()}
-                </span>
-                <button type="button" className="file-clear"
-                  onClick={() => removeExistingMedia(m.id)}>
-                  {t('reportForm.remove')}
-                </button>
-              </li>
-            ))}
-          </ul>
+        {videoExempt ? (
+          <div className="media-exempt-note">
+            {t('reportForm.videoExemptNote')}
+          </div>
+        ) : (
+          <div className="proof-slots">
+            <ProofSlot
+              label={t('reportForm.mandatorySlotLabel')}
+              hint={t('reportForm.mandatorySlotHint')}
+              accent="primary"
+              item={mandatorySlot}
+              inputId="mandatory-video"
+              onAdd={(file) => addToSlot(file, 'mandatory_intro')}
+              onRemove={() => mandatorySlot && removeMediaItem(mandatorySlot)}
+              t={t}
+            />
+            <ProofSlot
+              label={t('reportForm.studentsSlotLabel')}
+              hint={t('reportForm.studentsSlotHint')}
+              accent="secondary"
+              item={studentsSlot}
+              inputId="students-video"
+              onAdd={(file) => addToSlot(file, 'students_video')}
+              onRemove={() => studentsSlot && removeMediaItem(studentsSlot)}
+              t={t}
+            />
+          </div>
         )}
 
-        <label
-          htmlFor="media"
-          className={`dropzone ${dragOver ? 'dropzone-active' : ''}`}
-          onDragOver={handleDragOver}
-          onDragEnter={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <div className="dropzone-icon" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-          </div>
-          <div className="dropzone-primary">
-            {dragOver ? t('reportForm.dropToAdd') : t('reportForm.dragOrClick')}
-          </div>
-          <div className="dropzone-sub">
-            {t('reportForm.mediaTypesHint')}
-          </div>
-        </label>
-        <input id="media" type="file"
-          accept="image/*,video/*,audio/*"
-          multiple className="visually-hidden"
-          onChange={e => {
-            const picked = Array.from(e.target.files || [])
-            setMediaFiles(list => [...list, ...picked])
-            e.target.value = ''
-          }} />
+        <div className="other-media-section">
+          <div className="info-label" style={{ marginBottom: 8 }}>{t('reportForm.otherMediaLabel')}</div>
+          <p className="form-hint" style={{ marginBottom: 12 }}>{t('reportForm.otherMediaHint')}</p>
 
-        {mediaFiles.length > 0 && (
-          <ul className="media-picker-list" style={{ marginTop: 14 }}>
-            {mediaFiles.map((f, i) => (
-              <li key={i} className="media-picker-item">
-                <span className="media-picker-kind">{kindFromMime(f.type) || 'file'}</span>
-                <span className="media-picker-name">{f.name}</span>
-                <span className="media-picker-size">
-                  <bdi>{(f.size / 1024 / 1024).toFixed(1)} MB</bdi>
-                </span>
-                <button type="button" className="file-clear"
-                  onClick={() => setMediaFiles(list => list.filter((_, idx) => idx !== i))}>
-                  {t('reportForm.remove')}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+          <label
+            htmlFor="media"
+            className={`dropzone ${dragOver ? 'dropzone-active' : ''}`}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <div className="dropzone-icon" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <div className="dropzone-primary">
+              {dragOver ? t('reportForm.dropToAdd') : t('reportForm.dragOrClick')}
+            </div>
+            <div className="dropzone-sub">
+              {t('reportForm.mediaTypesHint')}
+            </div>
+          </label>
+          <input id="media" type="file"
+            accept="image/*,video/*,audio/*"
+            multiple className="visually-hidden"
+            onChange={e => {
+              const picked = Array.from(e.target.files || [])
+              setMediaFiles(list => [...list, ...picked.map(f => wrapFile(f))])
+              e.target.value = ''
+            }} />
+
+          {otherList.filter(x => x.kind !== 'link').length > 0 && (
+            <ul className="media-picker-list" style={{ marginTop: 14 }}>
+              {otherList.filter(x => x.kind !== 'link').map(item => (
+                <li key={item.source === 'new' ? item.key : item.id} className="media-picker-item">
+                  <span className="media-picker-kind">{item.kind}</span>
+                  <span className="media-picker-name">{item.label}</span>
+                  {item.sizeMb != null && (
+                    <span className="media-picker-size">
+                      <bdi>{item.sizeMb.toFixed(1)} MB</bdi>
+                    </span>
+                  )}
+                  <button type="button" className="file-clear"
+                    onClick={() => removeMediaItem(item)}>
+                    {t('reportForm.remove')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         <div style={{ marginTop: 20 }}>
           <div className="info-label" style={{ marginBottom: 8 }}>{t('reportForm.orPasteLink')}</div>
@@ -416,10 +480,20 @@ export default function ReportForm({
               {t('reportForm.addLink')}
             </button>
           </div>
-          {links.length > 0 && (
+          {(otherList.filter(x => x.kind === 'link').length > 0 || links.length > 0) && (
             <ul className="media-picker-list">
+              {otherList.filter(x => x.kind === 'link').map(item => (
+                <li key={item.id} className="media-picker-item">
+                  <span className="media-picker-kind">link</span>
+                  <span className="media-picker-name">{item.label}</span>
+                  <button type="button" className="file-clear"
+                    onClick={() => removeMediaItem(item)}>
+                    {t('reportForm.remove')}
+                  </button>
+                </li>
+              ))}
               {links.map((l, i) => (
-                <li key={i} className="media-picker-item">
+                <li key={`new-${i}`} className="media-picker-item">
                   <span className="media-picker-kind">link</span>
                   <span className="media-picker-name">{l.caption || l.url}</span>
                   <button type="button" className="file-clear"
@@ -459,5 +533,66 @@ export default function ReportForm({
         )}
       </div>
     </form>
+  )
+}
+
+function ProofSlot({ label, hint, accent, item, inputId, onAdd, onRemove, t }) {
+  return (
+    <div className={`proof-slot proof-slot-${accent}${item ? ' proof-slot-filled' : ''}`}>
+      <div className="proof-slot-header">
+        <div className="proof-slot-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7" />
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+          </svg>
+        </div>
+        <div className="proof-slot-text">
+          <div className="proof-slot-label">{label}</div>
+          <div className="proof-slot-hint">{hint}</div>
+        </div>
+        {item && (
+          <span className="proof-slot-status" aria-label={t('reportForm.slotFilled')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        )}
+      </div>
+
+      {item ? (
+        <div className="proof-slot-body proof-slot-body-filled">
+          <div className="proof-slot-file">
+            <span className="proof-slot-filename">{item.label}</span>
+            {item.sizeMb != null && (
+              <span className="proof-slot-size">
+                <bdi>{item.sizeMb.toFixed(1)} MB</bdi>
+              </span>
+            )}
+          </div>
+          <button type="button" className="file-clear" onClick={onRemove}>
+            {t('reportForm.remove')}
+          </button>
+        </div>
+      ) : (
+        <div className="proof-slot-body">
+          <label htmlFor={inputId} className="btn btn-secondary proof-slot-add">
+            {t('reportForm.slotAddVideo')}
+          </label>
+          <input
+            id={inputId}
+            type="file"
+            accept="video/*"
+            className="visually-hidden"
+            onChange={e => {
+              const file = e.target.files?.[0]
+              if (file) onAdd(file)
+              e.target.value = ''
+            }}
+          />
+        </div>
+      )}
+    </div>
   )
 }

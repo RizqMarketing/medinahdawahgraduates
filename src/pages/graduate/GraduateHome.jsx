@@ -8,6 +8,7 @@ import {
   listReportsForGraduate,
   listReportsForGraduateInMonth,
   getReportForToday,
+  getGraduatePointsBreakdown,
 } from '../../lib/api.js'
 import { getDailyGreeting } from '../../lib/dailyGreeting.js'
 import { formatHoursMinutes, formatNumber } from '../../lib/format.js'
@@ -28,6 +29,7 @@ export default function GraduateHome() {
   const [reports, setReports] = useState([])
   const [todayReport, setTodayReport] = useState(null)
   const [month, setMonth] = useState(monthIdNow())
+  const [points, setPoints] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -38,15 +40,17 @@ export default function GraduateHome() {
         if (cancelled) return
         setGraduate(g)
         const { start, end } = monthIdRange(month)
-        const [m, reps, todays] = await Promise.all([
+        const [m, reps, todays, pts] = await Promise.all([
           getMyMonthlyHours(g.id, { start, end }),
           listReportsForGraduateInMonth(g.id, month),
           isCurrentMonth(month) ? getReportForToday(g.id) : Promise.resolve(null),
+          getGraduatePointsBreakdown(g.id, { start, end }),
         ])
         if (cancelled) return
         setHours(m)
         setReports(reps)
         setTodayReport(todays)
+        setPoints(pts)
         setState({ status: 'ok', error: null })
       } catch (err) {
         if (!cancelled) setState({ status: 'error', error: err })
@@ -156,7 +160,30 @@ export default function GraduateHome() {
                 <div className="stat-number"><bdi>{formatNumber(pct)}%</bdi></div>
                 <div className="stat-label">{t('graduateHome.towardStandard')}</div>
               </div>
+              <div className="stat-card">
+                <div className="stat-number" style={{ color: 'var(--accent-green, #2e8b57)' }}>
+                  <bdi>{formatNumber(points?.total_points || 0)}</bdi>
+                </div>
+                <div className="stat-label">{t('graduateHome.monthlyPoints')}</div>
+              </div>
             </div>
+            {points && (
+              <div className="points-breakdown-inline">
+                <span>{t('graduateHome.pointsBreakdown.dailyReports', { n: points.daily_report_points })}</span>
+                <span className="dot" aria-hidden="true">·</span>
+                <span>{t('graduateHome.pointsBreakdown.mandatoryVideo', { n: points.mandatory_video_points })}</span>
+                <span className="dot" aria-hidden="true">·</span>
+                <span>{t('graduateHome.pointsBreakdown.optionalVideo', { n: points.optional_video_points })}</span>
+                <span className="dot" aria-hidden="true">·</span>
+                <span>{t('graduateHome.pointsBreakdown.hoursBonus', { n: points.hours_bonus })}</span>
+                {points.manual_bonus_total > 0 && (
+                  <>
+                    <span className="dot" aria-hidden="true">·</span>
+                    <span>{t('graduateHome.pointsBreakdown.manualBonus', { n: points.manual_bonus_total })}</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </section>
 

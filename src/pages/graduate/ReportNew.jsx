@@ -35,14 +35,23 @@ export default function ReportNew() {
 
     const mediaRows = []
     for (let i = 0; i < newMediaFiles.length; i++) {
+      const m = newMediaFiles[i]
+      const file = m.file || m
+      const proofType = m.proof_type || null
       setStatus?.(t('reportPages.uploadingOfTotal', { current: i + 1, total: newMediaFiles.length }))
       try {
         const { storage_path, kind } = await uploadReportMedia({
           graduateId: graduate.id,
           reportId: report.id,
-          file: newMediaFiles[i],
+          file,
         })
-        mediaRows.push({ report_id: report.id, kind, storage_path, caption: null })
+        mediaRows.push({
+          report_id: report.id,
+          kind,
+          storage_path,
+          caption: null,
+          proof_type: kind === 'video' ? proofType : null,
+        })
       } catch (err) { console.error('Upload failed:', err) }
     }
     for (const l of newLinks) {
@@ -82,6 +91,7 @@ export default function ReportNew() {
 
         <ReportForm
           mode="new"
+          graduate={graduate}
           submitLabel={t('reportForm.submitReport')}
           submittingText={t('reportForm.submittingDefault')}
           onSubmit={handleSubmit}

@@ -67,9 +67,8 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-inner">
-        <NavLink to={homeFor} className="brand" onClick={() => setOpen(false)}>
+        <NavLink to={homeFor} className="brand" onClick={() => setOpen(false)} aria-label={t('common.appName')}>
           <img src="/logo.jpg" alt={t('common.appName')} className="brand-logo" />
-          <div className="brand-name">{t('common.appName')}</div>
         </NavLink>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>

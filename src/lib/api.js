@@ -562,6 +562,62 @@ export async function endSponsorship(id, ended_on = null) {
   return data
 }
 
+// ---- Points / grading ----
+export async function getGraduatePointsBreakdown(graduateId, { start, end } = {}) {
+  const now = new Date()
+  const effStart = start || new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+  const effEnd = end || new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString().slice(0, 10)
+  const { data, error } = await supabase.rpc('graduate_points_breakdown', {
+    g_id: graduateId,
+    range_start: effStart,
+    range_end: effEnd,
+  })
+  if (error) throw error
+  return (data && data[0]) || {
+    daily_report_points: 0,
+    mandatory_video_points: 0,
+    optional_video_points: 0,
+    hours_bonus: 0,
+    manual_bonus_total: 0,
+    total_points: 0,
+    hours_in_range: 0,
+  }
+}
+
+export async function listBonusAwards(graduateId, monthStart = null) {
+  let q = supabase
+    .from('graduate_bonus_awards')
+    .select('id, month_start, points, reason, awarded_by, created_at')
+    .eq('graduate_id', graduateId)
+    .order('created_at', { ascending: false })
+  if (monthStart) q = q.eq('month_start', monthStart)
+  const { data, error } = await q
+  if (error) throw error
+  return data || []
+}
+
+export async function createBonusAward({ graduate_id, points, reason, month_start = null }) {
+  const payload = { graduate_id, points, reason }
+  if (month_start) payload.month_start = month_start
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.user?.id) payload.awarded_by = session.user.id
+  const { data, error } = await supabase
+    .from('graduate_bonus_awards')
+    .insert(payload)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteBonusAward(id) {
+  const { error } = await supabase
+    .from('graduate_bonus_awards')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function inviteUser(payload) {
   const { data, error } = await supabase.functions.invoke('invite-user', {
     body: payload,

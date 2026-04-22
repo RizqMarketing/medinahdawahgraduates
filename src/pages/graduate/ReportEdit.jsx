@@ -47,14 +47,23 @@ export default function ReportEdit() {
 
     const mediaRows = []
     for (let i = 0; i < newMediaFiles.length; i++) {
+      const m = newMediaFiles[i]
+      const file = m.file || m
+      const proofType = m.proof_type || null
       setStatus?.(t('reportPages.uploadingOfTotal', { current: i + 1, total: newMediaFiles.length }))
       try {
         const { storage_path, kind } = await uploadReportMedia({
           graduateId: graduate.id,
           reportId,
-          file: newMediaFiles[i],
+          file,
         })
-        mediaRows.push({ report_id: reportId, kind, storage_path, caption: null })
+        mediaRows.push({
+          report_id: reportId,
+          kind,
+          storage_path,
+          caption: null,
+          proof_type: kind === 'video' ? proofType : null,
+        })
       } catch (err) { console.error('Upload failed:', err) }
     }
     for (const l of newLinks) {
@@ -98,6 +107,7 @@ export default function ReportEdit() {
         <ReportForm
           mode="edit"
           initial={state.data}
+          graduate={graduate}
           submitLabel={t('reportForm.saveLabel')}
           submittingText={t('reportForm.savingLabel')}
           onSubmit={handleSubmit}

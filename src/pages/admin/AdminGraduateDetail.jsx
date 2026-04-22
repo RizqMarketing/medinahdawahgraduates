@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getGraduateBySlug, updateGraduateStatus, endSponsorship } from '../../lib/api.js'
+import { getGraduateBySlug, updateGraduateStatus, endSponsorship, updateGraduate } from '../../lib/api.js'
+import GraduateBonusCard from './GraduateBonusCard.jsx'
 import InviteGraduateModal from './InviteGraduateModal.jsx'
 import AssignSponsorModal from './AssignSponsorModal.jsx'
 import { formatNumber } from '../../lib/format.js'
@@ -15,6 +16,7 @@ export default function AdminGraduateDetail() {
   const [showAssign, setShowAssign] = useState(false)
   const [savingStatus, setSavingStatus] = useState(false)
   const [ending, setEnding] = useState(false)
+  const [savingFlag, setSavingFlag] = useState(null) // 'video_exempt' | 'voice_fallback_approved' | null
 
   const STATUS_LABELS = {
     active: t('graduateStatus.active'),
@@ -54,6 +56,20 @@ export default function AdminGraduateDetail() {
       alert(t('adminGradDetail.statusChangeFailed', { message: err.message }))
     } finally {
       setSavingStatus(false)
+    }
+  }
+
+  const handleFlagToggle = async (flag, next) => {
+    const prev = state.data?.[flag]
+    setState(s => ({ ...s, data: { ...s.data, [flag]: next } }))
+    setSavingFlag(flag)
+    try {
+      await updateGraduate(state.data.id, { [flag]: next })
+    } catch (err) {
+      setState(s => ({ ...s, data: { ...s.data, [flag]: prev } }))
+      alert(t('adminGradDetail.flagChangeFailed', { message: err.message }))
+    } finally {
+      setSavingFlag(null)
     }
   }
 
@@ -160,7 +176,7 @@ export default function AdminGraduateDetail() {
               </div>
             </div>
 
-            <div>
+            <div style={{ marginBottom: 20 }}>
               <div className="info-label" style={{ marginBottom: 8 }}>{t('adminGradDetail.loginAccount')}</div>
               {hasLogin ? (
                 <div style={{ fontSize: 14 }}>
@@ -178,8 +194,46 @@ export default function AdminGraduateDetail() {
                 </>
               )}
             </div>
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+              <div className="info-label" style={{ marginBottom: 10 }}>{t('adminGradDetail.gradingOverrides')}</div>
+
+              <label className="toggle-row" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', marginBottom: 12 }}>
+                <input
+                  type="checkbox"
+                  checked={!!g.video_exempt}
+                  onChange={e => handleFlagToggle('video_exempt', e.target.checked)}
+                  disabled={savingFlag === 'video_exempt'}
+                  style={{ marginTop: 3 }}
+                />
+                <div>
+                  <div style={{ fontSize: 14, color: 'var(--text-primary)' }}>{t('adminGradDetail.videoExemptLabel')}</div>
+                  <div className="form-hint" style={{ marginTop: 2 }}>{t('adminGradDetail.videoExemptHint')}</div>
+                </div>
+              </label>
+
+              <label className="toggle-row" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={!!g.voice_fallback_approved}
+                  onChange={e => handleFlagToggle('voice_fallback_approved', e.target.checked)}
+                  disabled={savingFlag === 'voice_fallback_approved'}
+                  style={{ marginTop: 3 }}
+                />
+                <div>
+                  <div style={{ fontSize: 14, color: 'var(--text-primary)' }}>{t('adminGradDetail.voiceFallbackLabel')}</div>
+                  <div className="form-hint" style={{ marginTop: 2 }}>{t('adminGradDetail.voiceFallbackHint')}</div>
+                </div>
+              </label>
+
+              <div className="form-hint" style={{ marginTop: 10 }}>
+                {savingFlag ? t('adminGradDetail.savingShort') : t('adminGradDetail.changesSaveImmediately')}
+              </div>
+            </div>
           </section>
         </div>
+
+        <GraduateBonusCard graduateId={g.id} />
 
         {g.focus_areas?.length > 0 && (
           <section className="section">

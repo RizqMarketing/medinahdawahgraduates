@@ -56,6 +56,7 @@ export default function AdminMonthTotals() {
         active_days: Number(r.active_days || 0),
         students_reached: Number(r.students_reached || 0),
         reports_count: Number(r.reports_count || 0),
+        total_points: Number(r.total_points || 0),
       }
     }).sort((a, b) => b.counted_hours - a.counted_hours)
   }, [state.graduates, state.rollup])
@@ -245,10 +246,16 @@ export default function AdminMonthTotals() {
                       )}
                     </div>
                   </div>
-                  <div className="leaderboard-hours">
-                    <strong><bdi>{formatNumber(g.counted_hours)}</bdi></strong>
-                    <span>/ <bdi>{formatNumber(target)}</bdi></span>
-                    <div className="leaderboard-hours-label">{t('common.hours')}</div>
+                  <div className="leaderboard-totals">
+                    <div className="leaderboard-points">
+                      <strong><bdi>{formatNumber(g.total_points)}</bdi></strong>
+                      <div className="leaderboard-hours-label">{t('common.points')}</div>
+                    </div>
+                    <div className="leaderboard-hours">
+                      <strong><bdi>{formatNumber(g.counted_hours)}</bdi></strong>
+                      <span>/ <bdi>{formatNumber(target)}</bdi></span>
+                      <div className="leaderboard-hours-label">{t('common.hours')}</div>
+                    </div>
                   </div>
                 </Link>
               )
