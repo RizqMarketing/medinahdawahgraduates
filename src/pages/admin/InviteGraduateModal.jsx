@@ -58,8 +58,8 @@ export default function InviteGraduateModal({ graduate, onClose, onInvited }) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
+    <div className="modal-backdrop">
+      <div className="modal">
         <button className="modal-close" onClick={onClose} aria-label={t('common.close')}>×</button>
 
         {stage === 'form' && (
