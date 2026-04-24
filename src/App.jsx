@@ -25,6 +25,8 @@ import ReportView from './pages/ReportView.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import BrowseGraduates from './pages/BrowseGraduates.jsx'
 import Login from './pages/Login.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
 import RequireAuth from './components/RequireAuth.jsx'
 import AdminGraduateNew from './pages/admin/AdminGraduateNew.jsx'
 import AdminGraduateDetail from './pages/admin/AdminGraduateDetail.jsx'
@@ -49,6 +51,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<RoleHomeRedirect />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/sponsor" element={
             <RequireAuth role="sponsor"><SponsorDashboard /></RequireAuth>
           } />

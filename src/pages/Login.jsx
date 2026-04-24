@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useLocation, Navigate } from 'react-router-dom'
+import { useNavigate, useLocation, Navigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext.jsx'
 
@@ -98,6 +98,12 @@ export default function Login() {
           >
             {submitting ? t('auth.signingIn') : t('auth.signInButton')}
           </button>
+
+          <div style={{ marginTop: 18, textAlign: 'center' }}>
+            <Link to="/forgot-password" style={{ fontSize: 13, opacity: 0.75 }}>
+              {t('auth.forgotPasswordLink')}
+            </Link>
+          </div>
         </form>
       </div>
     </div>
