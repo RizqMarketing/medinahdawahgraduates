@@ -166,7 +166,7 @@ Assalamu alaykum wa rahmatullah,
 
 JazakAllahu khayran for being part of Madinah Dawah Graduates. This is the new system your sponsor will use to see your work, in sha Allah.
 
-🔗 Link: https://madinahdawahgraduates.netlify.app
+🔗 Link: https://madinahdawahgraduates.com
 📧 Email: <their email>
 🔑 Temporary password: <paste here>
 
@@ -183,7 +183,7 @@ BarakAllahu feek. If anything is unclear just send me a message here.
 
 جزاك الله خيراً على كونك جزءًا من "خريجي دعوة المدينة". هذا هو النظام الجديد الذي سيستخدمه الممول لمتابعة عملك إن شاء الله.
 
-🔗 الرابط: https://madinahdawahgraduates.netlify.app
+🔗 الرابط: https://madinahdawahgraduates.com
 📧 البريد: <بريدك>
 🔑 كلمة المرور المؤقتة: <انسخها هنا>
 
@@ -202,7 +202,7 @@ Assalamu alaykum wa rahmatullah,
 
 JazakAllahu khayran for your support. This is the new platform where you'll see the daily work of the graduate you're sponsoring, in sha Allah.
 
-🔗 Link: https://madinahdawahgraduates.netlify.app
+🔗 Link: https://madinahdawahgraduates.com
 📧 Email: <their email>
 🔑 Temporary password: <paste here>
 
@@ -219,7 +219,7 @@ BarakAllahu feek.
 
 جزاك الله خيراً على دعمك. هذه هي المنصة الجديدة التي سترى فيها العمل اليومي للخريج الذي تكفله إن شاء الله.
 
-🔗 الرابط: https://madinahdawahgraduates.netlify.app
+🔗 الرابط: https://madinahdawahgraduates.com
 📧 البريد: <بريدك>
 🔑 كلمة المرور المؤقتة: <انسخها هنا>
 
