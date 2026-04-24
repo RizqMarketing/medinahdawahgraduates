@@ -18,7 +18,13 @@ Work top-to-bottom on launch day. Everything marked **MANUAL** can't be scripted
 - [ ] **MANUAL:** Supabase Dashboard → SQL Editor → paste + run `supabase/migrations/0021_reset_for_launch.sql`
   - Last `select` in the migration will show row counts — confirm all operational tables are `0`
   - `profiles` should show 1 (admin) or however many admins you kept
-- [ ] **MANUAL:** Supabase Dashboard → Auth → Users → delete every non-admin auth user
+- [ ] **MANUAL:** Supabase Dashboard → Auth → Users → delete every non-admin auth user.
+  Before deleting, run this in SQL Editor to identify which auth user holds the admin profile — that's the ONE to keep:
+  ```sql
+  select u.id, u.email, p.role
+  from auth.users u left join profiles p on p.id = u.id;
+  ```
+  Delete every row where `role` is null or not 'admin'. If you delete the row with `role = 'admin'`, the profiles cascade wipes the admin profile and login succeeds but routes nowhere — recovery is inserting a new profile via service_role.
 - [ ] **MANUAL:** Supabase Dashboard → Storage → `report-media` → select all → delete objects
 - [ ] **MANUAL:** Supabase Dashboard → Storage → `graduate-photos` → delete every demo photo (Musa's demo photo too — the real graduate will upload their own)
 
