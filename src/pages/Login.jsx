@@ -17,12 +17,6 @@ function rolePrefixFor(path) {
   return null
 }
 
-const QUICK_LOGINS = [
-  { key: 'quickLoginGraduate', email: 'graduate@mdg.test', password: 'Graduate123!' },
-  { key: 'quickLoginAdmin',    email: 'admin@mdg.test',    password: 'Admin123!' },
-  { key: 'quickLoginSponsor',  email: 'sponsor@mdg.test',  password: 'Sponsor123!' },
-]
-
 export default function Login() {
   const { t } = useTranslation()
   const { signIn, session, role, loading } = useAuth()
@@ -30,7 +24,6 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
-  const [quickRole, setQuickRole] = useState('')
 
   const nav = useNavigate()
   const location = useLocation()
@@ -56,21 +49,6 @@ export default function Login() {
     }
   }
 
-  const handleQuickLogin = async (e) => {
-    const choice = QUICK_LOGINS.find(q => q.key === e.target.value)
-    setQuickRole(e.target.value)
-    if (!choice) return
-    setError(null)
-    setSubmitting(true)
-    try {
-      await signIn(choice.email, choice.password)
-    } catch (err) {
-      setError(err.message || t('auth.couldNotSignIn'))
-      setSubmitting(false)
-      setQuickRole('')
-    }
-  }
-
   return (
     <div className="page">
       <div className="container" style={{ maxWidth: 440 }}>
@@ -80,27 +58,7 @@ export default function Login() {
           {t('auth.subtitle')}
         </p>
 
-        <div className="card" style={{ marginTop: 32, padding: 20, background: 'var(--surface-2, rgba(255,255,255,0.03))' }}>
-          <label className="info-label" htmlFor="quick-login">{t('auth.previewQuickLogin')}</label>
-          <select
-            id="quick-login"
-            className="text-input"
-            value={quickRole}
-            onChange={handleQuickLogin}
-            disabled={submitting}
-            style={{ marginTop: 6 }}
-          >
-            <option value="">{t('auth.chooseRolePreview')}</option>
-            {QUICK_LOGINS.map(q => (
-              <option key={q.key} value={q.key}>{t(`auth.${q.key}`)}</option>
-            ))}
-          </select>
-          <p style={{ fontSize: 12, opacity: 0.7, marginTop: 10, marginBottom: 0 }}>
-            {t('auth.orUseCredentials')}
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="card" style={{ marginTop: 16, padding: 28 }}>
+        <form onSubmit={handleSubmit} className="card" style={{ marginTop: 32, padding: 28 }}>
           <label className="info-label" htmlFor="email">{t('auth.emailLabel')}</label>
           <input
             id="email"

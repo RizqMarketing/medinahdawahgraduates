@@ -12,8 +12,8 @@
 export function subjectFromActivityType(activityType) {
   const s = (activityType || '').toLowerCase().trim()
   if (!s) return 'other'
-  // Quran / memorization
-  if (/\bquran\b|qur'?an|memoris|memoriz|hifz|hifdh|قرآن|حفظ|تحفيظ/.test(s)) return 'quran'
+  // Quran / memorization / recitation
+  if (/\bquran\b|qur'?an|memoris|memoriz|hifz|hifdh|recit|قرآن|حفظ|تحفيظ|تلاوة/.test(s)) return 'quran'
   // Tajweed
   if (/tajweed|tajwid|تجويد/.test(s))                                          return 'tajweed'
   // Tafsir
@@ -22,8 +22,8 @@ export function subjectFromActivityType(activityType) {
   if (/fiqh|usool al fiqh|usul al fiqh|فقه|أصول الفقه|اصول الفقه/.test(s))     return 'fiqh'
   // Aqeedah / tawheed
   if (/tawheed|tawhid|aqeedah|aqidah|توحيد|عقيدة/.test(s))                     return 'aqeedah'
-  // Hadith / mustalah
-  if (/hadith|musta(lah|lih)|حديث|مصطلح/.test(s))                              return 'hadith'
+  // Hadith / sunnah / mustalah
+  if (/hadith|sunnah|musta(lah|lih)|حديث|سنة|مصطلح/.test(s))                   return 'hadith'
   // Khutbah / jumuah
   if (/khutbah|jumu'?ah|friday|خطبة|جمعة/.test(s))                             return 'khutbah'
   // Sirah
