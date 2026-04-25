@@ -56,3 +56,44 @@ export function breakdownBySubject(activities) {
     .filter(x => x.hours > 0)
     .sort((a, b) => b.hours - a.hours)
 }
+
+// Plan-vs-actual coverage. Maps each planned-activity row to canonical subject,
+// then looks up actual hours + unique reporting days for that subject.
+//
+// Status thresholds (kept loose on purpose — admin reads the numbers and
+// judges themselves; the badge is just a quick visual triage):
+//   * 0 hours          → 'missed'     (red)
+//   * < 4 hours total  → 'partial'    (gold) — token effort
+//   * ≥ 4 hours        → 'delivered'  (green)
+//
+// `reports` is expected to be the shape returned by `getMonthlyReportData`:
+// each report has `report_date` and `activities[{ activity_type, hours }]`.
+export function planVsActualCoverage(plannedActivities, reports) {
+  const byCanonical = {}
+  for (const r of reports || []) {
+    for (const a of r.activities || []) {
+      const key = subjectFromActivityType(a.activity_type)
+      if (!byCanonical[key]) byCanonical[key] = { hours: 0, days: new Set() }
+      byCanonical[key].hours += Number(a.hours || 0)
+      byCanonical[key].days.add(r.report_date)
+    }
+  }
+  return (plannedActivities || []).map(row => {
+    const subjectKey = subjectFromActivityType(row.subject)
+    const bucket = byCanonical[subjectKey]
+    const actualHours = bucket ? Math.round(bucket.hours * 100) / 100 : 0
+    const actualDays = bucket ? bucket.days.size : 0
+    const status = actualHours === 0 ? 'missed'
+      : actualHours < 4 ? 'partial'
+      : 'delivered'
+    return {
+      subject: row.subject,
+      location: row.location,
+      frequency: row.frequency,
+      subjectKey,
+      actualHours,
+      actualDays,
+      status,
+    }
+  })
+}

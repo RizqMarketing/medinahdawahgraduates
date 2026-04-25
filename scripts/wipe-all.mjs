@@ -18,7 +18,7 @@ const sb = createClient(url, svc, { auth: { persistSession: false } })
 
 // 1. Truncate operational tables
 console.log('[1/3] truncating operational tables')
-for (const t of ['report_media', 'activities', 'reports', 'graduate_bonus_awards', 'sponsorships', 'sponsors', 'graduates']) {
+for (const t of ['report_media', 'activities', 'reports', 'monthly_plans', 'graduate_bonus_awards', 'sponsorships', 'sponsors', 'graduates']) {
   const { error } = await sb.from(t).delete().neq('id', '00000000-0000-0000-0000-000000000000')
   if (error) console.error(`  ${t}:`, error.message)
   else console.log(`  ${t}: cleared`)
@@ -70,7 +70,7 @@ for (const bucket of ['report-media', 'graduate-photos']) {
 
 // Final count
 console.log('\n[done] final state:')
-for (const t of ['graduates','sponsors','sponsorships','reports','activities','report_media','graduate_bonus_awards','profiles']) {
+for (const t of ['graduates','sponsors','sponsorships','reports','activities','report_media','monthly_plans','graduate_bonus_awards','profiles']) {
   const { count } = await sb.from(t).select('*', { count: 'exact', head: true })
   console.log(`  ${t}: ${count}`)
 }

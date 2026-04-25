@@ -6,6 +6,7 @@ import GraduateBonusCard from './GraduateBonusCard.jsx'
 import InviteGraduateModal from './InviteGraduateModal.jsx'
 import AssignSponsorModal from './AssignSponsorModal.jsx'
 import { formatNumber } from '../../lib/format.js'
+import { lastMonthId } from '../../lib/months.js'
 
 export default function AdminGraduateDetail() {
   const { t } = useTranslation()
@@ -126,6 +127,7 @@ export default function AdminGraduateDetail() {
 
           <div className="detail-actions">
             <Link to={`/admin/graduates/${g.slug}/edit`} className="btn btn-secondary">{t('adminGradDetail.editDetails')}</Link>
+            <Link to={`/graduate/${g.slug}/months/${lastMonthId()}`} className="btn btn-secondary">{t('monthlyReport.eyebrow')}</Link>
             {!hasLogin && (
               <button className="btn btn-primary" onClick={() => setShowInvite(true)}>
                 {t('adminGradDetail.inviteToLogIn')}

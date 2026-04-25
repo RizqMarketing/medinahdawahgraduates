@@ -40,7 +40,7 @@ export async function listAllGraduatesForAdmin() {
     .from('graduates')
     .select(`
       id, slug, full_name, country, status, target_hours_monthly, photo_url,
-      profile:profiles(full_name)
+      profile:profiles(full_name, phone)
     `)
     .order('full_name', { ascending: true })
   if (error) throw error
@@ -616,6 +616,82 @@ export async function deleteBonusAward(id) {
     .delete()
     .eq('id', id)
   if (error) throw error
+}
+
+// ---- Monthly report ----
+// Single query that pulls everything the per-graduate monthly report page
+// needs: reports + activities + media. Each report is augmented with
+// per-report totals so the UI can rank "strongest days" for the highlights
+// reel without a second pass over the activities.
+export async function getMonthlyReportData(graduateId, monthId) {
+  const { start, end } = monthIdRange(monthId)
+  const { data, error } = await supabase
+    .from('reports')
+    .select(`
+      id, report_date, location, overall_text, status,
+      activities(hours, students_count, activity_type, category),
+      media:report_media(id, kind, storage_path, external_url, caption, proof_type)
+    `)
+    .eq('graduate_id', graduateId)
+    .gte('report_date', start)
+    .lt('report_date', end)
+    .order('report_date', { ascending: false })
+  if (error) throw error
+  return (data || []).map(r => {
+    const acts = r.activities || []
+    const total_hours = roundHours(acts.reduce((s, a) => s + Number(a.hours || 0), 0))
+    const total_students = acts.reduce((s, a) => s + (a.students_count || 0), 0)
+    return { ...r, total_hours, total_students }
+  })
+}
+
+// ---- Monthly plans ----
+// Plan covers the month identified by month_id ('YYYY-MM'). Graduates submit
+// by the 25th of the prior month. Admin sees everyone's status.
+
+export async function getMyPlan(graduateId, monthId) {
+  const { data, error } = await supabase
+    .from('monthly_plans')
+    .select('*')
+    .eq('graduate_id', graduateId)
+    .eq('month_id', monthId)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function upsertMyPlan({ graduate_id, month_id, hours_target, focus_text, planned_activities, status }) {
+  const payload = {
+    graduate_id,
+    month_id,
+    hours_target: hours_target == null ? 132 : Number(hours_target),
+    focus_text: focus_text || null,
+    planned_activities: planned_activities || [],
+    status: status || 'draft',
+  }
+  if (payload.status === 'submitted') payload.submitted_at = new Date().toISOString()
+  const { data, error } = await supabase
+    .from('monthly_plans')
+    .upsert(payload, { onConflict: 'graduate_id,month_id' })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function listPlansForMonth(monthId) {
+  const { data, error } = await supabase
+    .from('monthly_plans')
+    .select('id, graduate_id, month_id, hours_target, focus_text, planned_activities, status, submitted_at, updated_at, created_at')
+    .eq('month_id', monthId)
+  if (error) throw error
+  const byId = {}
+  for (const row of data || []) byId[row.graduate_id] = row
+  return byId
+}
+
+export async function getPlanForGraduateAndMonth(graduateId, monthId) {
+  return getMyPlan(graduateId, monthId)
 }
 
 export async function inviteUser(payload) {

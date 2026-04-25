@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import Header from './components/Header.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
+import DevImpersonationBar from './components/DevImpersonationBar.jsx'
 import { useAuth } from './contexts/AuthContext.jsx'
 
 function ScrollToTop() {
@@ -36,16 +37,21 @@ import AdminSponsorNew from './pages/admin/AdminSponsorNew.jsx'
 import AdminSponsorDetail from './pages/admin/AdminSponsorDetail.jsx'
 import AdminSponsorEdit from './pages/admin/AdminSponsorEdit.jsx'
 import AdminMonthTotals from './pages/admin/AdminMonthTotals.jsx'
+import AdminPlans from './pages/admin/AdminPlans.jsx'
+import AdminPlanDetail from './pages/admin/AdminPlanDetail.jsx'
 import GraduateHome from './pages/graduate/GraduateHome.jsx'
 import ReportNew from './pages/graduate/ReportNew.jsx'
 import ReportEdit from './pages/graduate/ReportEdit.jsx'
 import ReportDetail from './pages/ReportDetail.jsx'
+import PlanEditor from './pages/graduate/PlanEditor.jsx'
+import MonthlyReport from './pages/MonthlyReport.jsx'
 
 export default function App() {
   return (
     <div className="app-shell">
       <SplashScreen />
       <ScrollToTop />
+      {import.meta.env.DEV && <DevImpersonationBar />}
       <Header />
       <main>
         <Routes>
@@ -89,8 +95,17 @@ export default function App() {
           <Route path="/admin/months/:monthId" element={
             <RequireAuth role="admin"><AdminMonthTotals /></RequireAuth>
           } />
+          <Route path="/admin/plans/:monthId" element={
+            <RequireAuth role="admin"><AdminPlans /></RequireAuth>
+          } />
+          <Route path="/admin/plans/:monthId/:graduateSlug" element={
+            <RequireAuth role="admin"><AdminPlanDetail /></RequireAuth>
+          } />
           <Route path="/graduate-home" element={
             <RequireAuth role="graduate"><GraduateHome /></RequireAuth>
+          } />
+          <Route path="/plan/:monthId" element={
+            <RequireAuth role="graduate"><PlanEditor /></RequireAuth>
           } />
           <Route path="/reports/new" element={
             <RequireAuth role="graduate"><ReportNew /></RequireAuth>
@@ -100,6 +115,9 @@ export default function App() {
           } />
           <Route path="/graduate/:slug/reports/:date" element={
             <RequireAuth><ReportDetail /></RequireAuth>
+          } />
+          <Route path="/graduate/:slug/months/:monthId" element={
+            <RequireAuth><MonthlyReport /></RequireAuth>
           } />
           <Route path="/graduates" element={
             <RequireAuth><BrowseGraduates /></RequireAuth>

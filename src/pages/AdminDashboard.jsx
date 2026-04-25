@@ -7,9 +7,10 @@ import DayPicker from '../components/DayPicker.jsx'
 import LoadingPage from '../components/LoadingPage.jsx'
 import { formatNumber } from '../lib/format.js'
 import {
-  monthIdNow, monthIdRange, formatMonthId, isCurrentMonth,
+  monthIdNow, monthIdNext, monthIdRange, formatMonthId, isCurrentMonth,
   dayIdNow, dayIdRange, formatDayId, isToday,
 } from '../lib/months.js'
+import DevQuickSwitch from '../components/DevQuickSwitch.jsx'
 
 function displayName(g, dash) {
   return g.full_name || g.profile?.full_name || g.slug || dash
@@ -281,6 +282,8 @@ export default function AdminDashboard() {
           </section>
         )}
 
+        {import.meta.env.DEV && <DevQuickSwitch />}
+
         <section className="section">
           <div className="admin-toolbar">
             <h2 className="section-title">{t('admin.quickActions')}</h2>
@@ -290,6 +293,7 @@ export default function AdminDashboard() {
             <Link to="/admin/sponsors" className="btn btn-secondary">{t('admin.viewSponsors')}</Link>
             <Link to="/admin/sponsors/new" className="btn btn-secondary">{t('admin.addSponsor')}</Link>
             <Link to={`/admin/months/${month}`} className="btn btn-secondary">{t('admin.monthlyTotals')}</Link>
+            <Link to={`/admin/plans/${monthIdNext(monthIdNow())}`} className="btn btn-secondary">{t('plans.monthlyPlans')}</Link>
           </div>
         </section>
       </div>

@@ -127,7 +127,7 @@ export default function SponsorDashboard() {
         </div>
 
         {lastMonthRecap && (
-          <div className="recap-card">
+          <Link to={`/graduate/${g.slug}/months/${lastMonthId()}`} className="recap-card recap-card-link">
             <div className="recap-eyebrow">{t('sponsorDashboard.recapEyebrow')}</div>
             <div className="recap-title">
               {t('sponsorDashboard.recapTitle', { name: g.full_name, month: formatMonthId(lastMonthId()) })}
@@ -140,7 +140,7 @@ export default function SponsorDashboard() {
                 <span><strong><bdi>{formatNumber(lastMonthRecap.studentsReached)}</bdi></strong> {t('sponsorDashboard.studentsReached')}</span>
               )}
             </div>
-          </div>
+          </Link>
         )}
 
         <section>

@@ -9,6 +9,7 @@ import {
   listReportsForGraduateInMonth,
   getReportForToday,
   getGraduatePointsBreakdown,
+  getMyPlan,
 } from '../../lib/api.js'
 import { getDailyGreeting } from '../../lib/dailyGreeting.js'
 import { formatHoursMinutes, formatNumber } from '../../lib/format.js'
@@ -16,7 +17,7 @@ import MonthPicker from '../../components/MonthPicker.jsx'
 import ReportHeatmap from '../../components/ReportHeatmap.jsx'
 import LoadingPage from '../../components/LoadingPage.jsx'
 import {
-  monthIdNow, monthIdRange, formatMonthId, isCurrentMonth, daysLeftInMonth,
+  monthIdNow, monthIdNext, monthIdRange, formatMonthId, isCurrentMonth, daysLeftInMonth,
 } from '../../lib/months.js'
 
 const MONTH_KEYS = ['january','february','march','april','may','june','july','august','september','october','november','december']
@@ -30,6 +31,7 @@ export default function GraduateHome() {
   const [todayReport, setTodayReport] = useState(null)
   const [month, setMonth] = useState(monthIdNow())
   const [points, setPoints] = useState(null)
+  const [upcomingPlan, setUpcomingPlan] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -51,6 +53,12 @@ export default function GraduateHome() {
         setReports(reps)
         setTodayReport(todays)
         setPoints(pts)
+        // Upcoming plan check is best-effort — don't fail the home page if
+        // the plans table isn't migrated yet.
+        try {
+          const plan = await getMyPlan(g.id, monthIdNext(monthIdNow()))
+          if (!cancelled) setUpcomingPlan(plan)
+        } catch { /* ignore */ }
         setState({ status: 'ok', error: null })
       } catch (err) {
         if (!cancelled) setState({ status: 'error', error: err })
@@ -83,6 +91,15 @@ export default function GraduateHome() {
   const showMonthEndBanner = viewingCurrent && daysLeft <= 3 && hours < target
   const firstName = graduate.full_name?.split(' ')[0] || t('graduateHome.akhiFallback')
 
+  // Plan banner: shows only when viewing current month, from the 20th onward.
+  const today = new Date()
+  const dayOfMonth = today.getDate()
+  const upcomingMonthId = monthIdNext(monthIdNow())
+  const upcomingMonthLabel = formatMonthId(upcomingMonthId)
+  const planSubmitted = upcomingPlan?.status === 'submitted'
+  const showPlanWindow = viewingCurrent && dayOfMonth >= 20
+  const planLate = showPlanWindow && dayOfMonth >= 26 && !planSubmitted
+
   return (
     <div className="page">
       <div className="container">
@@ -102,6 +119,28 @@ export default function GraduateHome() {
             {daysLeft === 0
               ? t('graduateHome.lastDayBanner', { month: monthLabel, hours: formatNumber(hours) })
               : t('graduateHome.daysLeftBanner', { count: daysLeft, month: monthLabel, hours: formatNumber(hours), target: formatNumber(target) })}
+          </div>
+        )}
+
+        {showPlanWindow && (
+          <div className={planLate ? 'month-end-banner plan-banner-late' : 'month-end-banner plan-banner'}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
+                  {t('plans.bannerEyebrow', { month: upcomingMonthLabel })}
+                </div>
+                <div>
+                  {planSubmitted
+                    ? t('plans.bannerSubmitted', { month: upcomingMonthLabel })
+                    : planLate
+                      ? t('plans.bannerLate', { month: upcomingMonthLabel })
+                      : t('plans.bannerNotSubmitted', { month: upcomingMonthLabel })}
+                </div>
+              </div>
+              <Link to={`/plan/${upcomingMonthId}`} className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
+                {planSubmitted ? t('plans.bannerCtaEdit') : t('plans.bannerCtaSubmit')}
+              </Link>
+            </div>
           </div>
         )}
 
