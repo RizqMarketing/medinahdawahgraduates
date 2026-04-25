@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import ChangePasswordModal from './ChangePasswordModal.jsx'
 
 export default function UserMenu() {
   const { session, profile, signOut } = useAuth()
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const ref = useRef(null)
   const nav = useNavigate()
 
@@ -57,8 +59,17 @@ export default function UserMenu() {
             <div className="user-menu-name">{name}</div>
             <div className="user-menu-role">{profile?.role || t('common.dash')}</div>
           </div>
+          <button
+            onClick={() => { setShowChangePassword(true); setOpen(false) }}
+            className="user-menu-item"
+          >
+            {t('auth.change.menuItem')}
+          </button>
           <button onClick={handleLogout} className="user-menu-item">{t('nav.logOut')}</button>
         </div>
+      )}
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
       )}
     </div>
   )

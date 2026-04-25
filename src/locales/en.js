@@ -124,6 +124,21 @@ export default {
       successTitle: 'Password updated',
       successBody: 'Your new password is saved. Redirecting you to sign in…',
     },
+    change: {
+      menuItem: 'Change password',
+      title: 'Change password',
+      subtitle: 'Choose a new password for your account. At least 8 characters.',
+      newPasswordLabel: 'New password',
+      confirmLabel: 'Confirm new password',
+      saveButton: 'Save new password',
+      saving: 'Saving…',
+      cancel: 'Cancel',
+      tooShort: 'Password must be at least 8 characters.',
+      mismatch: 'Passwords do not match.',
+      failed: 'Could not change password',
+      successTitle: 'Password updated',
+      successBody: 'Your new password is saved, alhamdulillah.',
+    },
   },
 
   time: {
