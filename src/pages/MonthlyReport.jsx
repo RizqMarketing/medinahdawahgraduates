@@ -8,6 +8,7 @@ import {
   getMyPlan,
   getActiveSponsorForGraduate,
 } from '../lib/api.js'
+import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import ReportMediaItem from '../components/ReportMediaItem.jsx'
 import LoadingPage from '../components/LoadingPage.jsx'
@@ -154,13 +155,14 @@ export default function MonthlyReport() {
       <div className="container">
         <button onClick={() => nav(-1)} className="back-link">{t('monthlyReport.backToProfile')}</button>
 
-        {/* Print-only branded header bar (hidden on screen, shows in PDF/print).
-            Mirrors the founder's existing PDF cover identity. */}
-        <div className="print-only print-header-bar" aria-hidden="true">
-          <img src="/logo.jpg" alt="" className="print-logo" />
+        {/* Print/PDF-only brand mark — matches the website's top-left brand
+            (small circular logo + name). Hidden on screen, shown in
+            print and PDF mode via .print-only display rules. */}
+        <div className="print-only print-brand-mark" aria-hidden="true">
+          <img src="/logo.jpg" alt="" className="print-brand-logo" />
           <div>
-            <div className="print-wordmark">{t('monthlyReport.printWordmark')}</div>
-            <div className="print-subline">{t('monthlyReport.printSubline')}</div>
+            <div className="print-brand-name">{t('monthlyReport.printSubline')}</div>
+            <div className="print-brand-tag">{t('monthlyReport.printWordmark')}</div>
           </div>
         </div>
 
@@ -420,6 +422,7 @@ export default function MonthlyReport() {
                       <h3 style={{
                         fontSize: 14, fontWeight: 700, color: 'var(--accent-green)',
                         margin: 0, letterSpacing: 0.4, textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
                       }}>
                         {t('monthlyReport.dayN', { n: formatNumber(dayIdx + 1) })}
                       </h3>
@@ -577,134 +580,41 @@ export default function MonthlyReport() {
                 onClick={async () => {
                   setCopyState('pdf')
                   try {
-                    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-                      import('html2canvas'),
-                      import('jspdf'),
-                    ])
-                    // Apply the branded report styles (same class native print
-                    // toggles via beforeprint), give the browser a frame to
-                    // recompute layout, then capture.
-                    document.body.classList.add('printing')
-                    // Wait two frames + fonts ready + 100ms so styles, fonts,
-                    // and layout fully settle before capture (otherwise
-                    // html2canvas reads stale layout / fallback fonts).
-                    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
-                    if (document.fonts?.ready) {
-                      try { await document.fonts.ready } catch {}
+                    // Server-side PDF: the live page uses modern CSS
+                    // (color-mix, gradients) that html2canvas can't parse.
+                    // We POST our Supabase session to a Netlify function,
+                    // which spins up real Chromium, navigates to the report
+                    // URL as our authenticated user, and returns a true
+                    // text PDF.
+                    const { data: { session } } = await supabase.auth.getSession()
+                    if (!session) throw new Error('Not signed in')
+                    const response = await fetch('/.netlify/functions/generate-pdf', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        slug: graduate.slug,
+                        monthId,
+                        accessToken: session.access_token,
+                        refreshToken: session.refresh_token,
+                      }),
+                    })
+                    if (!response.ok) {
+                      const text = await response.text().catch(() => '')
+                      throw new Error(`PDF service returned ${response.status}: ${text}`)
                     }
-                    await new Promise(r => setTimeout(r, 100))
-                    const node = document.querySelector('.container')
-                    if (!node) throw new Error('container not found')
-
-                    // Collect natural page-break candidates (top of each
-                    // section + each Day card). Coordinates are relative to
-                    // the captured node, in CSS pixels. Multiplied by scale
-                    // to map to canvas pixels later.
-                    const containerRect = node.getBoundingClientRect()
-                    const breakSelectors = [
-                      'section.section',
-                      '.section-header',
-                      '.card > div', // each Day in the daily activities section
-                    ]
-                    const breakCandidates = []
-                    for (const sel of breakSelectors) {
-                      for (const el of node.querySelectorAll(sel)) {
-                        const r = el.getBoundingClientRect()
-                        const cs = window.getComputedStyle(el)
-                        if (cs.display === 'none') continue
-                        breakCandidates.push(r.top - containerRect.top)
-                      }
-                    }
-                    breakCandidates.sort((a, b) => a - b)
-
-                    let canvas
-                    try {
-                      canvas = await html2canvas(node, {
-                        backgroundColor: '#fdfaf3',
-                        scale: 2,
-                        useCORS: true,
-                        windowWidth: 1000,
-                        width: 1000,
-                        onclone: (clonedDoc, clonedElement) => {
-                          clonedDoc.documentElement.removeAttribute('data-theme')
-                          clonedDoc.body.classList.add('printing')
-                          clonedDoc.body.style.background = '#fdfaf3'
-                          if (clonedElement) {
-                            clonedElement.classList.add('printing')
-                            clonedElement.style.maxWidth = 'none'
-                            clonedElement.style.width = '1000px'
-                            clonedElement.style.padding = '32px 36px'
-                            clonedElement.style.background = '#fdfaf3'
-                            clonedElement.style.color = '#141210'
-                          }
-                        },
-                        ignoreElements: (el) => {
-                          if (el.classList?.contains('no-print')) return true
-                          if (el.classList?.contains('back-link')) return true
-                          if (el.classList?.contains('dev-impersonation-bar')) return true
-                          if (el.classList?.contains('dev-quick-switch')) return true
-                          return false
-                        },
-                      })
-                    } finally {
-                      document.body.classList.remove('printing')
-                    }
-
-                    // Build PDF — slice the captured canvas into A4 pages,
-                    // snapping each page boundary to a natural break (top of
-                    // a section / Day) so we never cut a sentence in half.
-                    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-                    const pageWmm = pdf.internal.pageSize.getWidth()
-                    const pageHmm = pdf.internal.pageSize.getHeight()
-                    // canvas px → mm scale: 1 css px = (canvas.width / 1000) canvas px
-                    // and our render width = 1000 css px → pageWmm.
-                    // So 1 canvas px = pageWmm / canvas.width mm.
-                    const pxToMm = pageWmm / canvas.width
-                    const pageHpx = pageHmm / pxToMm // canvas pixels per A4 page
-                    // Convert breakCandidates from css px → canvas px (scale = 2).
-                    const breakPx = breakCandidates.map(c => c * 2)
-                    breakPx.push(canvas.height) // sentinel for the bottom
-
-                    const sliceCanvas = document.createElement('canvas')
-                    const ctx = sliceCanvas.getContext('2d')
-                    sliceCanvas.width = canvas.width
-
-                    let yStart = 0
-                    let pageNum = 0
-                    while (yStart < canvas.height) {
-                      const naturalEnd = yStart + pageHpx
-                      // Find the largest break point that is <= naturalEnd
-                      // AND > yStart + 0.4 * pageHpx (don't make pages too short).
-                      let yEnd = Math.min(canvas.height, naturalEnd)
-                      const minPageFill = yStart + pageHpx * 0.4
-                      for (let i = breakPx.length - 1; i >= 0; i--) {
-                        const bp = breakPx[i]
-                        if (bp > yStart && bp <= naturalEnd && bp >= minPageFill) {
-                          yEnd = bp
-                          break
-                        }
-                      }
-                      // Last page — always go to bottom.
-                      if (naturalEnd >= canvas.height) yEnd = canvas.height
-
-                      const sliceH = yEnd - yStart
-                      sliceCanvas.height = sliceH
-                      ctx.fillStyle = '#fdfaf3'
-                      ctx.fillRect(0, 0, sliceCanvas.width, sliceH)
-                      ctx.drawImage(canvas, 0, -yStart)
-                      const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.92)
-
-                      if (pageNum > 0) pdf.addPage()
-                      pdf.addImage(sliceData, 'JPEG', 0, 0, pageWmm, sliceH * pxToMm)
-                      pageNum++
-                      yStart = yEnd
-                    }
+                    const blob = await response.blob()
                     const safeName = (graduate.full_name || graduate.slug || 'graduate').replace(/[^\w؀-ۿ -]/g, '').trim()
-                    pdf.save(`${safeName} — ${monthLabel}.pdf`)
+                    const objectUrl = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = objectUrl
+                    a.download = `${safeName} — ${monthLabel}.pdf`
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                    URL.revokeObjectURL(objectUrl)
                   } catch (err) {
                     console.error('PDF generation failed', err)
-                    // Fall back to native print so user still gets something.
-                    window.print()
+                    alert(t('monthlyReport.downloadPdfFailed'))
                   } finally {
                     setCopyState(null)
                   }

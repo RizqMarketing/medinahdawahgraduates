@@ -3628,6 +3628,57 @@ input[type="time"].text-input {
 .print-only { display: none; }
 
 /* =============================================================================
+   .pdf-mode — captures the live monthly-report page EXACTLY as it appears
+   on the website. Hides only the nav/back-link/share/dev-tools, and shows
+   a small "logo + name" brand mark at the top (same logo as the website
+   nav) so the PDF still has the brand identity once the nav is removed.
+   ============================================================================= */
+.pdf-mode .no-print,
+.pdf-mode .header,
+.pdf-mode .back-link,
+.pdf-mode nav,
+.pdf-mode .nav-bar,
+.pdf-mode .header-bar,
+.pdf-mode .dev-impersonation-bar,
+.pdf-mode .dev-quick-switch,
+.pdf-mode .greeting .btn { display: none !important; }
+.pdf-mode .page { padding-top: 24px !important; }
+
+/* Brand mark — small website-style logo + name at the top of the PDF. */
+.pdf-mode .print-only { display: flex !important; }
+.pdf-mode .print-brand-mark {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 22px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--card-border);
+}
+.pdf-mode .print-brand-mark .print-brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+.pdf-mode .print-brand-mark .print-brand-name {
+  font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+.pdf-mode .print-brand-mark .print-brand-tag {
+  font-size: 8pt;
+  font-weight: 500;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* =============================================================================
    Branded report styling — used by BOTH:
    1. Native print/save-as-PDF (via @page + the beforeprint event listener
       in main.jsx, which toggles `.printing`)
@@ -3701,41 +3752,35 @@ input[type="time"].text-input {
 /* Reveal print-only elements (the branded header bar). */
 .printing .print-only { display: block !important; }
 
-/* === Branded header bar (print-only, top of page 1) ======================
-   Use flex (not grid) — html2canvas handles flex more reliably than grid. */
-.printing .print-header-bar {
+/* === Brand mark for printable (.printing) light theme =================== */
+.printing .print-brand-mark {
   display: flex !important;
   align-items: center;
-  gap: 14px;
-  background: #065f46 !important;
-  color: #ffffff !important;
-  padding: 18px 22px !important;
-  margin: 0 0 22px !important;
-  border-radius: 4px;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid #d8c98a;
 }
-/* Logo hidden — the .jpg's white-on-green design clashes on a green bar.
-   The wordmark carries the brand on its own; cleaner result. */
-.printing .print-header-bar .print-logo {
-  display: none !important;
+.printing .print-brand-mark .print-brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
 }
-.printing .print-header-bar .print-wordmark {
-  font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
-  font-size: 24pt;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  margin: 0;
-  color: #ffffff !important;
-  line-height: 1.1;
+.printing .print-brand-mark .print-brand-name {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #141210;
+  letter-spacing: 0.2px;
 }
-.printing .print-header-bar .print-subline {
-  font-size: 9pt;
+.printing .print-brand-mark .print-brand-tag {
+  font-size: 7.5pt;
   font-weight: 500;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.4px;
   text-transform: uppercase;
-  opacity: 0.9;
-  margin-top: 4px;
+  color: #6a655c;
+  margin-top: 2px;
 }
 
 /* === Page chrome — elegant report cover typography ====================== */
@@ -3750,30 +3795,33 @@ input[type="time"].text-input {
   page-break-after: avoid;
 }
 .printing .page-subtitle {
-  color: #6a655c !important;
-  font-size: 10pt !important;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 8px !important;
-  font-weight: 600;
+  color: #4a4640 !important;
+  font-size: 11pt !important;
+  margin-bottom: 14px !important;
+  font-weight: 400;
 }
 
 /* === Hero / identity card =============================================== */
 .printing .graduate-card {
-  background: #faf8f3 !important;
-  border: 1px solid #e2dccc !important;
-  border-radius: 6px !important;
-  padding: 18px 20px !important;
+  background: #f6f0e2 !important;
+  border: 0 !important;
+  border-inline-start: 3px solid #065f46 !important;
+  border-radius: 0 !important;
+  padding: 18px 22px !important;
   page-break-inside: avoid;
   box-shadow: none !important;
   margin-top: 14px !important;
-  /* Override grid so html2canvas lays it out predictably as a single column. */
   display: block !important;
 }
-.printing .graduate-card h3 { color: #141210 !important; font-size: 16pt !important; }
-/* Hide the placeholder avatar in print — initials in a circle look like UI
-   debris on a printed report. If a real photo is set we still want to hide
-   the chip too (the founder's existing PDF doesn't show one inline). */
+.printing .graduate-card h3 {
+  color: #141210 !important;
+  font-size: 17pt !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.2px !important;
+  margin: 0 0 4px !important;
+}
+/* Hide the placeholder avatar (initials chip looks like UI debris on a
+   printed report). Action buttons obviously don't belong either. */
 .printing .graduate-card-avatar { display: none !important; }
 .printing .graduate-card-actions { display: none !important; }
 .printing .progress-block .progress { background: #e2dccc !important; }
@@ -3826,19 +3874,19 @@ input[type="time"].text-input {
   letter-spacing: -0.5px;
 }
 
-/* === Section titles — gold hairline + uppercase eyebrow =================== */
+/* === Section titles — sentence case green with subtle gold rule ========== */
 .printing .section { margin-top: 22px !important; }
 .printing .section-header {
   border-bottom: 1px solid #d8c98a !important;
-  padding-bottom: 8px !important;
+  padding-bottom: 6px !important;
   margin-bottom: 14px !important;
 }
 .printing .section-title {
   color: #065f46 !important;
-  font-size: 11pt !important;
+  font-size: 14pt !important;
   font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 1.6px !important;
+  letter-spacing: -0.1px !important;
+  text-transform: none !important;
   border-bottom: 0 !important;
   padding-bottom: 0 !important;
   margin: 0 !important;
@@ -3846,7 +3894,7 @@ input[type="time"].text-input {
 }
 .printing .section-sub {
   color: #6a655c !important;
-  font-size: 9pt !important;
+  font-size: 9.5pt !important;
   margin-top: 3px !important;
   font-style: italic;
 }

@@ -910,6 +910,7 @@ export default {
     copyLinkDone: 'تم نسخ الرابط',
     downloadPdf: 'تحميل PDF',
     downloadPdfBusy: 'جارٍ إعداد PDF…',
+    downloadPdfFailed: 'تعذّر إنشاء ملف PDF. حاول مرة أخرى، أو استخدم زر الطباعة → "حفظ كـ PDF" كحل بديل.',
     printWordmark: 'التقرير الشهري',
     printSubline: 'خرّيجو دعوة المدينة',
     printPage: 'طباعة',

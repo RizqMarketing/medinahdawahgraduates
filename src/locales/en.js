@@ -904,6 +904,7 @@ export default {
     copyLinkDone: 'Link copied',
     downloadPdf: 'Download PDF',
     downloadPdfBusy: 'Preparing PDF…',
+    downloadPdfFailed: 'Could not generate the PDF. Please try again, or use Print → Save as PDF as a fallback.',
     printWordmark: 'Monthly Report',
     printSubline: 'Madinah Dawah Graduates',
     printPage: 'Print',

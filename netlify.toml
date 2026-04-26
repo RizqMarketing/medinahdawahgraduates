@@ -2,6 +2,18 @@
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  # Puppeteer + chromium can't be bundled by esbuild (native binaries +
+  # large fonts dir). Mark them external so Netlify ships them as-is.
+  external_node_modules = ["@sparticuz/chromium", "puppeteer-core"]
+  node_bundler = "esbuild"
+  # PDF generation is slow (chromium cold start + page load + render).
+  # Free tier max is 26s; default 10s isn't enough.
+  included_files = ["node_modules/@sparticuz/chromium/**"]
+
+[functions.generate-pdf]
+  timeout = 26
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
