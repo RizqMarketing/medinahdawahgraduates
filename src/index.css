@@ -3640,24 +3640,27 @@ input[type="time"].text-input {
 }
 
 .printing {
-  background: #ffffff !important;
+  /* Cream "paper" background for the annual-report feel — premium printed
+     reports rarely use pure white. */
+  background: #fdfaf3 !important;
   color: #141210 !important;
   font-size: 10.5pt;
   line-height: 1.55;
+  font-variant-numeric: tabular-nums;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
   /* Force light-theme tokens regardless of user's chosen theme. */
-  --bg-primary: #ffffff;
-  --bg-secondary: #faf8f3;
-  --bg-tertiary: #f3f0e8;
+  --bg-primary: #fdfaf3;
+  --bg-secondary: #f6f0e2;
+  --bg-tertiary: #efe9d8;
   --text-primary: #141210;
   --text-secondary: #4a4640;
   --text-muted: #6a655c;
   --accent: #065f46;
   --accent-green: #065f46;
   --accent-green-soft: #e8f0ea;
-  --accent-gold: #a16207;
-  --accent-gold-soft: #fbf3dd;
+  --accent-gold: #b08740; /* Slightly more refined than the screen gold */
+  --accent-gold-soft: #f5e9c9;
   --success: #047857;
   --error: #b91c1c;
   --card-bg: #ffffff;
@@ -3735,19 +3738,24 @@ input[type="time"].text-input {
   margin-top: 4px;
 }
 
-/* === Page chrome ========================================================= */
+/* === Page chrome — elegant report cover typography ====================== */
 .printing .eyebrow { display: none !important; }
 .printing .page-title {
-  font-size: 20pt !important;
+  font-size: 26pt !important;
+  font-weight: 700 !important;
   color: #141210 !important;
-  margin: 6px 0 4px !important;
-  line-height: 1.2;
+  margin: 14px 0 6px !important;
+  line-height: 1.15;
+  letter-spacing: -0.4px !important;
   page-break-after: avoid;
 }
 .printing .page-subtitle {
-  color: #4a4640 !important;
-  font-size: 11pt !important;
-  margin-bottom: 14px !important;
+  color: #6a655c !important;
+  font-size: 10pt !important;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px !important;
+  font-weight: 600;
 }
 
 /* === Hero / identity card =============================================== */
@@ -3771,45 +3779,76 @@ input[type="time"].text-input {
 .printing .progress-block .progress { background: #e2dccc !important; }
 .printing .progress-block .progress-fill { background: #065f46 !important; }
 
-/* === Headline stats grid → "Key Metrics" panel =========================== */
+/* === Headline stats panel — annual-report style ========================== */
 .printing .stats-grid {
-  border: 1px solid #e2dccc;
-  border-radius: 6px;
-  padding: 12px 14px;
+  background: transparent !important;
+  border: 0 !important;
+  border-top: 1px solid #d8c98a !important;
+  border-bottom: 1px solid #d8c98a !important;
+  border-radius: 0 !important;
+  padding: 18px 0 !important;
+  margin: 22px 0 !important;
   page-break-inside: avoid;
-  background: #ffffff !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 0 !important;
 }
 .printing .stat-card {
   background: transparent !important;
   border: 0 !important;
+  border-inline-start: 1px solid #e2dccc !important;
   box-shadow: none !important;
-  padding: 4px 6px !important;
+  padding: 0 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
 }
-.printing .stat-number {
-  color: #065f46 !important;
-  font-size: 17pt !important;
-  font-weight: 700;
+.printing .stats-grid .stat-card:first-child {
+  border-inline-start: 0 !important;
+  padding-inline-start: 0 !important;
 }
 .printing .stat-label {
-  color: #4a4640 !important;
-  font-size: 8.5pt !important;
+  order: 1 !important;
+  color: #6a655c !important;
+  font-size: 8pt !important;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 1.4px;
+  font-weight: 600 !important;
+  margin-bottom: 8px !important;
+}
+.printing .stat-number {
+  order: 2 !important;
+  color: #065f46 !important;
+  font-size: 24pt !important;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.5px;
 }
 
-/* === Section titles ===================================================== */
-.printing .section { margin-top: 18px !important; }
+/* === Section titles — gold hairline + uppercase eyebrow =================== */
+.printing .section { margin-top: 22px !important; }
+.printing .section-header {
+  border-bottom: 1px solid #d8c98a !important;
+  padding-bottom: 8px !important;
+  margin-bottom: 14px !important;
+}
 .printing .section-title {
   color: #065f46 !important;
-  font-size: 13pt !important;
-  border-bottom: 1px solid #e2dccc;
-  padding-bottom: 5px;
-  margin: 0 0 12px !important;
+  font-size: 11pt !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.6px !important;
+  border-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  margin: 0 !important;
   page-break-after: avoid;
 }
 .printing .section-sub {
   color: #6a655c !important;
   font-size: 9pt !important;
+  margin-top: 3px !important;
+  font-style: italic;
 }
 
 /* === Cards ============================================================== */
@@ -3822,9 +3861,29 @@ input[type="time"].text-input {
   page-break-inside: auto;
 }
 
-/* === Daily activities — keep each day together =========================== */
+/* === Daily activities — keep each day together + custom chevron bullets ==
+   Replaces default disc bullets with brand-green chevrons (›) for a more
+   refined feel. */
 .printing .card > div { page-break-inside: avoid; }
 .printing .card > div h3 { color: #065f46 !important; }
+.printing .day-block ul {
+  list-style: none !important;
+  padding-inline-start: 0 !important;
+  margin: 0 !important;
+}
+.printing .day-block ul li {
+  padding-inline-start: 16px !important;
+  position: relative !important;
+}
+.printing .day-block ul li::before {
+  content: '›';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  color: #065f46;
+  font-weight: 700;
+  font-size: 1.05em;
+}
 
 /* === Plan-vs-actual table ================================================ */
 .printing .data-table-coverage .table-header,
@@ -3860,8 +3919,25 @@ input[type="time"].text-input {
   border-radius: 4px;
 }
 
-/* === Footer ayah ========================================================= */
-.printing .arabic { color: #a16207 !important; }
+/* === Footer ayah — framed with ornamental gold hairlines ================ */
+.printing .ayah-footer {
+  text-align: center !important;
+  border-top: 1px solid #d8c98a !important;
+  border-bottom: 1px solid #d8c98a !important;
+  padding: 20px 0 18px !important;
+  margin-top: 32px !important;
+  page-break-inside: avoid;
+}
+.printing .ayah-footer .arabic {
+  color: #b08740 !important;
+  font-size: 22pt !important;
+  display: block;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.printing .ayah-footer > div {
+  color: #6a655c !important;
+}
 
 /* === Page break controls (only relevant during native print) ============= */
 .printing h1,

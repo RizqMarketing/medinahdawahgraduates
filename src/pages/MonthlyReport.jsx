@@ -620,7 +620,7 @@ export default function MonthlyReport() {
                     let canvas
                     try {
                       canvas = await html2canvas(node, {
-                        backgroundColor: '#ffffff',
+                        backgroundColor: '#fdfaf3',
                         scale: 2,
                         useCORS: true,
                         windowWidth: 1000,
@@ -628,12 +628,13 @@ export default function MonthlyReport() {
                         onclone: (clonedDoc, clonedElement) => {
                           clonedDoc.documentElement.removeAttribute('data-theme')
                           clonedDoc.body.classList.add('printing')
+                          clonedDoc.body.style.background = '#fdfaf3'
                           if (clonedElement) {
                             clonedElement.classList.add('printing')
                             clonedElement.style.maxWidth = 'none'
                             clonedElement.style.width = '1000px'
-                            clonedElement.style.padding = '24px'
-                            clonedElement.style.background = '#ffffff'
+                            clonedElement.style.padding = '32px 36px'
+                            clonedElement.style.background = '#fdfaf3'
                             clonedElement.style.color = '#141210'
                           }
                         },
@@ -688,7 +689,7 @@ export default function MonthlyReport() {
 
                       const sliceH = yEnd - yStart
                       sliceCanvas.height = sliceH
-                      ctx.fillStyle = '#ffffff'
+                      ctx.fillStyle = '#fdfaf3'
                       ctx.fillRect(0, 0, sliceCanvas.width, sliceH)
                       ctx.drawImage(canvas, 0, -yStart)
                       const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.92)
@@ -721,8 +722,9 @@ export default function MonthlyReport() {
             </div>
           </section>
 
-        {/* Footer ayah */}
-        <section className="section" style={{ textAlign: 'center', marginTop: 32 }}>
+        {/* Footer ayah — class hook so the print stylesheet can give it
+            ornamental gold rules in PDF/print mode. */}
+        <section className="section ayah-footer" style={{ textAlign: 'center', marginTop: 32 }}>
           <span className="arabic" translate="no" style={{ fontSize: 22, color: 'var(--accent-gold)' }}>
             وَمَا عِندَ اللَّهِ خَيْرٌ وَأَبْقَىٰ
           </span>
