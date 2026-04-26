@@ -614,7 +614,7 @@ export default function MonthlyReport() {
                     URL.revokeObjectURL(objectUrl)
                   } catch (err) {
                     console.error('PDF generation failed', err)
-                    alert(t('monthlyReport.downloadPdfFailed'))
+                    alert(`${t('monthlyReport.downloadPdfFailed')}\n\n${err?.message || err}`)
                   } finally {
                     setCopyState(null)
                   }
