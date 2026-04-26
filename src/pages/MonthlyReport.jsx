@@ -552,7 +552,14 @@ export default function MonthlyReport() {
                     // toggles via beforeprint), give the browser a frame to
                     // recompute layout, then capture.
                     document.body.classList.add('printing')
+                    // Wait two frames + fonts ready + 100ms so styles, fonts,
+                    // and layout fully settle before capture (otherwise
+                    // html2canvas reads stale layout / fallback fonts).
                     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+                    if (document.fonts?.ready) {
+                      try { await document.fonts.ready } catch {}
+                    }
+                    await new Promise(r => setTimeout(r, 100))
                     const node = document.querySelector('.container')
                     if (!node) throw new Error('container not found')
                     let canvas
@@ -561,12 +568,34 @@ export default function MonthlyReport() {
                         backgroundColor: '#ffffff',
                         scale: 2,
                         useCORS: true,
-                        windowWidth: node.scrollWidth,
-                        // Skip elements hidden by the printing styles so the
-                        // canvas height matches what's actually visible.
+                        // Fixed render width for predictable layout (A4-ish at
+                        // 96 dpi ≈ 794px; we use 1000px so text is sharp).
+                        windowWidth: 1000,
+                        width: 1000,
+                        // Force the printing class + drop dark theme inside
+                        // the cloned document. html2canvas clones the DOM
+                        // into a hidden iframe; without this the cloned
+                        // body sometimes lacks our class and the dark theme
+                        // wins, which is exactly what was happening.
+                        onclone: (clonedDoc, clonedElement) => {
+                          clonedDoc.documentElement.removeAttribute('data-theme')
+                          clonedDoc.body.classList.add('printing')
+                          if (clonedElement) {
+                            clonedElement.classList.add('printing')
+                            clonedElement.style.maxWidth = 'none'
+                            clonedElement.style.width = '1000px'
+                            clonedElement.style.padding = '24px'
+                            clonedElement.style.background = '#ffffff'
+                            clonedElement.style.color = '#141210'
+                          }
+                        },
                         ignoreElements: (el) => {
-                          const cs = window.getComputedStyle(el)
-                          return cs.display === 'none' || cs.visibility === 'hidden'
+                          // Skip nav/dev/back-link chrome before measuring.
+                          if (el.classList?.contains('no-print')) return true
+                          if (el.classList?.contains('back-link')) return true
+                          if (el.classList?.contains('dev-impersonation-bar')) return true
+                          if (el.classList?.contains('dev-quick-switch')) return true
+                          return false
                         },
                       })
                     } finally {

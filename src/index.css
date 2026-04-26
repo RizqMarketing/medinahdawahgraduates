@@ -3630,7 +3630,7 @@ input[type="time"].text-input {
 /* =============================================================================
    Branded report styling — used by BOTH:
    1. Native print/save-as-PDF (via @page + the beforeprint event listener
-      in main.jsx, which toggles `body.printing`)
+      in main.jsx, which toggles `.printing`)
    2. Programmatic "Download PDF" (JS adds `.printing`, captures with
       html2canvas, removes it)
    Single source of truth so both paths produce identical output.
@@ -3639,7 +3639,7 @@ input[type="time"].text-input {
   @page { size: A4; margin: 1.4cm 1.2cm; }
 }
 
-body.printing {
+.printing {
   background: #ffffff !important;
   color: #141210 !important;
   font-size: 10.5pt;
@@ -3665,41 +3665,41 @@ body.printing {
 }
 
 /* Activity breakdown ("Where the hours went") — was leaking dark theme. */
-body.printing .subject-breakdown {
+.printing .subject-breakdown {
   background: #ffffff !important;
   border: 1px solid #e2dccc !important;
   padding: 14px 16px !important;
   page-break-inside: avoid;
 }
-body.printing .subject-row-name { color: #141210 !important; }
-body.printing .subject-row-value { color: #4a4640 !important; }
-body.printing .subject-row-bar { background: #ece6d6 !important; }
-body.printing .subject-row-fill {
+.printing .subject-row-name { color: #141210 !important; }
+.printing .subject-row-value { color: #4a4640 !important; }
+.printing .subject-row-bar { background: #ece6d6 !important; }
+.printing .subject-row-fill {
   background: #065f46 !important;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 
 /* Hide everything that's not the report itself. */
-body.printing .no-print,
-body.printing .header,
-body.printing .footer,
-body.printing .back-link,
-body.printing nav,
-body.printing .nav-bar,
-body.printing .header-bar,
-body.printing .dev-impersonation-bar,
-body.printing .dev-quick-switch,
-body.printing .greeting .btn { display: none !important; }
+.printing .no-print,
+.printing .header,
+.printing .footer,
+.printing .back-link,
+.printing nav,
+.printing .nav-bar,
+.printing .header-bar,
+.printing .dev-impersonation-bar,
+.printing .dev-quick-switch,
+.printing .greeting .btn { display: none !important; }
 
-body.printing .page { background: #fff !important; padding: 0 !important; }
-body.printing .container { max-width: 100% !important; padding: 0 !important; }
+.printing .page { background: #fff !important; padding: 0 !important; }
+.printing .container { max-width: 100% !important; padding: 0 !important; }
 
 /* Reveal print-only elements (the branded header bar). */
-body.printing .print-only { display: block !important; }
+.printing .print-only { display: block !important; }
 
 /* === Branded header bar (print-only, top of page 1) ====================== */
-body.printing .print-header-bar {
+.printing .print-header-bar {
   display: grid !important;
   grid-template-columns: auto 1fr;
   align-items: center;
@@ -3712,14 +3712,14 @@ body.printing .print-header-bar {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
-body.printing .print-header-bar .print-logo {
+.printing .print-header-bar .print-logo {
   width: 44px; height: 44px;
   border-radius: 6px;
   background: #ffffff;
   object-fit: contain;
   padding: 4px;
 }
-body.printing .print-header-bar .print-wordmark {
+.printing .print-header-bar .print-wordmark {
   font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
   font-size: 22pt;
   font-weight: 800;
@@ -3727,7 +3727,7 @@ body.printing .print-header-bar .print-wordmark {
   margin: 0;
   color: #ffffff !important;
 }
-body.printing .print-header-bar .print-subline {
+.printing .print-header-bar .print-subline {
   font-size: 9pt;
   font-weight: 500;
   letter-spacing: 1px;
@@ -3737,22 +3737,22 @@ body.printing .print-header-bar .print-subline {
 }
 
 /* === Page chrome ========================================================= */
-body.printing .eyebrow { display: none !important; }
-body.printing .page-title {
+.printing .eyebrow { display: none !important; }
+.printing .page-title {
   font-size: 20pt !important;
   color: #141210 !important;
   margin: 6px 0 4px !important;
   line-height: 1.2;
   page-break-after: avoid;
 }
-body.printing .page-subtitle {
+.printing .page-subtitle {
   color: #4a4640 !important;
   font-size: 11pt !important;
   margin-bottom: 14px !important;
 }
 
 /* === Hero / identity card =============================================== */
-body.printing .graduate-card {
+.printing .graduate-card {
   background: #faf8f3 !important;
   border: 1px solid #e2dccc !important;
   border-radius: 6px !important;
@@ -3761,35 +3761,35 @@ body.printing .graduate-card {
   box-shadow: none !important;
   margin-top: 14px !important;
 }
-body.printing .graduate-card h3 { color: #141210 !important; }
-body.printing .graduate-card-avatar img,
-body.printing .graduate-card-avatar span {
+.printing .graduate-card h3 { color: #141210 !important; }
+.printing .graduate-card-avatar img,
+.printing .graduate-card-avatar span {
   background: #065f46 !important;
   color: #ffffff !important;
 }
-body.printing .progress-block .progress { background: #e2dccc !important; }
-body.printing .progress-block .progress-fill { background: #065f46 !important; }
+.printing .progress-block .progress { background: #e2dccc !important; }
+.printing .progress-block .progress-fill { background: #065f46 !important; }
 
 /* === Headline stats grid → "Key Metrics" panel =========================== */
-body.printing .stats-grid {
+.printing .stats-grid {
   border: 1px solid #e2dccc;
   border-radius: 6px;
   padding: 12px 14px;
   page-break-inside: avoid;
   background: #ffffff !important;
 }
-body.printing .stat-card {
+.printing .stat-card {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
   padding: 4px 6px !important;
 }
-body.printing .stat-number {
+.printing .stat-number {
   color: #065f46 !important;
   font-size: 17pt !important;
   font-weight: 700;
 }
-body.printing .stat-label {
+.printing .stat-label {
   color: #4a4640 !important;
   font-size: 8.5pt !important;
   text-transform: uppercase;
@@ -3797,8 +3797,8 @@ body.printing .stat-label {
 }
 
 /* === Section titles ===================================================== */
-body.printing .section { margin-top: 18px !important; }
-body.printing .section-title {
+.printing .section { margin-top: 18px !important; }
+.printing .section-title {
   color: #065f46 !important;
   font-size: 13pt !important;
   border-bottom: 1px solid #e2dccc;
@@ -3806,13 +3806,13 @@ body.printing .section-title {
   margin: 0 0 12px !important;
   page-break-after: avoid;
 }
-body.printing .section-sub {
+.printing .section-sub {
   color: #6a655c !important;
   font-size: 9pt !important;
 }
 
 /* === Cards ============================================================== */
-body.printing .card {
+.printing .card {
   background: #ffffff !important;
   border: 1px solid #e2dccc !important;
   border-radius: 6px !important;
@@ -3822,51 +3822,51 @@ body.printing .card {
 }
 
 /* === Daily activities — keep each day together =========================== */
-body.printing .card > div { page-break-inside: avoid; }
-body.printing .card > div h3 { color: #065f46 !important; }
+.printing .card > div { page-break-inside: avoid; }
+.printing .card > div h3 { color: #065f46 !important; }
 
 /* === Plan-vs-actual table ================================================ */
-body.printing .data-table-coverage .table-header,
-body.printing .data-table-coverage .table-row {
+.printing .data-table-coverage .table-header,
+.printing .data-table-coverage .table-row {
   border-bottom: 1px solid #e2dccc !important;
   background: transparent !important;
 }
-body.printing .data-table-coverage .table-header { color: #6a655c !important; font-size: 9pt; }
-body.printing .data-table-plans .table-header,
-body.printing .data-table-plans .table-row {
+.printing .data-table-coverage .table-header { color: #6a655c !important; font-size: 9pt; }
+.printing .data-table-plans .table-header,
+.printing .data-table-plans .table-row {
   border-bottom: 1px solid #e2dccc !important;
 }
 
 /* === Badges (force-print colors so they survive the dialog) ============== */
-body.printing .badge {
+.printing .badge {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
-body.printing .badge-success { background: #e8f0ea !important; color: #065f46 !important; }
-body.printing .badge-gold    { background: #fbf3dd !important; color: #a16207 !important; }
-body.printing .badge-late    { background: #fce7e7 !important; color: #b91c1c !important; }
-body.printing .badge-muted   { background: #f3f0e8 !important; color: #6a655c !important; }
+.printing .badge-success { background: #e8f0ea !important; color: #065f46 !important; }
+.printing .badge-gold    { background: #fbf3dd !important; color: #a16207 !important; }
+.printing .badge-late    { background: #fce7e7 !important; color: #b91c1c !important; }
+.printing .badge-muted   { background: #f3f0e8 !important; color: #6a655c !important; }
 
 /* === Highlights — compact print grid ====================================== */
-body.printing .media-grid {
+.printing .media-grid {
   grid-template-columns: 1fr 1fr 1fr !important;
   gap: 8px !important;
 }
-body.printing .media-grid img,
-body.printing .media-grid video {
+.printing .media-grid img,
+.printing .media-grid video {
   height: 110px !important;
   object-fit: cover;
   border-radius: 4px;
 }
 
 /* === Footer ayah ========================================================= */
-body.printing .arabic { color: #a16207 !important; }
+.printing .arabic { color: #a16207 !important; }
 
 /* === Page break controls (only relevant during native print) ============= */
-body.printing h1,
-body.printing h2,
-body.printing h3 { page-break-after: avoid; break-after: avoid; }
-body.printing .progress-block,
-body.printing article.card,
-body.printing section.section { page-break-inside: avoid; }
-body.printing section.section.print-page-break-before { page-break-before: always; }
+.printing h1,
+.printing h2,
+.printing h3 { page-break-after: avoid; break-after: avoid; }
+.printing .progress-block,
+.printing article.card,
+.printing section.section { page-break-inside: avoid; }
+.printing section.section.print-page-break-before { page-break-before: always; }
