@@ -405,46 +405,79 @@ export default function MonthlyReport() {
                 const headerLocation = dayLocations.length > 0
                   ? dayLocations.join(' · ')
                   : report.location || ''
+                const isLast = dayIdx === reports.length - 1
                 return (
-                  <div key={report.id} style={{ marginBottom: dayIdx === reports.length - 1 ? 0 : 22 }}>
-                    <h3 style={{
-                      fontSize: 15, fontWeight: 700, color: 'var(--accent)',
-                      margin: '0 0 8px', letterSpacing: 0.3,
-                    }}>
-                      {t('monthlyReport.dayN', { n: formatNumber(dayIdx + 1) })}
-                      <span style={{ color: 'var(--text-muted)', fontWeight: 500, marginInlineStart: 8 }}>
-                        · <bdi>{formatDayId(report.report_date)}</bdi>
+                  <div
+                    key={report.id}
+                    className="day-block"
+                    style={{
+                      paddingBottom: isLast ? 0 : 16,
+                      marginBottom: isLast ? 0 : 16,
+                      borderBottom: isLast ? 'none' : '1px solid var(--card-border)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
+                      <h3 style={{
+                        fontSize: 14, fontWeight: 700, color: 'var(--accent-green)',
+                        margin: 0, letterSpacing: 0.4, textTransform: 'uppercase',
+                      }}>
+                        {t('monthlyReport.dayN', { n: formatNumber(dayIdx + 1) })}
+                      </h3>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                        <bdi>{formatDayId(report.report_date)}</bdi>
                       </span>
-                    </h3>
+                      <span style={{
+                        marginInlineStart: 'auto',
+                        color: 'var(--text-secondary)',
+                        fontSize: 12,
+                        fontVariantNumeric: 'tabular-nums',
+                      }}>
+                        <bdi>{formatHoursMinutes(dayHours)}</bdi>
+                      </span>
+                    </div>
                     {headerLocation && (
-                      <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 6 }}>
-                        <strong style={{ color: 'var(--text-muted)' }}>{t('monthlyReport.locationLabel')}:</strong> {headerLocation}
+                      <div style={{ color: 'var(--text-muted)', fontSize: 12.5, marginBottom: 8 }}>
+                        <bdi>{headerLocation}</bdi>
                       </div>
                     )}
-                    <ul style={{ margin: '0 0 6px', paddingInlineStart: 22, lineHeight: 1.7 }}>
+                    <ul style={{
+                      margin: 0,
+                      paddingInlineStart: 18,
+                      lineHeight: 1.55,
+                      fontSize: 13.5,
+                      color: 'var(--text-secondary)',
+                    }}>
                       {acts.map((a, i) => {
                         const range = formatTimeRange(a.start_time, a.end_time)
                         const parts = []
                         if (a.students_count > 0) parts.push(t('monthlyReport.studentsCountInline', { count: a.students_count }))
                         if (a.notes) parts.push(a.notes)
                         const paren = parts.length ? ` (${parts.join('; ')})` : ''
-                        const trailing = range
-                          ? `: ${range}`
-                          : `: ${formatHoursMinutes(a.hours)}`
+                        const trailing = range ? ` — ${range}` : ` — ${formatHoursMinutes(a.hours)}`
                         return (
-                          <li key={a.id || i}>
-                            <bdi>{a.activity_type}{paren}{trailing}</bdi>
+                          <li key={a.id || i} style={{ marginBottom: 2 }}>
+                            <bdi>
+                              <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                                {a.activity_type}
+                              </span>
+                              {paren}
+                              <span style={{ color: 'var(--text-muted)' }}>{trailing}</span>
+                            </bdi>
                           </li>
                         )
                       })}
                     </ul>
-                    <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-                      <strong style={{ color: 'var(--text-muted)' }}>{t('monthlyReport.dayTotalLabel')}:</strong>{' '}
-                      <bdi>{formatHoursMinutes(dayHours)}</bdi>
-                    </div>
                     {report.overall_text && (
-                      <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6, fontStyle: 'italic' }}>
-                        “{report.overall_text}”
+                      <div style={{
+                        color: 'var(--text-muted)',
+                        fontSize: 12.5,
+                        marginTop: 10,
+                        paddingInlineStart: 12,
+                        borderInlineStart: '2px solid var(--card-border)',
+                        fontStyle: 'italic',
+                        lineHeight: 1.5,
+                      }}>
+                        {report.overall_text}
                       </div>
                     )}
                   </div>
