@@ -7,12 +7,20 @@ import { ThemeProvider } from './ThemeContext.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import './index.css'
 
-// Native print path — toggle `body.printing` so all the branded report rules
-// (defined under .printing in index.css) apply during print preview and
-// "Save as PDF" output. Both the Print and Download PDF buttons trigger
-// window.print() which fires beforeprint, so they share one styling path.
-window.addEventListener('beforeprint', () => document.body.classList.add('printing'))
-window.addEventListener('afterprint', () => document.body.classList.remove('printing'))
+// Two print modes share window.print():
+//   .printing       — light/paper-friendly (Print button)
+//   .printing-dark  — dark/digital, matches website (Download PDF button)
+// The PDF button adds .printing-dark before calling window.print(); we
+// only auto-add .printing when the dark variant isn't already requested.
+window.addEventListener('beforeprint', () => {
+  if (!document.body.classList.contains('printing-dark')) {
+    document.body.classList.add('printing')
+  }
+})
+window.addEventListener('afterprint', () => {
+  document.body.classList.remove('printing')
+  document.body.classList.remove('printing-dark')
+})
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
