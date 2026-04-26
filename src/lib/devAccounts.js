@@ -21,10 +21,10 @@ export const DEV_TEST_ACCOUNTS = [
     blurb: 'Graduate · May plan late',
   },
   {
-    email: 'fatima.sponsor.test@mdg.test',
-    name: 'Fatima Sponsor',
+    email: 'ali.sponsor.test@mdg.test',
+    name: 'Ali Sponsor',
     role: 'sponsor',
-    blurb: 'Sponsor · sponsoring Yusuf',
+    blurb: 'Sponsor · sponsoring Yusuf + Hassan',
   },
 ]
 

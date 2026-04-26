@@ -203,7 +203,7 @@ async function seedSponsor({ email, fullName, country, phone, sponsoredGraduateI
 // ── Run ───────────────────────────────────────────────────────────────────
 console.log('\n[1/3] checking for existing test users')
 const { data: existing } = await sb.auth.admin.listUsers()
-const testEmails = ['yusuf.test@mdg.test', 'hassan.test@mdg.test', 'fatima.sponsor.test@mdg.test']
+const testEmails = ['yusuf.test@mdg.test', 'hassan.test@mdg.test', 'ali.sponsor.test@mdg.test']
 const conflicts = existing.users.filter(u => testEmails.includes(u.email))
 if (conflicts.length) {
   console.log(`  found ${conflicts.length} existing test user(s) — exiting.`)
@@ -238,9 +238,9 @@ const hassan = await seedGraduate({
 console.log('\n[3/3] seeding one test sponsor (covering Yusuf + Hassan)')
 const yusufId = (await sb.from('graduates').select('id').eq('slug', 'yusuf-test').single()).data?.id
 const hassanId = (await sb.from('graduates').select('id').eq('slug', 'hassan-test').single()).data?.id
-const fatima = yusuf ? await seedSponsor({
-  email: 'fatima.sponsor.test@mdg.test',
-  fullName: 'Fatima Sponsor',
+const ali = yusuf ? await seedSponsor({
+  email: 'ali.sponsor.test@mdg.test',
+  fullName: 'Ali Sponsor',
   country: 'United Kingdom',
   phone: '+447700900000',
   sponsoredGraduateIds: [yusufId, hassanId],
@@ -251,7 +251,7 @@ console.log(`  password: ${TEST_PASSWORD}`)
 for (const g of [yusuf, hassan].filter(Boolean)) {
   console.log(`  ${g.fullName.padEnd(18)} ${g.email.padEnd(34)} ${g.hasMayPlan ? '(May plan submitted)' : '(May plan MISSING — late)'}`)
 }
-if (fatima) console.log(`  ${fatima.fullName.padEnd(18)} ${fatima.email}  (sponsoring ${fatima.count} graduate${fatima.count === 1 ? '' : 's'})`)
+if (ali) console.log(`  ${ali.fullName.padEnd(18)} ${ali.email}  (sponsoring ${ali.count} graduate${ali.count === 1 ? '' : 's'})`)
 console.log('\nLog in as admin and use the DEV "Switch view" panel on the admin dashboard,')
 console.log('or open /login in incognito and pick any test account.')
 console.log('When done: node scripts/wipe-all.mjs')
