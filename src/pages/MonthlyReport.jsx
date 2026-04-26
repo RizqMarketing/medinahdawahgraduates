@@ -575,12 +575,7 @@ export default function MonthlyReport() {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => {
-                  // Dark/digital variant — matches the website look.
-                  // afterprint listener cleans up the class.
-                  document.body.classList.add('printing-dark')
-                  window.print()
-                }}
+                onClick={() => window.print()}
                 title={t('monthlyReport.downloadPdfHint')}
               >
                 {t('monthlyReport.downloadPdf')}
