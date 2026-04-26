@@ -154,6 +154,16 @@ export default function MonthlyReport() {
       <div className="container">
         <button onClick={() => nav(-1)} className="back-link">{t('monthlyReport.backToProfile')}</button>
 
+        {/* Print-only branded header bar (hidden on screen, shows in PDF/print).
+            Mirrors the founder's existing PDF cover identity. */}
+        <div className="print-only print-header-bar" aria-hidden="true">
+          <img src="/logo.jpg" alt="" className="print-logo" />
+          <div>
+            <div className="print-wordmark">{t('monthlyReport.printWordmark')}</div>
+            <div className="print-subline">{t('monthlyReport.printSubline')}</div>
+          </div>
+        </div>
+
         <p className="eyebrow">{t('monthlyReport.eyebrow')}</p>
         <h1 className="page-title">{t('monthlyReport.title', { name: graduate.full_name })}</h1>
         <p className="page-subtitle">
@@ -368,9 +378,12 @@ export default function MonthlyReport() {
 
         {/* Detailed daily activities — matches the founder's existing PDF
             format (Day 1, Day 2, …) so sponsors get the granular log they're
-            used to. Visible to all roles. */}
+            used to. Visible to all roles.
+            `print-page-break-before` makes this start on a fresh page in
+            print/PDF so the cover (header + identity + key metrics) sits
+            clean on page 1. */}
         {reports.length > 0 && (
-          <section className="section">
+          <section className="section print-page-break-before">
             <div className="section-header">
               <h2 className="section-title">{t('monthlyReport.dailyActivitiesTitle')}</h2>
               <div className="section-sub">{t('monthlyReport.dailyActivitiesSub')}</div>
@@ -527,60 +540,10 @@ export default function MonthlyReport() {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={async () => {
-                  // Lazy-load html2canvas + jsPDF only when actually used —
-                  // keeps the main bundle slim. ~180 KB gzipped on first download.
-                  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-                    import('html2canvas'),
-                    import('jspdf'),
-                  ])
-                  const node = document.querySelector('.container')
-                  if (!node) return
-                  // Hide action buttons + back-link during capture so the PDF
-                  // looks like a clean report, not a screenshot of the UI.
-                  const hidden = Array.from(document.querySelectorAll('.no-print, .back-link'))
-                  const prev = hidden.map(el => el.style.display)
-                  hidden.forEach(el => { el.style.display = 'none' })
-                  let canvas
-                  try {
-                    canvas = await html2canvas(node, {
-                      backgroundColor: getComputedStyle(document.body).backgroundColor || '#0d0d0d',
-                      scale: 2,
-                      useCORS: true,
-                      windowWidth: node.scrollWidth,
-                    })
-                  } finally {
-                    hidden.forEach((el, i) => { el.style.display = prev[i] })
-                  }
-                  const imgData = canvas.toDataURL('image/jpeg', 0.92)
-                  // A4 portrait: 210 × 297 mm. Fit width, paginate vertically.
-                  const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-                  const pageW = pdf.internal.pageSize.getWidth()
-                  const pageH = pdf.internal.pageSize.getHeight()
-                  const imgW = pageW
-                  const imgH = (canvas.height * imgW) / canvas.width
-                  let y = 0
-                  let remaining = imgH
-                  while (remaining > 0) {
-                    pdf.addImage(imgData, 'JPEG', 0, y, imgW, imgH)
-                    remaining -= pageH
-                    if (remaining > 0) {
-                      pdf.addPage()
-                      y -= pageH
-                    }
-                  }
-                  const safeName = (graduate.full_name || graduate.slug || 'graduate').replace(/[^\w؀-ۿ -]/g, '').trim()
-                  pdf.save(`${safeName} — ${monthLabel}.pdf`)
-                }}
+                onClick={() => window.print()}
+                title={t('monthlyReport.downloadPdfHint')}
               >
                 {t('monthlyReport.downloadPdf')}
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => window.print()}
-              >
-                {t('monthlyReport.printPage')}
               </button>
             </div>
           </section>

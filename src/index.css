@@ -3624,10 +3624,228 @@ input[type="time"].text-input {
 }
 .dev-impersonation-back:hover { background: rgba(0, 0, 0, 0.28); }
 
-/* Print rules — used by the monthly report's Print button */
+/* Print-only elements — hidden on screen, shown only on print/save-as-PDF. */
+.print-only { display: none; }
+
+/* =============================================================================
+   Print rules — power both the "Print" and "Download PDF" buttons.
+   "Download PDF" calls window.print(); modern browsers offer "Save as PDF"
+   directly in the dialog. So this stylesheet IS the PDF design.
+   ============================================================================= */
 @media print {
-  .no-print, .header, .footer, .back-link { display: none !important; }
-  .page { background: #fff !important; }
-  .card, .stat-card { border-color: #ccc !important; box-shadow: none !important; }
-  body { background: #fff; color: #000; }
+  /* A4 with comfortable margins. Browsers respect @page margin in print/PDF. */
+  @page { size: A4; margin: 1.4cm 1.2cm; }
+
+  /* Force light theme + force-print colors (browsers strip bg colors by
+     default to save ink — this is a sponsorship report, branding matters). */
+  body {
+    background: #ffffff !important;
+    color: #141210 !important;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body, .page {
+    --bg-primary: #ffffff;
+    --bg-secondary: #faf8f3;
+    --bg-tertiary: #f3f0e8;
+    --text-primary: #141210;
+    --text-secondary: #4a4640;
+    --text-muted: #6a655c;
+    --accent: #065f46;
+    --accent-green: #065f46;
+    --accent-green-soft: #e8f0ea;
+    --accent-gold: #a16207;
+    --accent-gold-soft: #fbf3dd;
+    --success: #047857;
+    --error: #b91c1c;
+  }
+
+  /* Hide everything that's not the report itself. */
+  .no-print, .header, .footer, .back-link,
+  nav, .nav-bar, .header-bar,
+  .dev-impersonation-bar, .dev-quick-switch,
+  .greeting .btn { display: none !important; }
+  .page { background: #fff !important; padding: 0 !important; }
+  .container { max-width: 100% !important; padding: 0 !important; }
+
+  /* Reveal print-only elements (the branded header bar). */
+  .print-only { display: block !important; }
+
+  /* === Branded header bar (print-only, top of page 1) ====================== */
+  .print-header-bar {
+    display: grid !important;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 16px;
+    background: #065f46 !important;
+    color: #ffffff !important;
+    padding: 14px 18px !important;
+    margin: 0 0 18px !important;
+    border-radius: 4px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print-header-bar .print-logo {
+    width: 44px; height: 44px;
+    border-radius: 6px;
+    background: #ffffff;
+    object-fit: contain;
+    padding: 4px;
+  }
+  .print-header-bar .print-wordmark {
+    font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
+    font-size: 22pt;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin: 0;
+    color: #ffffff !important;
+  }
+  .print-header-bar .print-subline {
+    font-size: 9pt;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+
+  /* === Page chrome ========================================================= */
+  .eyebrow { display: none !important; }
+  .page-title {
+    font-size: 20pt !important;
+    color: #141210 !important;
+    margin: 6px 0 4px !important;
+    line-height: 1.2;
+    page-break-after: avoid;
+  }
+  .page-subtitle {
+    color: #4a4640 !important;
+    font-size: 11pt !important;
+    margin-bottom: 14px !important;
+  }
+
+  /* === Hero / identity card =============================================== */
+  .graduate-card {
+    background: #faf8f3 !important;
+    border: 1px solid #e2dccc !important;
+    border-radius: 6px !important;
+    padding: 16px !important;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    margin-top: 14px !important;
+  }
+  .graduate-card h3 { color: #141210 !important; }
+  .graduate-card-avatar img,
+  .graduate-card-avatar span {
+    background: #065f46 !important;
+    color: #ffffff !important;
+  }
+  .progress-block .progress {
+    background: #e2dccc !important;
+  }
+  .progress-block .progress-fill {
+    background: #065f46 !important;
+  }
+
+  /* === Headline stats grid → "Key Metrics" panel =========================== */
+  .stats-grid {
+    border: 1px solid #e2dccc;
+    border-radius: 6px;
+    padding: 12px 14px;
+    page-break-inside: avoid;
+    background: #ffffff !important;
+  }
+  .stat-card {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 4px 6px !important;
+  }
+  .stat-number {
+    color: #065f46 !important;
+    font-size: 17pt !important;
+    font-weight: 700;
+  }
+  .stat-label {
+    color: #4a4640 !important;
+    font-size: 8.5pt !important;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  /* === Section titles ===================================================== */
+  .section { margin-top: 18px !important; }
+  .section-title {
+    color: #065f46 !important;
+    font-size: 13pt !important;
+    border-bottom: 1px solid #e2dccc;
+    padding-bottom: 5px;
+    margin: 0 0 12px !important;
+    page-break-after: avoid;
+  }
+  .section-sub {
+    color: #6a655c !important;
+    font-size: 9pt !important;
+  }
+
+  /* === Cards ============================================================== */
+  .card {
+    background: #ffffff !important;
+    border: 1px solid #e2dccc !important;
+    border-radius: 6px !important;
+    padding: 14px !important;
+    box-shadow: none !important;
+    page-break-inside: auto;
+  }
+
+  /* === Daily activities — keep each day together =========================== */
+  .card > div { page-break-inside: avoid; }
+  .card > div h3 { color: #065f46 !important; }
+
+  /* === Plan-vs-actual table ================================================ */
+  .data-table-coverage .table-header,
+  .data-table-coverage .table-row {
+    border-bottom: 1px solid #e2dccc !important;
+    background: transparent !important;
+  }
+  .data-table-coverage .table-header { color: #6a655c !important; font-size: 9pt; }
+  .data-table-plans .table-header,
+  .data-table-plans .table-row {
+    border-bottom: 1px solid #e2dccc !important;
+  }
+
+  /* === Badges (force-print colors so they survive the dialog) ============== */
+  .badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .badge-success { background: #e8f0ea !important; color: #065f46 !important; }
+  .badge-gold    { background: #fbf3dd !important; color: #a16207 !important; }
+  .badge-late    { background: #fce7e7 !important; color: #b91c1c !important; }
+  .badge-muted   { background: #f3f0e8 !important; color: #6a655c !important; }
+
+  /* === Highlights — compact print grid ====================================== */
+  .media-grid {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .media-grid img,
+  .media-grid video {
+    height: 110px !important;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  /* === Footer ayah ========================================================= */
+  .arabic { color: #a16207 !important; }
+
+  /* === Page break controls ================================================= */
+  h1, h2, h3 { page-break-after: avoid; break-after: avoid; }
+  .progress-block, article.card, section.section { page-break-inside: avoid; }
+
+  /* Break BEFORE the daily-activities section so the cover sits cleanly
+     on page 1 most of the time. */
+  section.section.print-page-break-before { page-break-before: always; }
 }
