@@ -545,6 +545,13 @@ export default function MonthlyReport() {
               >
                 {t('monthlyReport.downloadPdf')}
               </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => window.print()}
+              >
+                {t('monthlyReport.printPage')}
+              </button>
             </div>
           </section>
 
