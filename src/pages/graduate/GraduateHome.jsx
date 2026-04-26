@@ -18,6 +18,7 @@ import ReportHeatmap from '../../components/ReportHeatmap.jsx'
 import LoadingPage from '../../components/LoadingPage.jsx'
 import {
   monthIdNow, monthIdNext, monthIdRange, formatMonthId, isCurrentMonth, daysLeftInMonth,
+  nowInRiyadh, isPlanLateForMonth,
 } from '../../lib/months.js'
 
 const MONTH_KEYS = ['january','february','march','april','may','june','july','august','september','october','november','december']
@@ -92,13 +93,14 @@ export default function GraduateHome() {
   const firstName = graduate.full_name?.split(' ')[0] || t('graduateHome.akhiFallback')
 
   // Plan banner: shows only when viewing current month, from the 20th onward.
-  const today = new Date()
-  const dayOfMonth = today.getDate()
+  // Anchored to Madinah wall clock so the gold→red flip matches admin policy
+  // regardless of where the graduate is physically located.
   const upcomingMonthId = monthIdNext(monthIdNow())
   const upcomingMonthLabel = formatMonthId(upcomingMonthId)
   const planSubmitted = upcomingPlan?.status === 'submitted'
-  const showPlanWindow = viewingCurrent && dayOfMonth >= 20
-  const planLate = showPlanWindow && dayOfMonth >= 26 && !planSubmitted
+  const { dayOfMonth: riyadhDay } = nowInRiyadh()
+  const showPlanWindow = viewingCurrent && riyadhDay >= 20
+  const planLate = showPlanWindow && !planSubmitted && isPlanLateForMonth(upcomingMonthId)
 
   return (
     <div className="page">

@@ -26,3 +26,13 @@ export function buildPlanReminderText({ graduateName, monthLabel }) {
   const ar = `السلام عليكم أخي ${graduateName ? graduateName + ' ' : ''}— تذكير لطيف بإرسال خطتك لشهر ${monthLabel} عندما يتيسر لك. جزاك الله خيرًا.`
   return `${ar}\n\n${en}`
 }
+
+// Bilingual report share — admin sends to the sponsor of a graduate. Includes
+// the link to the monthly report page so the sponsor can open it directly.
+export function buildReportShareText({ sponsorName, graduateName, monthLabel, url }) {
+  const enGreeting = sponsorName ? `Assalamu alaykum dear ${sponsorName}` : 'Assalamu alaykum'
+  const arGreeting = sponsorName ? `السلام عليكم أخي/أختي ${sponsorName}` : 'السلام عليكم'
+  const en = `${enGreeting} — here is ${graduateName}'s monthly report for ${monthLabel}: ${url}\n\nBarakAllahu feekum for supporting his work.`
+  const ar = `${arGreeting} — هذا تقرير ${graduateName} الشهري لشهر ${monthLabel}: ${url}\n\nبارك الله فيكم على دعمكم لعمله.`
+  return `${ar}\n\n${en}`
+}

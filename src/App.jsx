@@ -21,6 +21,7 @@ function RoleHomeRedirect() {
   return <Navigate to="/login" replace />
 }
 import SponsorDashboard from './pages/SponsorDashboard.jsx'
+import SponsorMyGraduates from './pages/SponsorMyGraduates.jsx'
 import GraduateProfile from './pages/GraduateProfile.jsx'
 import ReportView from './pages/ReportView.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
@@ -61,6 +62,12 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/sponsor" element={
             <RequireAuth role="sponsor"><SponsorDashboard /></RequireAuth>
+          } />
+          <Route path="/my-graduates" element={
+            <RequireAuth role="sponsor"><SponsorMyGraduates /></RequireAuth>
+          } />
+          <Route path="/my-graduates/months/:monthId" element={
+            <RequireAuth role="sponsor"><SponsorMyGraduates /></RequireAuth>
           } />
           <Route path="/graduate/:slug" element={
             <RequireAuth><GraduateProfile /></RequireAuth>

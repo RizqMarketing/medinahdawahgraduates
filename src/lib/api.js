@@ -151,6 +151,24 @@ export async function getMySponsorship() {
   return { sponsor, activeSponsorship: active }
 }
 
+// Admin-side: find the active sponsor (if any) for a given graduate. Used
+// by the monthly report page to power the "Send to sponsor" WhatsApp button.
+// Returns { sponsor, sponsorship } or null.
+export async function getActiveSponsorForGraduate(graduateId) {
+  const { data, error } = await supabase
+    .from('sponsorships')
+    .select(`
+      id, status, monthly_amount_usd, started_on,
+      sponsor:sponsors(id, full_name, phone)
+    `)
+    .eq('graduate_id', graduateId)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (error) throw error
+  if (!data?.sponsor) return null
+  return { sponsor: data.sponsor, sponsorship: { id: data.id, monthly_amount_usd: data.monthly_amount_usd, started_on: data.started_on } }
+}
+
 export async function getSponsorImpactStats(sponsorshipStartDate, graduateId) {
   const { data: reports, error } = await supabase
     .from('reports')
@@ -629,7 +647,7 @@ export async function getMonthlyReportData(graduateId, monthId) {
     .from('reports')
     .select(`
       id, report_date, location, overall_text, status,
-      activities(hours, students_count, activity_type, category),
+      activities(hours, students_count, activity_type, category, start_time, end_time, location, notes, position),
       media:report_media(id, kind, storage_path, external_url, caption, proof_type)
     `)
     .eq('graduate_id', graduateId)

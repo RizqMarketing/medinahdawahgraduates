@@ -93,13 +93,15 @@ export default function AdminPlanDetail() {
                   <div className="table-header">
                     <span>{t('plans.rowSubject')}</span>
                     <span>{t('plans.rowLocation')}</span>
-                    <span>{t('plans.rowFrequency')}</span>
+                    <span>{t('plans.rowHoursPerMonth')}</span>
                   </div>
                   {planned.map((row, i) => (
                     <div className="table-row" key={i}>
                       <span>{row.subject || '—'}</span>
                       <span style={{ color: 'var(--text-secondary)' }}>{row.location || '—'}</span>
-                      <span style={{ color: 'var(--text-secondary)' }}>{row.frequency || '—'}</span>
+                      <span style={{ color: 'var(--text-secondary)' }}>
+                        <bdi>{row.hours_per_month ? t('plans.hoursTargetUnit', { hours: formatNumber(row.hours_per_month) }) : '—'}</bdi>
+                      </span>
                     </div>
                   ))}
                 </div>

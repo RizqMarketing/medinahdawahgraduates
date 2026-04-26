@@ -124,6 +124,7 @@ export default function SponsorDashboard() {
             <p className="eyebrow">{t('sponsorDashboard.eyebrowMonth', { month: monthLabel })}</p>
             <h1 className="page-title" translate="no">{t('sponsorDashboard.assalam')}<em>{firstName}</em></h1>
           </div>
+          <Link to="/my-graduates" className="btn btn-secondary">{t('myGraduates.headerLink')}</Link>
         </div>
 
         {lastMonthRecap && (

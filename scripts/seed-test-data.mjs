@@ -61,14 +61,14 @@ function makeReportDates(monthId, count) {
 }
 
 const ACTIVITY_TEMPLATES = [
-  { activity_type: 'Tawheed lesson',     category: 'teaching', hours: 2.5, students: 22 },
-  { activity_type: 'Quran reading group', category: 'teaching', hours: 1.5, students: 14 },
-  { activity_type: 'Khutbah preparation', category: 'teaching', hours: 1.0, students: 0 },
-  { activity_type: 'Friday khutbah',     category: 'teaching', hours: 1.0, students: 80 },
-  { activity_type: 'Aqeedah class',      category: 'teaching', hours: 2.0, students: 18 },
-  { activity_type: 'Village visit',      category: 'dawah',    hours: 3.0, students: 35 },
-  { activity_type: "Children's class",   category: 'teaching', hours: 1.5, students: 26 },
-  { activity_type: 'New Muslim support', category: 'dawah',    hours: 1.0, students: 3 },
+  { activity_type: 'Tawheed lesson',      category: 'teaching', hours: 2.5, students: 22, start: '07:00', end: '09:30', location: 'Main masjid',     notes: 'Tawheed for young students' },
+  { activity_type: 'Quran reading group', category: 'teaching', hours: 1.5, students: 14, start: '09:45', end: '11:15', location: 'Madrasa',         notes: 'group recitation' },
+  { activity_type: 'Khutbah preparation', category: 'teaching', hours: 1.0, students: 0,  start: '11:30', end: '12:30', location: 'Office',          notes: '' },
+  { activity_type: 'Friday khutbah',      category: 'teaching', hours: 1.0, students: 80, start: '12:30', end: '13:30', location: 'Main masjid',     notes: 'reality of fasting' },
+  { activity_type: 'Aqeedah class',       category: 'teaching', hours: 2.0, students: 18, start: '17:00', end: '19:00', location: 'Madrasa',         notes: 'introduction to belief' },
+  { activity_type: 'Village visit',       category: 'dawah',    hours: 3.0, students: 35, start: '14:00', end: '17:00', location: 'Nearby village',  notes: 'community visit and dawah' },
+  { activity_type: "Children's class",    category: 'teaching', hours: 1.5, students: 26, start: '15:00', end: '16:30', location: 'Madrasa',         notes: 'memorisation review' },
+  { activity_type: 'New Muslim support',  category: 'dawah',    hours: 1.0, students: 3,  start: '20:00', end: '21:00', location: 'Home',            notes: 'one-on-one mentoring' },
 ]
 
 function activitiesForDay(seed) {
@@ -83,6 +83,10 @@ function activitiesForDay(seed) {
       category: tpl.category,
       hours: tpl.hours,
       students_count: tpl.students,
+      start_time: tpl.start,
+      end_time: tpl.end,
+      location: tpl.location,
+      notes: tpl.notes || null,
       position: i,
     })
   }
@@ -139,9 +143,9 @@ async function seedGraduate({ email, fullName, slug, country, phone, focusAreas,
     hours_target: 140,
     focus_text: `In shaa Allah, focus on Tawheed lessons for the youth, weekly Friday khutbah preparation, and visits to surrounding villages for dawah.`,
     planned_activities: [
-      { subject: 'Tawheed class', location: 'Main masjid', frequency: '3× per week' },
-      { subject: 'Quran memorisation', location: 'Madrasa', frequency: 'Daily' },
-      { subject: 'Village dawah visits', location: 'Surrounding villages', frequency: 'Weekly' },
+      { subject: 'Tawheed class', location: 'Main masjid', hours_per_month: 30 },
+      { subject: 'Quran memorisation', location: 'Madrasa', hours_per_month: 60 },
+      { subject: 'Village dawah visits', location: 'Surrounding villages', hours_per_month: 20 },
     ],
     status: 'submitted',
     submitted_at: new Date(`${LAST_MONTH}-01T10:00:00Z`).toISOString(),
@@ -154,9 +158,9 @@ async function seedGraduate({ email, fullName, slug, country, phone, focusAreas,
       hours_target: 145,
       focus_text: `Continuing the Tawheed series with the youth and adding a new Aqeedah class for adults after Maghrib.`,
       planned_activities: [
-        { subject: 'Tawheed class (advanced)', location: 'Main masjid', frequency: '3× per week' },
-        { subject: 'Aqeedah for adults', location: 'Main masjid (after Maghrib)', frequency: '2× per week' },
-        { subject: 'Quran memorisation', location: 'Madrasa', frequency: 'Daily' },
+        { subject: 'Tawheed class (advanced)', location: 'Main masjid', hours_per_month: 36 },
+        { subject: 'Aqeedah for adults', location: 'Main masjid (after Maghrib)', hours_per_month: 24 },
+        { subject: 'Quran memorisation', location: 'Madrasa', hours_per_month: 70 },
       ],
       status: 'submitted',
       submitted_at: new Date().toISOString(),
@@ -166,7 +170,7 @@ async function seedGraduate({ email, fullName, slug, country, phone, focusAreas,
   return { email, slug, fullName, hasMayPlan: !!withMayPlan }
 }
 
-async function seedSponsor({ email, fullName, country, phone, sponsoredGraduateId }) {
+async function seedSponsor({ email, fullName, country, phone, sponsoredGraduateIds }) {
   const { data: created, error: authErr } = await sb.auth.admin.createUser({
     email, password: TEST_PASSWORD, email_confirm: true,
   })
@@ -183,9 +187,9 @@ async function seedSponsor({ email, fullName, country, phone, sponsoredGraduateI
   }).select().single()
   if (spErr) { console.error('  sponsor:', spErr.message); return null }
 
-  if (sponsoredGraduateId) {
+  for (const graduateId of (sponsoredGraduateIds || []).filter(Boolean)) {
     const { error: shipErr } = await sb.from('sponsorships').insert({
-      sponsor_id: sponsor.id, graduate_id: sponsoredGraduateId,
+      sponsor_id: sponsor.id, graduate_id: graduateId,
       monthly_amount_usd: 290,
       started_on: `${LAST_MONTH}-01`,
       status: 'active',
@@ -193,7 +197,7 @@ async function seedSponsor({ email, fullName, country, phone, sponsoredGraduateI
     if (shipErr) console.error('  sponsorship:', shipErr.message)
   }
 
-  return { email, fullName }
+  return { email, fullName, count: (sponsoredGraduateIds || []).length }
 }
 
 // ── Run ───────────────────────────────────────────────────────────────────
@@ -231,13 +235,15 @@ const hassan = await seedGraduate({
   withMayPlan: false, // late on next month's plan — admin can WhatsApp-nudge
 })
 
-console.log('\n[3/3] seeding one test sponsor (covering Yusuf)')
+console.log('\n[3/3] seeding one test sponsor (covering Yusuf + Hassan)')
+const yusufId = (await sb.from('graduates').select('id').eq('slug', 'yusuf-test').single()).data?.id
+const hassanId = (await sb.from('graduates').select('id').eq('slug', 'hassan-test').single()).data?.id
 const fatima = yusuf ? await seedSponsor({
   email: 'fatima.sponsor.test@mdg.test',
   fullName: 'Fatima Sponsor',
   country: 'United Kingdom',
   phone: '+447700900000',
-  sponsoredGraduateId: (await sb.from('graduates').select('id').eq('slug', 'yusuf-test').single()).data?.id,
+  sponsoredGraduateIds: [yusufId, hassanId],
 }) : null
 
 console.log('\n[done] seeded test accounts (all share the same password):')
@@ -245,7 +251,7 @@ console.log(`  password: ${TEST_PASSWORD}`)
 for (const g of [yusuf, hassan].filter(Boolean)) {
   console.log(`  ${g.fullName.padEnd(18)} ${g.email.padEnd(34)} ${g.hasMayPlan ? '(May plan submitted)' : '(May plan MISSING — late)'}`)
 }
-if (fatima) console.log(`  ${fatima.fullName.padEnd(18)} ${fatima.email}  (sponsoring Yusuf)`)
+if (fatima) console.log(`  ${fatima.fullName.padEnd(18)} ${fatima.email}  (sponsoring ${fatima.count} graduate${fatima.count === 1 ? '' : 's'})`)
 console.log('\nLog in as admin and use the DEV "Switch view" panel on the admin dashboard,')
 console.log('or open /login in incognito and pick any test account.')
 console.log('When done: node scripts/wipe-all.mjs')

@@ -58,13 +58,17 @@ export function breakdownBySubject(activities) {
 }
 
 // Plan-vs-actual coverage. Maps each planned-activity row to canonical subject,
-// then looks up actual hours + unique reporting days for that subject.
+// then looks up actual hours + unique reporting days for that subject and
+// compares against the row's planned hours/month.
 //
-// Status thresholds (kept loose on purpose — admin reads the numbers and
-// judges themselves; the badge is just a quick visual triage):
-//   * 0 hours          → 'missed'     (red)
-//   * < 4 hours total  → 'partial'    (gold) — token effort
-//   * ≥ 4 hours        → 'delivered'  (green)
+// Status thresholds based on actual / planned ratio:
+//   * < 50%   → 'missed'     (red)
+//   * 50–99%  → 'partial'    (gold)
+//   * ≥ 100%  → 'delivered'  (green)
+//
+// Fallback when plannedHours is 0 (older plans / row with no commitment):
+// any actual hours = delivered, none = missed. Avoids showing a misleading
+// per-row badge that has nothing to compare against.
 //
 // `reports` is expected to be the shape returned by `getMonthlyReportData`:
 // each report has `report_date` and `activities[{ activity_type, hours }]`.
@@ -83,13 +87,20 @@ export function planVsActualCoverage(plannedActivities, reports) {
     const bucket = byCanonical[subjectKey]
     const actualHours = bucket ? Math.round(bucket.hours * 100) / 100 : 0
     const actualDays = bucket ? bucket.days.size : 0
-    const status = actualHours === 0 ? 'missed'
-      : actualHours < 4 ? 'partial'
-      : 'delivered'
+    const plannedHours = Math.max(0, Number(row.hours_per_month) || 0)
+    let status
+    if (plannedHours === 0) {
+      status = actualHours > 0 ? 'delivered' : 'missed'
+    } else {
+      const ratio = actualHours / plannedHours
+      status = ratio >= 1 ? 'delivered'
+        : ratio >= 0.5 ? 'partial'
+        : 'missed'
+    }
     return {
       subject: row.subject,
       location: row.location,
-      frequency: row.frequency,
+      plannedHours,
       subjectKey,
       actualHours,
       actualDays,

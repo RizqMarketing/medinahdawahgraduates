@@ -43,3 +43,22 @@ export function formatNumber(n) {
     return String(n)
   }
 }
+
+// "07:00:00" + "08:55:00" → "7:00 a.m. – 8:55 a.m."
+// Returns null if either side is missing — caller should fall back to hours.
+export function formatTimeRange(start, end) {
+  if (!start || !end) return null
+  const fmt = (t) => {
+    const [hStr, mStr] = String(t).split(':')
+    let h = Number(hStr)
+    const m = Number(mStr || 0)
+    if (Number.isNaN(h) || Number.isNaN(m)) return null
+    const ampm = h >= 12 ? tr('time.pm') : tr('time.am')
+    h = h % 12 || 12
+    return `${h}:${String(m).padStart(2, '0')} ${ampm}`
+  }
+  const a = fmt(start)
+  const b = fmt(end)
+  if (!a || !b) return null
+  return `${a} – ${b}`
+}

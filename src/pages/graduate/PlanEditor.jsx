@@ -9,7 +9,7 @@ const MAX_FOCUS_CHARS = 1000
 const MAX_ROWS = 10
 
 function blankRow() {
-  return { subject: '', location: '', frequency: '' }
+  return { subject: '', location: '', hours_per_month: '' }
 }
 
 export default function PlanEditor() {
@@ -56,7 +56,7 @@ export default function PlanEditor() {
           setRows(planned.length ? planned.map(r => ({
             subject: r.subject || '',
             location: r.location || '',
-            frequency: r.frequency || '',
+            hours_per_month: r.hours_per_month != null ? String(r.hours_per_month) : '',
           })) : [blankRow()])
         } else {
           setPlan(null)
@@ -100,9 +100,9 @@ export default function PlanEditor() {
     .map(r => ({
       subject: r.subject?.trim() || '',
       location: r.location?.trim() || '',
-      frequency: r.frequency?.trim() || '',
+      hours_per_month: Math.max(0, Math.min(744, Math.round(Number(r.hours_per_month) || 0))),
     }))
-    .filter(r => r.subject || r.location || r.frequency)
+    .filter(r => r.subject || r.location || r.hours_per_month > 0)
 
   const save = async (asStatus) => {
     if (!graduate) return
@@ -229,6 +229,23 @@ export default function PlanEditor() {
           <div className="form-row" style={{ marginTop: 28 }}>
             <label className="info-label" style={{ display: 'block', marginBottom: 6 }}>{t('plans.plannedActivitiesLabel')}</label>
             <div className="form-hint" style={{ marginBottom: 12 }}>{t('plans.plannedActivitiesHint')}</div>
+            {(() => {
+              const allocated = rows.reduce((s, r) => s + (Number(r.hours_per_month) || 0), 0)
+              const targetNum = Number(hoursTarget) || 0
+              if (allocated === 0) return null
+              const over = allocated - targetNum
+              const color = over > 0 ? 'var(--error)'
+                : allocated < targetNum ? 'var(--text-muted)'
+                : 'var(--success)'
+              const label = over > 0
+                ? t('plans.allocatedOver', { allocated, over })
+                : t('plans.allocatedSummary', { allocated, target: targetNum })
+              return (
+                <div className="form-hint" style={{ marginBottom: 12, color }}>
+                  <bdi>{label}</bdi>
+                </div>
+              )
+            })()}
 
             {rows.map((r, i) => (
               <div key={i} className="plan-row-card">
@@ -256,14 +273,18 @@ export default function PlanEditor() {
                     />
                   </div>
                   <div className="form-row" style={{ marginBottom: 0 }}>
-                    <label className="info-label" style={{ display: 'block', marginBottom: 6 }}>{t('plans.rowFrequency')}</label>
+                    <label className="info-label" style={{ display: 'block', marginBottom: 6 }}>{t('plans.rowHoursPerMonth')}</label>
                     <input
-                      type="text"
+                      type="number"
+                      min={0}
+                      max={744}
                       className="text-input"
-                      value={r.frequency}
-                      onChange={e => updateRow(i, { frequency: e.target.value })}
+                      value={r.hours_per_month}
+                      onChange={e => updateRow(i, { hours_per_month: e.target.value })}
                       disabled={!editable}
-                      placeholder={t('plans.rowFrequencyPlaceholder')}
+                      placeholder={t('plans.rowHoursPerMonthPlaceholder')}
+                      inputMode="numeric"
+                      dir="ltr"
                     />
                   </div>
                 </div>

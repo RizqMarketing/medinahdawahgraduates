@@ -7,16 +7,14 @@ import MonthPicker from '../../components/MonthPicker.jsx'
 import LoadingPage from '../../components/LoadingPage.jsx'
 import { formatNumber } from '../../lib/format.js'
 import {
-  formatMonthId, monthIdNext, monthIdNow, monthIdPrev, monthIdRange,
+  formatMonthId, monthIdNext, monthIdNow, monthIdRange, isPlanLateForMonth,
 } from '../../lib/months.js'
 
-function planStatus(plan, monthId, today) {
+function planStatus(plan, monthId) {
   if (plan?.status === 'submitted') return 'submitted'
-  // Deadline = 25th of preceding month. Late from 26th onwards (or once
-  // covered month has begun and still no submission).
-  const prev = monthIdPrev(monthId)
-  if (today >= `${prev}-26`) return 'late'
-  return 'not_yet'
+  // Deadline = 25th of preceding month, but admin policy is "not late until
+  // 26th afternoon Madinah time" — see isPlanLateForMonth in lib/months.js.
+  return isPlanLateForMonth(monthId) ? 'late' : 'not_yet'
 }
 
 function displayName(g, dash) {
@@ -52,12 +50,6 @@ export default function AdminPlans() {
     return () => { cancelled = true }
   }, [month])
 
-  // Local-date string (not UTC) — admin's "today" should match their wall clock,
-  // otherwise late/on-time flips can look wrong by ±1 day depending on timezone.
-  const today = (() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  })()
   const monthLabel = formatMonthId(month)
   const dash = t('common.dash')
 
@@ -66,7 +58,7 @@ export default function AdminPlans() {
       .filter(g => g.status === 'active')
       .map(g => {
         const plan = state.plansByGraduateId[g.id] || null
-        const status = planStatus(plan, month, today)
+        const status = planStatus(plan, month)
         return { graduate: g, plan, status }
       })
       .sort((a, b) => {
@@ -76,7 +68,7 @@ export default function AdminPlans() {
         if (d !== 0) return d
         return displayName(a.graduate, '').localeCompare(displayName(b.graduate, ''))
       })
-  }, [state.graduates, state.plansByGraduateId, month, today])
+  }, [state.graduates, state.plansByGraduateId, month])
 
   const submittedCount = rows.filter(r => r.status === 'submitted').length
   const lateCount = rows.filter(r => r.status === 'late').length

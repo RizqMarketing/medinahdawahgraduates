@@ -18,7 +18,9 @@ create table if not exists monthly_plans (
   month_id            text not null check (month_id ~ '^\d{4}-\d{2}$'),
   hours_target        int not null default 132 check (hours_target between 0 and 744),
   focus_text          text,
-  -- Optional structured rows: [{ subject, location, frequency }, ...]
+  -- Structured rows: [{ subject, location, hours_per_month }, ...]
+  -- hours_per_month per row drives the per-subject plan-vs-actual coverage
+  -- on the monthly report. Sum may be < hours_target (rest is unplanned/ad-hoc).
   planned_activities  jsonb not null default '[]'::jsonb,
   status              text not null default 'draft'
                         check (status in ('draft', 'submitted')),

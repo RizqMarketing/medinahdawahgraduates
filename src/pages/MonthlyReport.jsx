@@ -6,14 +6,16 @@ import {
   getMonthlyReportData,
   getGraduateMonthBreakdown,
   getMyPlan,
+  getActiveSponsorForGraduate,
 } from '../lib/api.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import ReportMediaItem from '../components/ReportMediaItem.jsx'
 import LoadingPage from '../components/LoadingPage.jsx'
 import MonthPicker from '../components/MonthPicker.jsx'
-import { formatHoursMinutes, formatNumber } from '../lib/format.js'
-import { formatMonthId, formatDayId } from '../lib/months.js'
+import { formatHoursMinutes, formatNumber, formatTimeRange } from '../lib/format.js'
+import { formatMonthId, formatDayId, formatReportPeriod } from '../lib/months.js'
 import { planVsActualCoverage } from '../lib/subjects.js'
+import { buildWaLink, buildReportShareText } from '../lib/whatsapp.js'
 
 function initialsFrom(name) {
   return (name || '?').split(/\s+/).map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
@@ -50,6 +52,7 @@ export default function MonthlyReport() {
     reports: [],
     breakdown: [],
     plan: null,
+    sponsor: null,
     error: null,
   })
   const [copyState, setCopyState] = useState(null) // 'summary' | 'link' | null
@@ -72,8 +75,14 @@ export default function MonthlyReport() {
         } else {
           tasks.push(Promise.resolve(null))
         }
-        const [reports, breakdown, plan] = await Promise.all(tasks)
-        if (!cancelled) setState({ status: 'ok', graduate, reports, breakdown, plan, error: null })
+        // Active sponsor — admin only (powers the "Send to sponsor" button).
+        if (role === 'admin') {
+          tasks.push(getActiveSponsorForGraduate(graduate.id).catch(() => null))
+        } else {
+          tasks.push(Promise.resolve(null))
+        }
+        const [reports, breakdown, plan, sponsor] = await Promise.all(tasks)
+        if (!cancelled) setState({ status: 'ok', graduate, reports, breakdown, plan, sponsor, error: null })
       } catch (err) {
         if (!cancelled) setState(s => ({ ...s, status: 'error', error: err }))
       }
@@ -101,7 +110,7 @@ export default function MonthlyReport() {
     )
   }
 
-  const { graduate, reports, breakdown, plan } = state
+  const { graduate, reports, breakdown, plan, sponsor } = state
   const monthLabel = formatMonthId(monthId)
 
   // Aggregate stats
@@ -147,7 +156,17 @@ export default function MonthlyReport() {
 
         <p className="eyebrow">{t('monthlyReport.eyebrow')}</p>
         <h1 className="page-title">{t('monthlyReport.title', { name: graduate.full_name })}</h1>
-        <p className="page-subtitle">{t('monthlyReport.subtitle', { month: monthLabel })}</p>
+        <p className="page-subtitle">
+          {t('monthlyReport.subtitle', { month: monthLabel })}
+          {reports.length > 0 && (
+            <>
+              {' · '}
+              <span style={{ color: 'var(--text-muted)' }}>
+                {t('monthlyReport.periodCovered')}: <bdi>{formatReportPeriod(reports, monthId)}</bdi>
+              </span>
+            </>
+          )}
+        </p>
 
         <div className="no-print" style={{ marginTop: 12, marginBottom: 4 }}>
           <MonthPicker
@@ -303,21 +322,33 @@ export default function MonthlyReport() {
                             const statusLabel = row.status === 'delivered' ? t('monthlyReport.statusDelivered')
                               : row.status === 'partial' ? t('monthlyReport.statusPartial')
                               : t('monthlyReport.statusMissed')
-                            const actualText = row.actualHours === 0
-                              ? t('monthlyReport.actualNone')
-                              : row.actualDays === 1
-                                ? t('monthlyReport.actualHoursDaysSingle', { hours: formatNumber(row.actualHours), days: formatNumber(row.actualDays) })
-                                : t('monthlyReport.actualHoursDays', { hours: formatNumber(row.actualHours), days: formatNumber(row.actualDays) })
+                            // Actual cell anchored to planned hours when present:
+                            // "12 / 30 hrs · 5 days". Falls back to "X hrs · Y days"
+                            // for legacy rows where hours_per_month wasn't set.
+                            const daysSuffix = row.actualDays > 0
+                              ? (row.actualDays === 1
+                                  ? t('monthlyReport.daysOneSuffix', { days: formatNumber(row.actualDays) })
+                                  : t('monthlyReport.daysSuffix', { days: formatNumber(row.actualDays) }))
+                              : ''
+                            const actualText = row.plannedHours > 0
+                              ? t('monthlyReport.actualOfPlanned', { actual: formatNumber(row.actualHours), planned: formatNumber(row.plannedHours) })
+                              : row.actualHours === 0
+                                ? t('monthlyReport.actualNone')
+                                : t('monthlyReport.actualHoursOnly', { hours: formatNumber(row.actualHours) })
+                            const subLine = [row.location].filter(Boolean).join(' · ')
                             return (
                               <div className="table-row" key={i}>
                                 <span>
                                   <div style={{ fontWeight: 500 }}>{row.subject || '—'}</div>
-                                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                                    {[row.frequency, row.location].filter(Boolean).join(' · ') || ''}
-                                  </div>
+                                  {subLine && (
+                                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                                      {subLine}
+                                    </div>
+                                  )}
                                 </span>
                                 <span style={{ color: row.actualHours === 0 ? 'var(--text-muted)' : 'var(--text-secondary)' }}>
                                   <bdi>{actualText}</bdi>
+                                  {daysSuffix && <span style={{ color: 'var(--text-muted)', marginInlineStart: 6 }}><bdi>{daysSuffix}</bdi></span>}
                                 </span>
                                 <span style={{ textAlign: 'end' }}>
                                   <span className={`badge ${badgeClass}`}>{statusLabel}</span>
@@ -331,6 +362,81 @@ export default function MonthlyReport() {
                   </>
                 )
               })()}
+            </div>
+          </section>
+        )}
+
+        {/* Detailed daily activities — matches the founder's existing PDF
+            format (Day 1, Day 2, …) so sponsors get the granular log they're
+            used to. Visible to all roles. */}
+        {reports.length > 0 && (
+          <section className="section">
+            <div className="section-header">
+              <h2 className="section-title">{t('monthlyReport.dailyActivitiesTitle')}</h2>
+              <div className="section-sub">{t('monthlyReport.dailyActivitiesSub')}</div>
+            </div>
+            <div className="card" style={{ padding: 24 }}>
+              {[...reports].sort((a, b) => a.report_date.localeCompare(b.report_date)).map((report, dayIdx) => {
+                const acts = [...(report.activities || [])].sort((a, b) => {
+                  // Order by position if set, otherwise start_time, otherwise stable.
+                  const pa = a.position ?? 0, pb = b.position ?? 0
+                  if (pa !== pb) return pa - pb
+                  if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time)
+                  return 0
+                })
+                const dayHours = acts.reduce((s, a) => s + Number(a.hours || 0), 0)
+                // Collect unique activity locations for the day, fall back to report.location.
+                const dayLocations = Array.from(new Set(
+                  acts.map(a => a.location).filter(Boolean)
+                ))
+                const headerLocation = dayLocations.length > 0
+                  ? dayLocations.join(' · ')
+                  : report.location || ''
+                return (
+                  <div key={report.id} style={{ marginBottom: dayIdx === reports.length - 1 ? 0 : 22 }}>
+                    <h3 style={{
+                      fontSize: 15, fontWeight: 700, color: 'var(--accent)',
+                      margin: '0 0 8px', letterSpacing: 0.3,
+                    }}>
+                      {t('monthlyReport.dayN', { n: formatNumber(dayIdx + 1) })}
+                      <span style={{ color: 'var(--text-muted)', fontWeight: 500, marginInlineStart: 8 }}>
+                        · <bdi>{formatDayId(report.report_date)}</bdi>
+                      </span>
+                    </h3>
+                    {headerLocation && (
+                      <div style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 6 }}>
+                        <strong style={{ color: 'var(--text-muted)' }}>{t('monthlyReport.locationLabel')}:</strong> {headerLocation}
+                      </div>
+                    )}
+                    <ul style={{ margin: '0 0 6px', paddingInlineStart: 22, lineHeight: 1.7 }}>
+                      {acts.map((a, i) => {
+                        const range = formatTimeRange(a.start_time, a.end_time)
+                        const parts = []
+                        if (a.students_count > 0) parts.push(t('monthlyReport.studentsCountInline', { count: a.students_count }))
+                        if (a.notes) parts.push(a.notes)
+                        const paren = parts.length ? ` (${parts.join('; ')})` : ''
+                        const trailing = range
+                          ? `: ${range}`
+                          : `: ${formatHoursMinutes(a.hours)}`
+                        return (
+                          <li key={a.id || i}>
+                            <bdi>{a.activity_type}{paren}{trailing}</bdi>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                      <strong style={{ color: 'var(--text-muted)' }}>{t('monthlyReport.dayTotalLabel')}:</strong>{' '}
+                      <bdi>{formatHoursMinutes(dayHours)}</bdi>
+                    </div>
+                    {report.overall_text && (
+                      <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6, fontStyle: 'italic' }}>
+                        “{report.overall_text}”
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </section>
         )}
@@ -366,16 +472,47 @@ export default function MonthlyReport() {
           )}
         </section>
 
-        {/* Share actions — admin & graduate only (not sponsors) */}
-        {(role === 'admin' || role === 'graduate') && (
-          <section className="section no-print">
-            <div className="section-header">
-              <h2 className="section-title">{t('monthlyReport.actionsTitle')}</h2>
-            </div>
-            <div className="action-row">
+        {/* Share actions — visible to all roles. Individual buttons gate
+            themselves: "Send to sponsor" is admin-only, summary copy is
+            admin/graduate (it's worded to be sent TO a sponsor). */}
+        <section className="section no-print">
+          <div className="section-header">
+            <h2 className="section-title">{t('monthlyReport.actionsTitle')}</h2>
+          </div>
+          <div className="action-row">
+            {role === 'admin' && sponsor?.sponsor && (() => {
+                const waLink = buildWaLink({
+                  phone: sponsor.sponsor.phone,
+                  text: buildReportShareText({
+                    sponsorName: sponsor.sponsor.full_name,
+                    graduateName: graduate.full_name,
+                    monthLabel,
+                    url: window.location.href,
+                  }),
+                })
+                if (!waLink) {
+                  // Sponsor has no phone on file — surface a disabled hint
+                  // so the admin sees why the button isn't there.
+                  return (
+                    <button type="button" className="btn btn-secondary" disabled title={t('monthlyReport.sponsorNoPhone')}>
+                      {t('monthlyReport.sendToSponsorNoPhone')}
+                    </button>
+                  )
+                }
+                return (
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
+                  >
+                    {t('monthlyReport.sendToSponsor', { name: sponsor.sponsor.full_name })}
+                  </a>
+                )
+              })()}
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-secondary"
                 onClick={() => copy('summary', summaryText)}
               >
                 {copyState === 'summary' ? t('monthlyReport.copySummaryDone') : t('monthlyReport.copySummary')}
@@ -390,13 +527,63 @@ export default function MonthlyReport() {
               <button
                 type="button"
                 className="btn btn-secondary"
+                onClick={async () => {
+                  // Lazy-load html2canvas + jsPDF only when actually used —
+                  // keeps the main bundle slim. ~180 KB gzipped on first download.
+                  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+                    import('html2canvas'),
+                    import('jspdf'),
+                  ])
+                  const node = document.querySelector('.container')
+                  if (!node) return
+                  // Hide action buttons + back-link during capture so the PDF
+                  // looks like a clean report, not a screenshot of the UI.
+                  const hidden = Array.from(document.querySelectorAll('.no-print, .back-link'))
+                  const prev = hidden.map(el => el.style.display)
+                  hidden.forEach(el => { el.style.display = 'none' })
+                  let canvas
+                  try {
+                    canvas = await html2canvas(node, {
+                      backgroundColor: getComputedStyle(document.body).backgroundColor || '#0d0d0d',
+                      scale: 2,
+                      useCORS: true,
+                      windowWidth: node.scrollWidth,
+                    })
+                  } finally {
+                    hidden.forEach((el, i) => { el.style.display = prev[i] })
+                  }
+                  const imgData = canvas.toDataURL('image/jpeg', 0.92)
+                  // A4 portrait: 210 × 297 mm. Fit width, paginate vertically.
+                  const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
+                  const pageW = pdf.internal.pageSize.getWidth()
+                  const pageH = pdf.internal.pageSize.getHeight()
+                  const imgW = pageW
+                  const imgH = (canvas.height * imgW) / canvas.width
+                  let y = 0
+                  let remaining = imgH
+                  while (remaining > 0) {
+                    pdf.addImage(imgData, 'JPEG', 0, y, imgW, imgH)
+                    remaining -= pageH
+                    if (remaining > 0) {
+                      pdf.addPage()
+                      y -= pageH
+                    }
+                  }
+                  const safeName = (graduate.full_name || graduate.slug || 'graduate').replace(/[^\w؀-ۿ -]/g, '').trim()
+                  pdf.save(`${safeName} — ${monthLabel}.pdf`)
+                }}
+              >
+                {t('monthlyReport.downloadPdf')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
                 onClick={() => window.print()}
               >
                 {t('monthlyReport.printPage')}
               </button>
             </div>
           </section>
-        )}
 
         {/* Footer ayah */}
         <section className="section" style={{ textAlign: 'center', marginTop: 32 }}>

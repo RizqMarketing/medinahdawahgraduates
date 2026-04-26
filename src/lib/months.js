@@ -121,3 +121,56 @@ export function formatDayId(id) {
   if (id === yesterday) return `${i18n.t('time.yesterday')} · ${monthName(m)} ${d}`
   return `${weekdayShort(date.getUTCDay())}, ${monthName(m)} ${d}, ${y}`
 }
+
+// ---- Plan-deadline policy (anchored to Madinah/Riyadh wall clock) ----
+//
+// Why: admin's policy is "not late until 26th afternoon Madinah time". Using
+// the viewer's local clock makes badges flip in the wrong place for anyone
+// outside +03:00, so we read Asia/Riyadh directly.
+// How to apply: callers should use isPlanLateForMonth(monthId); only tweak
+// PLAN_LATE_CUTOFF_HOUR_RIYADH if admin redefines what "afternoon" means.
+export const PLAN_LATE_CUTOFF_HOUR_RIYADH = 15 // 3 PM Madinah
+
+export function nowInRiyadh() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Riyadh',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', hour12: false,
+  }).formatToParts(new Date())
+  const get = type => parts.find(p => p.type === type)?.value
+  const hourRaw = get('hour')
+  const hour = hourRaw === '24' ? 0 : Number(hourRaw)
+  return {
+    dateId: `${get('year')}-${get('month')}-${get('day')}`,
+    dayOfMonth: Number(get('day')),
+    hour,
+  }
+}
+
+// Format "1–25 Feb, 2026" given a list of report rows (each with report_date).
+// Spans the actual reported range, not the calendar month — matches the
+// founder's existing PDF behaviour where "1–25 Feb" reflects the days the
+// graduate reported on, not a hard policy. Falls back to month name only
+// if there are no reports.
+export function formatReportPeriod(reports, monthId) {
+  const dates = (reports || [])
+    .map(r => r.report_date)
+    .filter(Boolean)
+    .sort()
+  if (!dates.length) return formatMonthId(monthId)
+  const firstDay = Number(dates[0].slice(8, 10))
+  const lastDay = Number(dates[dates.length - 1].slice(8, 10))
+  const { month } = parseMonthId(monthId)
+  const monthShort = i18n.t(`time.monthsShort.${['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'][month - 1]}`)
+  const year = parseMonthId(monthId).year
+  if (firstDay === lastDay) return `${firstDay} ${monthShort}, ${year}`
+  return `${firstDay}–${lastDay} ${monthShort}, ${year}`
+}
+
+export function isPlanLateForMonth(monthId) {
+  const { dateId, hour } = nowInRiyadh()
+  const cutoffDay = `${monthIdPrev(monthId)}-26`
+  if (dateId > cutoffDay) return true
+  if (dateId === cutoffDay && hour >= PLAN_LATE_CUTOFF_HOUR_RIYADH) return true
+  return false
+}
