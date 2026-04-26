@@ -65,20 +65,30 @@ export default async (req, context) => {
       localStorage.setItem(key, JSON.stringify(session))
     }, { accessToken, refreshToken, projectRef: SUPABASE_PROJECT_REF })
 
-    // 3) Navigate to the actual report URL. networkidle0 ensures the
-    //    Supabase queries have all returned and content has rendered.
+    // 3) Navigate to the actual report URL.
     const reportUrl = `${baseUrl}/graduate/${encodeURIComponent(slug)}/months/${encodeURIComponent(monthId)}`
-    await page.goto(reportUrl, { waitUntil: 'networkidle0', timeout: 25000 })
+    await page.goto(reportUrl, { waitUntil: 'domcontentloaded', timeout: 25000 })
 
-    // 4) Apply the pdf-mode class so the report shows without nav/share.
+    // If auth was bad, RequireAuth bounces to /login — fail fast.
+    if (page.url().includes('/login')) {
+      throw new Error('Auth injection failed — redirected to /login')
+    }
+
+    // 4) Wait for the report to actually render (not the loading skeleton).
+    //    .graduate-card only mounts after state.status === "ok", i.e. all
+    //    Supabase queries (reports + breakdown + plan + sponsor) returned.
+    await page.waitForSelector('.graduate-card', { timeout: 20000 })
+
+    // 5) Apply the pdf-mode class so the report shows without nav/share.
     await page.evaluate(() => {
       document.body.classList.add('pdf-mode')
     })
 
-    // 5) Give the browser a beat to repaint after the class change.
+    // 6) Wait for any images/fonts that loaded after the data resolved.
+    await page.evaluate(() => document.fonts?.ready).catch(() => {})
     await new Promise(r => setTimeout(r, 800))
 
-    // 6) Render to PDF — printBackground keeps brand colors / dark theme.
+    // 7) Render to PDF — printBackground keeps brand colors / dark theme.
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
