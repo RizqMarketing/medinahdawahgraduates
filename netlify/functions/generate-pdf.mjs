@@ -47,25 +47,26 @@ export default async (req, context) => {
 
     const page = await browser.newPage()
 
-    // 1) Navigate to the site root first so we can write to localStorage
-    //    for this origin. Supabase client reads its session from there.
+    // 1) Navigate to the site root and let main.jsx run, which exposes
+    //    window.__pdfAuth__ for us.
     await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 20000 })
 
-    // 2) Inject the user's Supabase session.
-    await page.evaluate(({ accessToken, refreshToken, projectRef }) => {
-      const key = `sb-${projectRef}-auth-token`
-      const session = {
-        access_token: accessToken,
-        refresh_token: refreshToken || '',
-        expires_at: Math.floor(Date.now() / 1000) + 3600,
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: {},
-      }
-      localStorage.setItem(key, JSON.stringify(session))
-    }, { accessToken, refreshToken, projectRef: SUPABASE_PROJECT_REF })
+    // 2) Wait for the auth helper to be ready (set by main.jsx).
+    await page.waitForFunction(
+      () => typeof window.__pdfAuth__ === 'function',
+      { timeout: 10000 }
+    )
 
-    // 3) Navigate to the actual report URL.
+    // 3) Initialise the Supabase session via the live client. Naive
+    //    localStorage writes don't work — supabase.auth.setSession()
+    //    runs the proper getUser() validation and persists the session.
+    await page.evaluate(
+      ({ at, rt }) => window.__pdfAuth__({ accessToken: at, refreshToken: rt }),
+      { at: accessToken, rt: refreshToken }
+    )
+
+    // 4) Navigate to the actual report URL — the session we just set
+    //    is persisted in localStorage, so the new page reads it on load.
     const reportUrl = `${baseUrl}/graduate/${encodeURIComponent(slug)}/months/${encodeURIComponent(monthId)}`
     await page.goto(reportUrl, { waitUntil: 'domcontentloaded', timeout: 25000 })
 
@@ -74,21 +75,21 @@ export default async (req, context) => {
       throw new Error('Auth injection failed — redirected to /login')
     }
 
-    // 4) Wait for the report to actually render (not the loading skeleton).
+    // 5) Wait for the report to actually render (not the loading skeleton).
     //    .graduate-card only mounts after state.status === "ok", i.e. all
     //    Supabase queries (reports + breakdown + plan + sponsor) returned.
     await page.waitForSelector('.graduate-card', { timeout: 20000 })
 
-    // 5) Apply the pdf-mode class so the report shows without nav/share.
+    // 6) Apply the pdf-mode class so the report shows without nav/share.
     await page.evaluate(() => {
       document.body.classList.add('pdf-mode')
     })
 
-    // 6) Wait for any images/fonts that loaded after the data resolved.
+    // 7) Wait for any images/fonts that loaded after the data resolved.
     await page.evaluate(() => document.fonts?.ready).catch(() => {})
     await new Promise(r => setTimeout(r, 800))
 
-    // 7) Render to PDF — printBackground keeps brand colors / dark theme.
+    // 8) Render to PDF — printBackground keeps brand colors / dark theme.
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
