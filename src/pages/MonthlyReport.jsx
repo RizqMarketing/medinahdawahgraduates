@@ -8,7 +8,6 @@ import {
   getMyPlan,
   getActiveSponsorForGraduate,
 } from '../lib/api.js'
-import { supabase } from '../lib/supabase.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import ReportMediaItem from '../components/ReportMediaItem.jsx'
 import LoadingPage from '../components/LoadingPage.jsx'
@@ -576,51 +575,10 @@ export default function MonthlyReport() {
               <button
                 type="button"
                 className="btn btn-secondary"
-                disabled={copyState === 'pdf'}
-                onClick={async () => {
-                  setCopyState('pdf')
-                  try {
-                    // Server-side PDF: the live page uses modern CSS
-                    // (color-mix, gradients) that html2canvas can't parse.
-                    // We POST our Supabase session to a Netlify function,
-                    // which spins up real Chromium, navigates to the report
-                    // URL as our authenticated user, and returns a true
-                    // text PDF.
-                    const { data: { session } } = await supabase.auth.getSession()
-                    if (!session) throw new Error('Not signed in')
-                    const response = await fetch('/.netlify/functions/generate-pdf', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        slug: graduate.slug,
-                        monthId,
-                        accessToken: session.access_token,
-                        refreshToken: session.refresh_token,
-                      }),
-                    })
-                    if (!response.ok) {
-                      const text = await response.text().catch(() => '')
-                      throw new Error(`PDF service returned ${response.status}: ${text}`)
-                    }
-                    const blob = await response.blob()
-                    const safeName = (graduate.full_name || graduate.slug || 'graduate').replace(/[^\w؀-ۿ -]/g, '').trim()
-                    const objectUrl = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = objectUrl
-                    a.download = `${safeName} — ${monthLabel}.pdf`
-                    document.body.appendChild(a)
-                    a.click()
-                    document.body.removeChild(a)
-                    URL.revokeObjectURL(objectUrl)
-                  } catch (err) {
-                    console.error('PDF generation failed', err)
-                    alert(`${t('monthlyReport.downloadPdfFailed')}\n\n${err?.message || err}`)
-                  } finally {
-                    setCopyState(null)
-                  }
-                }}
+                onClick={() => window.print()}
+                title={t('monthlyReport.downloadPdfHint')}
               >
-                {copyState === 'pdf' ? t('monthlyReport.downloadPdfBusy') : t('monthlyReport.downloadPdf')}
+                {t('monthlyReport.downloadPdf')}
               </button>
               <button
                 type="button"
