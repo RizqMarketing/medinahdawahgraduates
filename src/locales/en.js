@@ -903,7 +903,7 @@ export default {
     copyLink: 'Copy link',
     copyLinkDone: 'Link copied',
     downloadPdf: 'Download PDF',
-    downloadPdfHint: 'Opens the print dialog. Choose "Save as PDF" to download.',
+    downloadPdfBusy: 'Preparing PDF…',
     printWordmark: 'Monthly Report',
     printSubline: 'Madinah Dawah Graduates',
     printPage: 'Print',

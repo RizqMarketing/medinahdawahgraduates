@@ -540,10 +540,63 @@ export default function MonthlyReport() {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => window.print()}
-                title={t('monthlyReport.downloadPdfHint')}
+                disabled={copyState === 'pdf'}
+                onClick={async () => {
+                  setCopyState('pdf')
+                  try {
+                    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+                      import('html2canvas'),
+                      import('jspdf'),
+                    ])
+                    // Apply the branded report styles (same class native print
+                    // toggles via beforeprint), give the browser a frame to
+                    // recompute layout, then capture.
+                    document.body.classList.add('printing')
+                    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+                    const node = document.querySelector('.container')
+                    if (!node) throw new Error('container not found')
+                    let canvas
+                    try {
+                      canvas = await html2canvas(node, {
+                        backgroundColor: '#ffffff',
+                        scale: 2,
+                        useCORS: true,
+                        windowWidth: node.scrollWidth,
+                        // Skip elements hidden by the printing styles so the
+                        // canvas height matches what's actually visible.
+                        ignoreElements: (el) => {
+                          const cs = window.getComputedStyle(el)
+                          return cs.display === 'none' || cs.visibility === 'hidden'
+                        },
+                      })
+                    } finally {
+                      document.body.classList.remove('printing')
+                    }
+                    const imgData = canvas.toDataURL('image/jpeg', 0.92)
+                    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
+                    const pageW = pdf.internal.pageSize.getWidth()
+                    const pageH = pdf.internal.pageSize.getHeight()
+                    const imgW = pageW
+                    const imgH = (canvas.height * imgW) / canvas.width
+                    let y = 0
+                    let remaining = imgH
+                    while (remaining > 0) {
+                      pdf.addImage(imgData, 'JPEG', 0, y, imgW, imgH)
+                      remaining -= pageH
+                      if (remaining > 0) { pdf.addPage(); y -= pageH }
+                    }
+                    const safeName = (graduate.full_name || graduate.slug || 'graduate').replace(/[^\w؀-ۿ -]/g, '').trim()
+                    pdf.save(`${safeName} — ${monthLabel}.pdf`)
+                  } catch (err) {
+                    console.error('PDF generation failed', err)
+                    // Fall back to native print so user still gets something.
+                    window.print()
+                  } finally {
+                    setCopyState(null)
+                  }
+                }}
               >
-                {t('monthlyReport.downloadPdf')}
+                {copyState === 'pdf' ? t('monthlyReport.downloadPdfBusy') : t('monthlyReport.downloadPdf')}
               </button>
               <button
                 type="button"

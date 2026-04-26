@@ -909,7 +909,7 @@ export default {
     copyLink: 'نسخ الرابط',
     copyLinkDone: 'تم نسخ الرابط',
     downloadPdf: 'تحميل PDF',
-    downloadPdfHint: 'يفتح نافذة الطباعة. اختر "حفظ كـ PDF" للتحميل.',
+    downloadPdfBusy: 'جارٍ إعداد PDF…',
     printWordmark: 'التقرير الشهري',
     printSubline: 'خرّيجو دعوة المدينة',
     printPage: 'طباعة',
