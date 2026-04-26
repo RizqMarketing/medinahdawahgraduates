@@ -562,21 +562,36 @@ export default function MonthlyReport() {
                     await new Promise(r => setTimeout(r, 100))
                     const node = document.querySelector('.container')
                     if (!node) throw new Error('container not found')
+
+                    // Collect natural page-break candidates (top of each
+                    // section + each Day card). Coordinates are relative to
+                    // the captured node, in CSS pixels. Multiplied by scale
+                    // to map to canvas pixels later.
+                    const containerRect = node.getBoundingClientRect()
+                    const breakSelectors = [
+                      'section.section',
+                      '.section-header',
+                      '.card > div', // each Day in the daily activities section
+                    ]
+                    const breakCandidates = []
+                    for (const sel of breakSelectors) {
+                      for (const el of node.querySelectorAll(sel)) {
+                        const r = el.getBoundingClientRect()
+                        const cs = window.getComputedStyle(el)
+                        if (cs.display === 'none') continue
+                        breakCandidates.push(r.top - containerRect.top)
+                      }
+                    }
+                    breakCandidates.sort((a, b) => a - b)
+
                     let canvas
                     try {
                       canvas = await html2canvas(node, {
                         backgroundColor: '#ffffff',
                         scale: 2,
                         useCORS: true,
-                        // Fixed render width for predictable layout (A4-ish at
-                        // 96 dpi ≈ 794px; we use 1000px so text is sharp).
                         windowWidth: 1000,
                         width: 1000,
-                        // Force the printing class + drop dark theme inside
-                        // the cloned document. html2canvas clones the DOM
-                        // into a hidden iframe; without this the cloned
-                        // body sometimes lacks our class and the dark theme
-                        // wins, which is exactly what was happening.
                         onclone: (clonedDoc, clonedElement) => {
                           clonedDoc.documentElement.removeAttribute('data-theme')
                           clonedDoc.body.classList.add('printing')
@@ -590,7 +605,6 @@ export default function MonthlyReport() {
                           }
                         },
                         ignoreElements: (el) => {
-                          // Skip nav/dev/back-link chrome before measuring.
                           if (el.classList?.contains('no-print')) return true
                           if (el.classList?.contains('back-link')) return true
                           if (el.classList?.contains('dev-impersonation-bar')) return true
@@ -601,18 +615,55 @@ export default function MonthlyReport() {
                     } finally {
                       document.body.classList.remove('printing')
                     }
-                    const imgData = canvas.toDataURL('image/jpeg', 0.92)
+
+                    // Build PDF — slice the captured canvas into A4 pages,
+                    // snapping each page boundary to a natural break (top of
+                    // a section / Day) so we never cut a sentence in half.
                     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
-                    const pageW = pdf.internal.pageSize.getWidth()
-                    const pageH = pdf.internal.pageSize.getHeight()
-                    const imgW = pageW
-                    const imgH = (canvas.height * imgW) / canvas.width
-                    let y = 0
-                    let remaining = imgH
-                    while (remaining > 0) {
-                      pdf.addImage(imgData, 'JPEG', 0, y, imgW, imgH)
-                      remaining -= pageH
-                      if (remaining > 0) { pdf.addPage(); y -= pageH }
+                    const pageWmm = pdf.internal.pageSize.getWidth()
+                    const pageHmm = pdf.internal.pageSize.getHeight()
+                    // canvas px → mm scale: 1 css px = (canvas.width / 1000) canvas px
+                    // and our render width = 1000 css px → pageWmm.
+                    // So 1 canvas px = pageWmm / canvas.width mm.
+                    const pxToMm = pageWmm / canvas.width
+                    const pageHpx = pageHmm / pxToMm // canvas pixels per A4 page
+                    // Convert breakCandidates from css px → canvas px (scale = 2).
+                    const breakPx = breakCandidates.map(c => c * 2)
+                    breakPx.push(canvas.height) // sentinel for the bottom
+
+                    const sliceCanvas = document.createElement('canvas')
+                    const ctx = sliceCanvas.getContext('2d')
+                    sliceCanvas.width = canvas.width
+
+                    let yStart = 0
+                    let pageNum = 0
+                    while (yStart < canvas.height) {
+                      const naturalEnd = yStart + pageHpx
+                      // Find the largest break point that is <= naturalEnd
+                      // AND > yStart + 0.4 * pageHpx (don't make pages too short).
+                      let yEnd = Math.min(canvas.height, naturalEnd)
+                      const minPageFill = yStart + pageHpx * 0.4
+                      for (let i = breakPx.length - 1; i >= 0; i--) {
+                        const bp = breakPx[i]
+                        if (bp > yStart && bp <= naturalEnd && bp >= minPageFill) {
+                          yEnd = bp
+                          break
+                        }
+                      }
+                      // Last page — always go to bottom.
+                      if (naturalEnd >= canvas.height) yEnd = canvas.height
+
+                      const sliceH = yEnd - yStart
+                      sliceCanvas.height = sliceH
+                      ctx.fillStyle = '#ffffff'
+                      ctx.fillRect(0, 0, sliceCanvas.width, sliceH)
+                      ctx.drawImage(canvas, 0, -yStart)
+                      const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.92)
+
+                      if (pageNum > 0) pdf.addPage()
+                      pdf.addImage(sliceData, 'JPEG', 0, 0, pageWmm, sliceH * pxToMm)
+                      pageNum++
+                      yStart = yEnd
                     }
                     const safeName = (graduate.full_name || graduate.slug || 'graduate').replace(/[^\w؀-ۿ -]/g, '').trim()
                     pdf.save(`${safeName} — ${monthLabel}.pdf`)

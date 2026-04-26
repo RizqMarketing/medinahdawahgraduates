@@ -3698,42 +3698,41 @@ input[type="time"].text-input {
 /* Reveal print-only elements (the branded header bar). */
 .printing .print-only { display: block !important; }
 
-/* === Branded header bar (print-only, top of page 1) ====================== */
+/* === Branded header bar (print-only, top of page 1) ======================
+   Use flex (not grid) — html2canvas handles flex more reliably than grid. */
 .printing .print-header-bar {
-  display: grid !important;
-  grid-template-columns: auto 1fr;
+  display: flex !important;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   background: #065f46 !important;
   color: #ffffff !important;
-  padding: 14px 18px !important;
-  margin: 0 0 18px !important;
+  padding: 18px 22px !important;
+  margin: 0 0 22px !important;
   border-radius: 4px;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
+/* Logo hidden — the .jpg's white-on-green design clashes on a green bar.
+   The wordmark carries the brand on its own; cleaner result. */
 .printing .print-header-bar .print-logo {
-  width: 44px; height: 44px;
-  border-radius: 6px;
-  background: #ffffff;
-  object-fit: contain;
-  padding: 4px;
+  display: none !important;
 }
 .printing .print-header-bar .print-wordmark {
   font-family: 'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif;
-  font-size: 22pt;
+  font-size: 24pt;
   font-weight: 800;
   letter-spacing: 0.5px;
   margin: 0;
   color: #ffffff !important;
+  line-height: 1.1;
 }
 .printing .print-header-bar .print-subline {
   font-size: 9pt;
   font-weight: 500;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  opacity: 0.85;
-  margin-top: 2px;
+  opacity: 0.9;
+  margin-top: 4px;
 }
 
 /* === Page chrome ========================================================= */
@@ -3756,17 +3755,19 @@ input[type="time"].text-input {
   background: #faf8f3 !important;
   border: 1px solid #e2dccc !important;
   border-radius: 6px !important;
-  padding: 16px !important;
+  padding: 18px 20px !important;
   page-break-inside: avoid;
   box-shadow: none !important;
   margin-top: 14px !important;
+  /* Override grid so html2canvas lays it out predictably as a single column. */
+  display: block !important;
 }
-.printing .graduate-card h3 { color: #141210 !important; }
-.printing .graduate-card-avatar img,
-.printing .graduate-card-avatar span {
-  background: #065f46 !important;
-  color: #ffffff !important;
-}
+.printing .graduate-card h3 { color: #141210 !important; font-size: 16pt !important; }
+/* Hide the placeholder avatar in print — initials in a circle look like UI
+   debris on a printed report. If a real photo is set we still want to hide
+   the chip too (the founder's existing PDF doesn't show one inline). */
+.printing .graduate-card-avatar { display: none !important; }
+.printing .graduate-card-actions { display: none !important; }
 .printing .progress-block .progress { background: #e2dccc !important; }
 .printing .progress-block .progress-fill { background: #065f46 !important; }
 
