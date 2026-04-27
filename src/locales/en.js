@@ -263,6 +263,21 @@ export default {
     lowRatioModalEmpty: 'Everyone active is mostly teaching this month, alhamdulillah.',
     lowRatioModalHint: 'Based on activity categories the graduate selected when submitting reports. Click a name to review their month in detail.',
     lowRatioRowMeta: '{{teaching}} teaching / {{logged}} logged · {{pct}}% teaching',
+
+    testSwitch: {
+      eyebrow: 'Test as graduate or sponsor',
+      hint: 'Sign in as a test account to walk through the graduate or sponsor flow exactly as they would. When done, sign out from the bar at the top of the page and log back in with your admin password.',
+      error: 'Could not switch — {{message}}.',
+      errorSeedHint: 'If you have not seeded test accounts yet, run scripts/seed-test-data.mjs against this database.',
+      busy: 'Switching…',
+    },
+    testImpersonation: {
+      label: 'Viewing as test account: {{name}}',
+      back: '← Sign out · back to admin login',
+      role_graduate: 'graduate',
+      role_sponsor: 'sponsor',
+      role_admin: 'admin',
+    },
   },
 
   category: {

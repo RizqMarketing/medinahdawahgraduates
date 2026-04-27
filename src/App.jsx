@@ -52,7 +52,7 @@ export default function App() {
     <div className="app-shell">
       <SplashScreen />
       <ScrollToTop />
-      {import.meta.env.DEV && <DevImpersonationBar />}
+      <DevImpersonationBar />
       <Header />
       <main>
         <Routes>

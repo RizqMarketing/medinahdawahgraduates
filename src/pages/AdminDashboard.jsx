@@ -282,7 +282,7 @@ export default function AdminDashboard() {
           </section>
         )}
 
-        {import.meta.env.DEV && <DevQuickSwitch />}
+        <DevQuickSwitch />
 
         <section className="section">
           <div className="admin-toolbar">
