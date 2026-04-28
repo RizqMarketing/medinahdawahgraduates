@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n.js'
 import {
@@ -25,6 +25,7 @@ const MONTH_KEYS = ['january','february','march','april','may','june','july','au
 
 export default function GraduateHome() {
   const { t } = useTranslation()
+  const nav = useNavigate()
   const [state, setState] = useState({ status: 'loading', error: null })
   const [graduate, setGraduate] = useState(null)
   const [hours, setHours] = useState(0)
@@ -41,6 +42,10 @@ export default function GraduateHome() {
         const g = graduate || await getMyGraduate()
         if (!g) throw new Error(t('graduateHome.noGraduateRecord'))
         if (cancelled) return
+        if (!g.setup_completed_at) {
+          nav('/welcome', { replace: true })
+          return
+        }
         setGraduate(g)
         const { start, end } = monthIdRange(month)
         const [m, reps, todays, pts] = await Promise.all([

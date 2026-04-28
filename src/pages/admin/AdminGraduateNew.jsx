@@ -38,6 +38,7 @@ export default function AdminGraduateNew() {
         </p>
 
         <GraduateForm
+          mode="new"
           submitLabel={t('adminGradForm.submitAdd')}
           onSubmit={handleSubmit}
           onCancel={() => nav('/admin')}

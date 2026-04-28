@@ -41,6 +41,7 @@ import AdminMonthTotals from './pages/admin/AdminMonthTotals.jsx'
 import AdminPlans from './pages/admin/AdminPlans.jsx'
 import AdminPlanDetail from './pages/admin/AdminPlanDetail.jsx'
 import GraduateHome from './pages/graduate/GraduateHome.jsx'
+import Welcome from './pages/graduate/Welcome.jsx'
 import ReportNew from './pages/graduate/ReportNew.jsx'
 import ReportEdit from './pages/graduate/ReportEdit.jsx'
 import ReportDetail from './pages/ReportDetail.jsx'
@@ -110,6 +111,12 @@ export default function App() {
           } />
           <Route path="/graduate-home" element={
             <RequireAuth role="graduate"><GraduateHome /></RequireAuth>
+          } />
+          <Route path="/welcome" element={
+            <RequireAuth role="graduate"><Welcome /></RequireAuth>
+          } />
+          <Route path="/profile" element={
+            <RequireAuth role="graduate"><Welcome mode="edit" /></RequireAuth>
           } />
           <Route path="/plan/:monthId" element={
             <RequireAuth role="graduate"><PlanEditor /></RequireAuth>

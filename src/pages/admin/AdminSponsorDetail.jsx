@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getSponsorById, endSponsorship } from '../../lib/api.js'
+import { getSponsorById, endSponsorship, deleteSponsor } from '../../lib/api.js'
 import InviteSponsorModal from './InviteSponsorModal.jsx'
 import AssignGraduateModal from './AssignGraduateModal.jsx'
 import { formatNumber } from '../../lib/format.js'
@@ -14,6 +14,7 @@ export default function AdminSponsorDetail() {
   const [showInvite, setShowInvite] = useState(false)
   const [showAssign, setShowAssign] = useState(false)
   const [ending, setEnding] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const load = ({ silent = false } = {}) => {
     if (!silent) setState(s => ({ ...s, status: 'loading' }))
@@ -23,6 +24,19 @@ export default function AdminSponsorDetail() {
   }
 
   useEffect(() => { load() }, [id])
+
+  const handleDelete = async () => {
+    if (!state.data) return
+    if (!confirm(t('adminSponsorDetail.confirmDelete', { name: state.data.full_name }))) return
+    setDeleting(true)
+    try {
+      await deleteSponsor(state.data.id)
+      nav('/admin/sponsors', { replace: true })
+    } catch (err) {
+      alert(t('adminSponsorDetail.deleteFailed', { message: err.message || String(err) }))
+      setDeleting(false)
+    }
+  }
 
   const handleEndSponsorship = async (sponsorshipId) => {
     if (!confirm(t('adminSponsorDetail.confirmEndSponsorship'))) return
@@ -88,6 +102,14 @@ export default function AdminSponsorDetail() {
                 {t('adminSponsorDetail.inviteLogin')}
               </button>
             )}
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? t('adminSponsorDetail.deleting') : t('adminSponsorDetail.deleteSponsor')}
+            </button>
           </div>
         </div>
 
@@ -134,12 +156,7 @@ export default function AdminSponsorDetail() {
                 </div>
               </div>
             ) : (
-              <>
-                <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>{t('adminSponsorDetail.noLoginYet')}</div>
-                <button className="btn btn-primary" style={{ marginTop: 10 }} onClick={() => setShowInvite(true)}>
-                  {t('adminSponsorDetail.createLogin')}
-                </button>
-              </>
+              <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>{t('adminSponsorDetail.noLoginYet')}</div>
             )}
           </section>
         </div>

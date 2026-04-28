@@ -12,6 +12,7 @@ export default function GraduateForm({
   submitLabel,
   onSubmit,
   onCancel,
+  mode = 'edit', // 'new' hides teaching+story (graduate fills on first login); 'edit' shows everything
 }) {
   const { t } = useTranslation()
   const [fullName, setFullName] = useState(initial.full_name || '')
@@ -109,18 +110,19 @@ export default function GraduateForm({
           <div className="form-hint">{t('adminGradForm.slugHint', { slug: slug || '…' })}</div>
         </div>
 
-        <div className="form-row-grid">
-          <div className="form-row">
-            <label className="info-label" htmlFor="country">{t('adminGradForm.country')}</label>
-            <input id="country" className="text-input" value={country}
-              onChange={e => setCountry(e.target.value)} placeholder={t('adminGradForm.countryPlaceholder')} required />
-          </div>
+        <div className="form-row">
+          <label className="info-label" htmlFor="country">{t('adminGradForm.country')}</label>
+          <input id="country" className="text-input" value={country}
+            onChange={e => setCountry(e.target.value)} placeholder={t('adminGradForm.countryPlaceholder')} required />
+        </div>
+
+        {mode === 'edit' && (
           <div className="form-row">
             <label className="info-label" htmlFor="teaching_location">{t('adminGradForm.teachingLocation')}</label>
             <input id="teaching_location" className="text-input" value={teachingLocation}
               onChange={e => setTeachingLocation(e.target.value)} placeholder={t('adminGradForm.teachingLocationPlaceholder')} />
           </div>
-        </div>
+        )}
 
         <div className="form-row">
           <label className="info-label" htmlFor="status">{t('adminGradForm.status')}</label>
@@ -173,23 +175,25 @@ export default function GraduateForm({
         </div>
       </div>
 
-      <div className="card" style={{ padding: 28, marginBottom: 24 }}>
-        <h2 className="section-title" style={{ marginBottom: 20 }}>{t('adminGradForm.sectionTeachingStory')}</h2>
+      {mode === 'edit' && (
+        <div className="card" style={{ padding: 28, marginBottom: 24 }}>
+          <h2 className="section-title" style={{ marginBottom: 20 }}>{t('adminGradForm.sectionTeachingStory')}</h2>
 
-        <div className="form-row">
-          <label className="info-label" htmlFor="focus_areas">{t('adminGradForm.focusAreas')}</label>
-          <textarea id="focus_areas" className="text-input" rows={4}
-            value={focusText} onChange={e => setFocusText(e.target.value)}
-            placeholder={t('adminGradForm.focusPlaceholder')} />
-        </div>
+          <div className="form-row">
+            <label className="info-label" htmlFor="focus_areas">{t('adminGradForm.focusAreas')}</label>
+            <textarea id="focus_areas" className="text-input" rows={4}
+              value={focusText} onChange={e => setFocusText(e.target.value)}
+              placeholder={t('adminGradForm.focusPlaceholder')} />
+          </div>
 
-        <div className="form-row">
-          <label className="info-label" htmlFor="story">{t('adminGradForm.story')}</label>
-          <textarea id="story" className="text-input" rows={6}
-            value={story} onChange={e => setStory(e.target.value)}
-            placeholder={t('adminGradForm.storyPlaceholder')} />
+          <div className="form-row">
+            <label className="info-label" htmlFor="story">{t('adminGradForm.story')}</label>
+            <textarea id="story" className="text-input" rows={6}
+              value={story} onChange={e => setStory(e.target.value)}
+              placeholder={t('adminGradForm.storyPlaceholder')} />
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="card" style={{ padding: 28, marginBottom: 24 }}>
         <h2 className="section-title" style={{ marginBottom: 20 }}>{t('adminGradForm.sectionPhoto')}</h2>

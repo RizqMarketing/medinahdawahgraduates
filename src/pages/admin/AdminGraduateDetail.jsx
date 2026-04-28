@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getGraduateBySlug, updateGraduateStatus, endSponsorship, updateGraduate } from '../../lib/api.js'
+import { getGraduateBySlug, updateGraduateStatus, endSponsorship, updateGraduate, deleteGraduate } from '../../lib/api.js'
 import GraduateBonusCard from './GraduateBonusCard.jsx'
 import InviteGraduateModal from './InviteGraduateModal.jsx'
 import AssignSponsorModal from './AssignSponsorModal.jsx'
@@ -18,6 +18,7 @@ export default function AdminGraduateDetail() {
   const [savingStatus, setSavingStatus] = useState(false)
   const [ending, setEnding] = useState(false)
   const [savingFlag, setSavingFlag] = useState(null) // 'video_exempt' | 'voice_fallback_approved' | null
+  const [deleting, setDeleting] = useState(false)
 
   const STATUS_LABELS = {
     active: t('graduateStatus.active'),
@@ -57,6 +58,19 @@ export default function AdminGraduateDetail() {
       alert(t('adminGradDetail.statusChangeFailed', { message: err.message }))
     } finally {
       setSavingStatus(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!state.data) return
+    if (!confirm(t('adminGradDetail.confirmDelete', { name: state.data.full_name }))) return
+    setDeleting(true)
+    try {
+      await deleteGraduate(state.data.id)
+      nav('/admin', { replace: true })
+    } catch (err) {
+      alert(t('adminGradDetail.deleteFailed', { message: err.message || String(err) }))
+      setDeleting(false)
     }
   }
 
@@ -133,6 +147,14 @@ export default function AdminGraduateDetail() {
                 {t('adminGradDetail.inviteToLogIn')}
               </button>
             )}
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? t('adminGradDetail.deleting') : t('adminGradDetail.deleteGraduate')}
+            </button>
           </div>
         </div>
 
@@ -188,12 +210,7 @@ export default function AdminGraduateDetail() {
                   </div>
                 </div>
               ) : (
-                <>
-                  <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>{t('adminGradDetail.noLoginYet')}</div>
-                  <button className="btn btn-primary" style={{ marginTop: 10 }} onClick={() => setShowInvite(true)}>
-                    {t('adminGradDetail.createLogin')}
-                  </button>
-                </>
+                <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>{t('adminGradDetail.noLoginYet')}</div>
               )}
             </div>
 

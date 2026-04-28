@@ -59,6 +59,15 @@ export default function UserMenu() {
             <div className="user-menu-name">{name}</div>
             <div className="user-menu-role">{profile?.role || t('common.dash')}</div>
           </div>
+          {profile?.role === 'graduate' && (
+            <NavLink
+              to="/profile"
+              onClick={() => setOpen(false)}
+              className="user-menu-item"
+            >
+              {t('nav.myProfile')}
+            </NavLink>
+          )}
           <button
             onClick={() => { setShowChangePassword(true); setOpen(false) }}
             className="user-menu-item"

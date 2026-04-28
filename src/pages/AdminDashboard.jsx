@@ -10,7 +10,6 @@ import {
   monthIdNow, monthIdNext, monthIdRange, formatMonthId, isCurrentMonth,
   dayIdNow, dayIdRange, formatDayId, isToday,
 } from '../lib/months.js'
-import DevQuickSwitch from '../components/DevQuickSwitch.jsx'
 
 function displayName(g, dash) {
   return g.full_name || g.profile?.full_name || g.slug || dash
@@ -281,8 +280,6 @@ export default function AdminDashboard() {
             </div>
           </section>
         )}
-
-        <DevQuickSwitch />
 
         <section className="section">
           <div className="admin-toolbar">

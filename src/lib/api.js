@@ -712,6 +712,16 @@ export async function getPlanForGraduateAndMonth(graduateId, monthId) {
   return getMyPlan(graduateId, monthId)
 }
 
+export async function deleteGraduate(graduateId) {
+  const { error } = await supabase.rpc('delete_graduate_admin', { grad_id: graduateId })
+  if (error) throw error
+}
+
+export async function deleteSponsor(sponsorId) {
+  const { error } = await supabase.rpc('delete_sponsor_admin', { sponsor_id: sponsorId })
+  if (error) throw error
+}
+
 export async function inviteUser(payload) {
   const { data, error } = await supabase.functions.invoke('invite-user', {
     body: payload,

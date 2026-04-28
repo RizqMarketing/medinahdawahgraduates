@@ -387,6 +387,14 @@ button {
 }
 .btn-ghost:hover { color: var(--accent-green); }
 
+.btn-danger {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid color-mix(in srgb, var(--error) 35%, transparent);
+}
+.btn-danger:hover { background: color-mix(in srgb, var(--error) 10%, transparent); border-color: color-mix(in srgb, var(--error) 60%, transparent); }
+.btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ────────── Status ────────── */
 
 .status {
