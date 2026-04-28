@@ -9,12 +9,14 @@ import {
 // Admin-only "Test as graduate / sponsor" panel: signs the current user out,
 // signs back in as the chosen test account, and navigates to that role's
 // home page. The test accounts are created by `scripts/seed-test-data.mjs`.
+// Dev-only: tree-shaken from production builds via `import.meta.env.DEV`.
 export default function DevQuickSwitch() {
   const { t } = useTranslation()
   const { signIn, signOut } = useAuth()
   const nav = useNavigate()
   const [busy, setBusy] = useState(null)
   const [error, setError] = useState(null)
+  if (!import.meta.env.DEV) return null
 
   const switchTo = async (account) => {
     setError(null)
