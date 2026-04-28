@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext.jsx'
+import { getMyGraduate } from '../lib/api.js'
 import ChangePasswordModal from './ChangePasswordModal.jsx'
 
 export default function UserMenu() {
@@ -9,8 +10,10 @@ export default function UserMenu() {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
+  const [photoUrl, setPhotoUrl] = useState(null)
   const ref = useRef(null)
   const nav = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (!open) return
@@ -18,6 +21,20 @@ export default function UserMenu() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
+
+  // Pull the graduate's profile photo for the user-chip avatar. Re-fetched on
+  // each route change so updates from /profile show up without a full reload.
+  useEffect(() => {
+    if (profile?.role !== 'graduate') {
+      setPhotoUrl(null)
+      return
+    }
+    let cancelled = false
+    getMyGraduate()
+      .then(g => { if (!cancelled) setPhotoUrl(g?.photo_url || null) })
+      .catch(() => { if (!cancelled) setPhotoUrl(null) })
+    return () => { cancelled = true }
+  }, [profile?.role, profile?.id, location.pathname])
 
   if (!session) {
     return (
@@ -50,7 +67,11 @@ export default function UserMenu() {
         className="user-chip"
         aria-label={t('nav.account')}
       >
-        <span className="user-chip-avatar">{initials}</span>
+        <span className="user-chip-avatar">
+          {photoUrl
+            ? <img src={photoUrl} alt={name} />
+            : initials}
+        </span>
         <span className="user-chip-name">{profile?.full_name || session.user.email}</span>
       </button>
       {open && (

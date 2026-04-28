@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getMyGraduate, updateGraduate } from '../../lib/api.js'
+import { getMyGraduate, updateGraduate, uploadGraduatePhoto } from '../../lib/api.js'
 import LoadingPage from '../../components/LoadingPage.jsx'
 
 const MAX_STORY_CHARS = 1500
@@ -23,10 +23,19 @@ export default function Welcome({ mode = 'first-login' }) {
   const [teachingLocation, setTeachingLocation] = useState('')
   const [focusText, setFocusText] = useState('')
   const [story, setStory] = useState('')
+  const [photoFile, setPhotoFile] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(null)
 
   const [saving, setSaving] = useState(false)
   const [savedOk, setSavedOk] = useState(false)
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (!photoFile) return
+    const url = URL.createObjectURL(photoFile)
+    setPhotoPreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [photoFile])
 
   useEffect(() => {
     let cancelled = false
@@ -47,6 +56,7 @@ export default function Welcome({ mode = 'first-login' }) {
         setTeachingLocation(g.teaching_location || '')
         setFocusText((g.focus_areas || []).join('\n'))
         setStory(g.story || '')
+        setPhotoPreview(g.photo_url || null)
         setLoadStatus('ok')
       } catch (err) {
         if (!cancelled) {
@@ -77,6 +87,9 @@ export default function Welcome({ mode = 'first-login' }) {
         focus_areas: focusAreas,
         story: story.trim().slice(0, MAX_STORY_CHARS),
       }
+      if (photoFile) {
+        changes.photo_url = await uploadGraduatePhoto(photoFile)
+      }
       if (mode === 'first-login') {
         changes.setup_completed_at = new Date().toISOString()
       }
@@ -84,6 +97,8 @@ export default function Welcome({ mode = 'first-login' }) {
       if (mode === 'first-login') {
         nav('/graduate-home', { replace: true })
       } else {
+        setPhotoFile(null)
+        if (changes.photo_url) setPhotoPreview(changes.photo_url)
         setSavedOk(true)
         setSaving(false)
       }
@@ -170,6 +185,44 @@ export default function Welcome({ mode = 'first-login' }) {
                 required
               />
               <div className="form-hint">{t('welcome.storyHint', { count: story.length, max: MAX_STORY_CHARS })}</div>
+            </div>
+
+            <div className="form-row">
+              <label className="info-label">{t('welcome.photoLabel')}</label>
+              <div className="photo-upload-row">
+                <div className="photo-preview">
+                  {photoPreview
+                    ? <img src={photoPreview} alt={t('common.photo')} />
+                    : <span className="photo-preview-empty">{t('welcome.photoPreviewEmpty')}</span>}
+                </div>
+                <div className="photo-upload-controls">
+                  <label htmlFor="welcome_photo" className="btn btn-secondary file-btn">
+                    {photoFile ? t('welcome.changePhoto') : t('welcome.choosePhoto')}
+                  </label>
+                  <input
+                    id="welcome_photo"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="visually-hidden"
+                    onChange={e => { setPhotoFile(e.target.files?.[0] || null); setSavedOk(false) }}
+                  />
+                  {photoFile && (
+                    <button
+                      type="button"
+                      className="btn-ghost file-clear"
+                      onClick={() => { setPhotoFile(null); setPhotoPreview(graduate.photo_url || null) }}
+                    >
+                      {t('welcome.removePhoto')}
+                    </button>
+                  )}
+                  <div className="file-name">
+                    {photoFile ? photoFile.name : t('welcome.noFileChosen')}
+                  </div>
+                  <div className="form-hint" style={{ marginTop: 6 }}>
+                    {t('welcome.photoHint')}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
