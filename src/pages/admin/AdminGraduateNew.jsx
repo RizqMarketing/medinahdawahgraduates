@@ -1,19 +1,30 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import GraduateForm from './GraduateForm.jsx'
+import InviteGraduateModal from './InviteGraduateModal.jsx'
 import { createGraduate, uploadGraduatePhoto } from '../../lib/api.js'
 
 export default function AdminGraduateNew() {
   const { t } = useTranslation()
   const nav = useNavigate()
+  const [createdGraduate, setCreatedGraduate] = useState(null)
 
   const handleSubmit = async (payload) => {
     const { photoFile, ...rest } = payload
     let photo_url = null
     if (photoFile) photo_url = await uploadGraduatePhoto(photoFile)
 
-    await createGraduate({ ...rest, photo_url })
-    nav('/admin', { replace: true })
+    const created = await createGraduate({ ...rest, photo_url })
+    setCreatedGraduate(created)
+  }
+
+  const closeAndContinue = () => {
+    if (createdGraduate?.slug) {
+      nav(`/admin/graduates/${createdGraduate.slug}`, { replace: true })
+    } else {
+      nav('/admin', { replace: true })
+    }
   }
 
   return (
@@ -32,6 +43,13 @@ export default function AdminGraduateNew() {
           onCancel={() => nav('/admin')}
         />
       </div>
+
+      {createdGraduate && (
+        <InviteGraduateModal
+          graduate={createdGraduate}
+          onClose={closeAndContinue}
+        />
+      )}
     </div>
   )
 }
