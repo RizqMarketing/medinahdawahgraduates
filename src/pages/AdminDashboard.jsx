@@ -287,6 +287,7 @@ export default function AdminDashboard() {
           </div>
           <div className="action-row">
             <Link to="/admin/graduates/new" className="btn btn-primary">{t('admin.addGraduate')}</Link>
+            <Link to="/admin/graduates/bulk-invite" className="btn btn-secondary">{t('admin.bulkInvite')}</Link>
             <Link to="/admin/sponsors" className="btn btn-secondary">{t('admin.viewSponsors')}</Link>
             <Link to="/admin/sponsors/new" className="btn btn-secondary">{t('admin.addSponsor')}</Link>
             <Link to={`/admin/months/${month}`} className="btn btn-secondary">{t('admin.monthlyTotals')}</Link>

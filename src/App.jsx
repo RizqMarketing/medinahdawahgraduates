@@ -29,8 +29,10 @@ import BrowseGraduates from './pages/BrowseGraduates.jsx'
 import Login from './pages/Login.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
+import Claim from './pages/Claim.jsx'
 import RequireAuth from './components/RequireAuth.jsx'
 import AdminGraduateNew from './pages/admin/AdminGraduateNew.jsx'
+import AdminBulkInvite from './pages/admin/AdminBulkInvite.jsx'
 import AdminGraduateDetail from './pages/admin/AdminGraduateDetail.jsx'
 import AdminGraduateEdit from './pages/admin/AdminGraduateEdit.jsx'
 import AdminSponsors from './pages/admin/AdminSponsors.jsx'
@@ -61,6 +63,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/claim" element={<Claim />} />
           <Route path="/sponsor" element={
             <RequireAuth role="sponsor"><SponsorDashboard /></RequireAuth>
           } />
@@ -81,6 +84,9 @@ export default function App() {
           } />
           <Route path="/admin/graduates/new" element={
             <RequireAuth role="admin"><AdminGraduateNew /></RequireAuth>
+          } />
+          <Route path="/admin/graduates/bulk-invite" element={
+            <RequireAuth role="admin"><AdminBulkInvite /></RequireAuth>
           } />
           <Route path="/admin/graduates/:slug" element={
             <RequireAuth role="admin"><AdminGraduateDetail /></RequireAuth>

@@ -741,3 +741,60 @@ export async function inviteUser(payload) {
   if (data?.error) throw new Error(data.error)
   return data
 }
+
+// Bulk graduate onboarding via signup links.
+// `rows`: array of { full_name, phone?, country }.
+// Returns { ok, created: [...], errors: [...] }.
+export async function bulkInviteGraduates(rows) {
+  const { data, error } = await supabase.functions.invoke('bulk-invite-graduates', {
+    body: { base_url: window.location.origin, rows },
+  })
+  if (error) {
+    let detail = error.message || 'Request failed'
+    try {
+      const res = error.context
+      if (res && typeof res.text === 'function') {
+        const text = await res.text()
+        const body = JSON.parse(text)
+        if (body?.error) detail = body.error
+      }
+    } catch { /* default message */ }
+    throw new Error(detail)
+  }
+  if (data?.error) throw new Error(data.error)
+  return data
+}
+
+// Look up a signup token's graduate name without consuming it. Used by the
+// /claim page to greet the graduate before they submit credentials. Returns
+// `null` if the token is invalid, used, or expired.
+export async function getSignupTokenInfo(token) {
+  const { data, error } = await supabase.rpc('get_signup_token_info', { p_token: token })
+  if (error) throw error
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row) return null
+  return { full_name: row.full_name, graduate_id: row.graduate_id }
+}
+
+// Consume a signup token: creates auth user + profile + links the graduate.
+// On success, the caller should immediately sign in with the same email +
+// password and navigate to /welcome.
+export async function claimSignupToken({ token, email, password }) {
+  const { data, error } = await supabase.functions.invoke('claim-signup-token', {
+    body: { token, email, password },
+  })
+  if (error) {
+    let detail = error.message || 'Request failed'
+    try {
+      const res = error.context
+      if (res && typeof res.text === 'function') {
+        const text = await res.text()
+        const body = JSON.parse(text)
+        if (body?.error) detail = body.error
+      }
+    } catch { /* default message */ }
+    throw new Error(detail)
+  }
+  if (data?.error) throw new Error(data.error)
+  return data
+}
