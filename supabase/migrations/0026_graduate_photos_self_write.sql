@@ -7,6 +7,7 @@
 -- graduates do not need update or delete permission — old photos orphan and
 -- can be cleaned up by admin if needed.
 
+drop policy if exists graduate_photos_graduate_insert on storage.objects;
 create policy graduate_photos_graduate_insert on storage.objects
   for insert
   with check (
