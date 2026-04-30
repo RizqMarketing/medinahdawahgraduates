@@ -6,7 +6,7 @@ import { bulkInviteGraduates } from '../../lib/api.js'
 // Parse the textarea: one graduate per line, comma-separated:
 //   "Mohammed Ali, +9665..., Indonesia"
 //   "Yusuf Khan, , Pakistan"            <- empty phone allowed
-//   "Aisha Bint Abdullah, Sudan"        <- 2 cols: name + country, no phone
+//   "Ibrahim Bin Hassan, Sudan"         <- 2 cols: name + country, no phone
 function parseRows(raw) {
   const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean)
   const rows = []

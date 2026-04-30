@@ -562,7 +562,7 @@ export default {
     subtitle: 'Paste a list of graduates below. Each one will get a personal signup link to send via WhatsApp — they set their own email and password when they sign up.',
     pasteLabel: 'Paste graduates (one per line)',
     pasteHint: 'Format: Full name, WhatsApp number, Country. Phone is optional — leave empty if you don\'t have it.',
-    pasteExample: 'Mohammed Ali, +966500000000, Indonesia\nYusuf Khan, +966500000001, Pakistan\nAisha Bint Abdullah, , Sudan',
+    pasteExample: 'Mohammed Ali, +966500000000, Indonesia\nYusuf Khan, +966500000001, Pakistan\nIbrahim Bin Hassan, , Sudan',
     pastePlaceholder: 'Mohammed Ali, +966..., Indonesia',
     preview: '{{valid}} valid · {{invalid}} invalid',
     lineError: 'Line {{line}} ({{error}})',
