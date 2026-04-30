@@ -6,7 +6,10 @@ import ar from './locales/ar.js'
 
 export const SUPPORTED_LANGS = ['en', 'ar']
 export const RTL_LANGS = new Set(['ar'])
-export const STORAGE_KEY = 'mdg.lang'
+// Bumped to v2 when Arabic became the default for everyone — wipes stale
+// 'en' preferences cached during pre-launch testing so the new default
+// actually takes effect on first load.
+export const STORAGE_KEY = 'mdg.lang.v2'
 
 // Apply <html dir> + <html lang> + translate="no" whenever the language
 // changes. Called once at init and again on every changeLanguage.
@@ -30,14 +33,17 @@ i18n
       en: { translation: en },
       ar: { translation: ar },
     },
-    fallbackLng: 'en',
+    fallbackLng: 'ar',
     supportedLngs: SUPPORTED_LANGS,
     load: 'languageOnly',
     interpolation: {
       escapeValue: false, // React already escapes
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      // Arabic is the default for everyone. Only honor an explicit user
+      // toggle persisted in localStorage; never fall back to navigator
+      // locale, which would silently flip English-locale browsers to EN.
+      order: ['localStorage'],
       lookupLocalStorage: STORAGE_KEY,
       caches: ['localStorage'],
     },
@@ -54,7 +60,7 @@ i18n
   })
 
 // Apply direction immediately on init so the first render is already correct.
-applyDocumentDirection(i18n.language || 'en')
+applyDocumentDirection(i18n.language || 'ar')
 
 // Keep <html dir> in sync on every change.
 i18n.on('languageChanged', (lng) => {
