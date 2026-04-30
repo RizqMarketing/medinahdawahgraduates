@@ -184,11 +184,10 @@ export default function AdminGraduateDetail() {
             <div className="card" style={{ padding: 24, color: 'var(--text-muted)' }}>
               {t('adminGradDetail.loading')}
             </div>
-          ) : monthReports.data.length === 0 ? (
-            <div className="card" style={{ padding: 24, color: 'var(--text-muted)' }}>
-              {t('adminGradDetail.noActivityThisMonth')}
-            </div>
           ) : (
+            // Always render the heatmap — even with zero reports it shows the
+            // empty grid (all cells dim), which is more useful at a glance
+            // than a single "no reports yet" line of text.
             <ReportHeatmap reports={monthReports.data} monthId={currentMonthId} graduateSlug={g.slug} />
           )}
         </section>

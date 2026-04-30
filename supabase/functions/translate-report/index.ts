@@ -80,7 +80,15 @@ async function authorize(admin: any, userId: string, graduateId: string): Promis
   return { ok: false, status: 403, error: 'Not authorized to translate this report' }
 }
 
-type Item = { id: string; text: string; kind: 'activity' | 'report'; rowId: string }
+// A single piece of source text to translate, plus where to write the result.
+// `table` + `rowId` + `column` together address the destination cell.
+type Item = {
+  id: string
+  text: string
+  table: 'activities' | 'reports' | 'graduates'
+  rowId: string
+  column: string
+}
 
 async function translateBatch(items: Item[], apiKey: string): Promise<Map<string, string>> {
   const payload = items.map(it => ({ id: it.id, text: it.text }))
@@ -177,23 +185,74 @@ Deno.serve(async (req) => {
   const auth = await authorize(admin, user.id, graduateId)
   if (!auth.ok) return json({ error: auth.error }, auth.status)
 
-  // Pull untranslated rows for this graduate+month.
+  // Pull untranslated rows for this graduate+month, plus the graduate's
+  // profile-level translatable fields (teaching_location + story).
   const { data: reports, error: reportsErr } = await admin
     .from('reports')
-    .select('id, overall_text, overall_text_en, activities(id, notes, notes_en)')
+    .select(`
+      id, overall_text, overall_text_en, location, location_en,
+      activities(id, notes, notes_en, activity_type, activity_type_en, location, location_en)
+    `)
     .eq('graduate_id', graduateId)
     .gte('report_date', range.start)
     .lt('report_date', range.end)
   if (reportsErr) return json({ error: `Could not load reports: ${reportsErr.message}` }, 500)
 
+  const { data: graduate, error: gradErr } = await admin
+    .from('graduates')
+    .select('id, teaching_location, teaching_location_en, story, story_en')
+    .eq('id', graduateId)
+    .maybeSingle()
+  if (gradErr) return json({ error: `Could not load graduate: ${gradErr.message}` }, 500)
+
   const items: Item[] = []
+  // Graduate-level fields (translated once per graduate, not once per month).
+  if (graduate?.teaching_location && !graduate.teaching_location_en) {
+    items.push({
+      id: `g:${graduate.id}:teaching_location`,
+      text: graduate.teaching_location,
+      table: 'graduates', rowId: graduate.id, column: 'teaching_location_en',
+    })
+  }
+  if (graduate?.story && !graduate.story_en) {
+    items.push({
+      id: `g:${graduate.id}:story`,
+      text: graduate.story,
+      table: 'graduates', rowId: graduate.id, column: 'story_en',
+    })
+  }
+  // Report + activity fields for the month.
   for (const r of reports || []) {
     if (r.overall_text && !r.overall_text_en) {
-      items.push({ id: `r:${r.id}`, text: r.overall_text, kind: 'report', rowId: r.id })
+      items.push({
+        id: `r:${r.id}:overall`, text: r.overall_text,
+        table: 'reports', rowId: r.id, column: 'overall_text_en',
+      })
+    }
+    if (r.location && !r.location_en) {
+      items.push({
+        id: `r:${r.id}:location`, text: r.location,
+        table: 'reports', rowId: r.id, column: 'location_en',
+      })
     }
     for (const a of r.activities || []) {
       if (a.notes && !a.notes_en) {
-        items.push({ id: `a:${a.id}`, text: a.notes, kind: 'activity', rowId: a.id })
+        items.push({
+          id: `a:${a.id}:notes`, text: a.notes,
+          table: 'activities', rowId: a.id, column: 'notes_en',
+        })
+      }
+      if (a.activity_type && !a.activity_type_en) {
+        items.push({
+          id: `a:${a.id}:type`, text: a.activity_type,
+          table: 'activities', rowId: a.id, column: 'activity_type_en',
+        })
+      }
+      if (a.location && !a.location_en) {
+        items.push({
+          id: `a:${a.id}:location`, text: a.location,
+          table: 'activities', rowId: a.id, column: 'location_en',
+        })
       }
     }
   }
@@ -222,11 +281,9 @@ Deno.serve(async (req) => {
   for (const it of batch) {
     const translation = translations.get(it.id)
     if (typeof translation !== 'string') continue
-    const table = it.kind === 'activity' ? 'activities' : 'reports'
-    const column = it.kind === 'activity' ? 'notes_en' : 'overall_text_en'
     const { error } = await admin
-      .from(table)
-      .update({ [column]: translation })
+      .from(it.table)
+      .update({ [it.column]: translation })
       .eq('id', it.rowId)
     if (error) writeErrors.push({ id: it.id, error: error.message })
     else written++

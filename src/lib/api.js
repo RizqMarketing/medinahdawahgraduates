@@ -657,8 +657,8 @@ export async function getMonthlyReportData(graduateId, monthId) {
   const { data, error } = await supabase
     .from('reports')
     .select(`
-      id, report_date, location, overall_text, overall_text_en, status,
-      activities(hours, students_count, activity_type, category, start_time, end_time, location, notes, notes_en, position),
+      id, report_date, location, location_en, overall_text, overall_text_en, status,
+      activities(hours, students_count, activity_type, activity_type_en, category, start_time, end_time, location, location_en, notes, notes_en, position),
       media:report_media(id, kind, storage_path, external_url, caption, proof_type)
     `)
     .eq('graduate_id', graduateId)

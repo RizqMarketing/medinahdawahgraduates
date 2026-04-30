@@ -111,14 +111,19 @@ export default function MonthlyReport() {
   // translation. When false and the user wants 'en', we trigger the edge
   // function to fill in the missing translations.
   const hasAllTranslations = useMemo(() => {
+    const g = state.graduate
+    if (g?.teaching_location && !g.teaching_location_en) return false
     for (const r of state.reports || []) {
       if (r.overall_text && !r.overall_text_en) return false
+      if (r.location && !r.location_en) return false
       for (const a of r.activities || []) {
         if (a.notes && !a.notes_en) return false
+        if (a.activity_type && !a.activity_type_en) return false
+        if (a.location && !a.location_en) return false
       }
     }
     return true
-  }, [state.reports])
+  }, [state.reports, state.graduate])
 
   const handleLangChange = async (next) => {
     if (next === reportLang) return
@@ -133,8 +138,13 @@ export default function MonthlyReport() {
       setTranslating(true)
       try {
         await translateMonthlyReport(state.graduate.id, monthId)
-        const fresh = await getMonthlyReportData(state.graduate.id, monthId)
-        setState(s => ({ ...s, reports: fresh }))
+        // Refetch BOTH reports + graduate — the edge function may have just
+        // populated graduate.teaching_location_en / graduate.story_en too.
+        const [freshReports, freshGraduate] = await Promise.all([
+          getMonthlyReportData(state.graduate.id, monthId),
+          getGraduateBySlug(slug),
+        ])
+        setState(s => ({ ...s, reports: freshReports, graduate: freshGraduate || s.graduate }))
       } catch (err) {
         setTranslateError(err?.message || t('monthlyReport.translateError'))
         setTranslating(false)
@@ -147,8 +157,12 @@ export default function MonthlyReport() {
   }
 
   const showInEnglish = reportLang === 'en'
-  const pickNotes = (a) => (showInEnglish && a.notes_en) ? a.notes_en : a.notes
-  const pickOverall = (r) => (showInEnglish && r.overall_text_en) ? r.overall_text_en : r.overall_text
+  const pickNotes        = (a) => (showInEnglish && a.notes_en)         ? a.notes_en         : a.notes
+  const pickOverall      = (r) => (showInEnglish && r.overall_text_en)  ? r.overall_text_en  : r.overall_text
+  const pickActType      = (a) => (showInEnglish && a.activity_type_en) ? a.activity_type_en : a.activity_type
+  const pickActLocation  = (a) => (showInEnglish && a.location_en)      ? a.location_en      : a.location
+  const pickReportLocation = (r) => (showInEnglish && r.location_en)    ? r.location_en      : r.location
+  const pickGradTeachingLocation = (g) => (showInEnglish && g?.teaching_location_en) ? g.teaching_location_en : g?.teaching_location
 
   if (state.status === 'loading') return <LoadingPage />
   if (state.status === 'error') {
@@ -288,7 +302,7 @@ export default function MonthlyReport() {
           <div>
             <h3>{graduate.full_name}</h3>
             <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
-              {graduate.teaching_location || graduate.country}
+              {pickGradTeachingLocation(graduate) || graduate.country}
             </div>
             <div className="progress-block" style={{ marginTop: 12 }}>
               <div className="progress-label">
@@ -492,12 +506,13 @@ export default function MonthlyReport() {
                 })
                 const dayHours = acts.reduce((s, a) => s + Number(a.hours || 0), 0)
                 // Collect unique activity locations for the day, fall back to report.location.
+                // Use translated location when toggle is in English mode.
                 const dayLocations = Array.from(new Set(
-                  acts.map(a => a.location).filter(Boolean)
+                  acts.map(a => pickActLocation(a)).filter(Boolean)
                 ))
                 const headerLocation = dayLocations.length > 0
                   ? dayLocations.join(' · ')
-                  : report.location || ''
+                  : (pickReportLocation(report) || '')
                 const isLast = dayIdx === reports.length - 1
                 return (
                   <div
@@ -553,7 +568,7 @@ export default function MonthlyReport() {
                           <li key={a.id || i} style={{ marginBottom: 2 }}>
                             <bdi>
                               <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                                {a.activity_type}
+                                {pickActType(a)}
                               </span>
                               {paren}
                               <span style={{ color: 'var(--text-muted)' }}>{trailing}</span>
