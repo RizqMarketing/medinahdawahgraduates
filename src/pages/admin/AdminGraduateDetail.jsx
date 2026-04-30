@@ -57,11 +57,15 @@ export default function AdminGraduateDetail() {
   // Pull this month's reports for the activity heatmap. Runs separately
   // from the main load so a slow report query never blocks identity +
   // credentials from rendering.
+  //
+  // Clear data to [] on every month change. Otherwise the heatmap would
+  // briefly render the previous month's cells under the new month's label
+  // — a confusing flash when the admin clicks "next month" rapidly.
   useEffect(() => {
     const gradId = state.data?.id
     if (!gradId) return
     let cancelled = false
-    setMonthReports(s => ({ ...s, status: 'loading' }))
+    setMonthReports({ status: 'loading', data: [] })
     getMonthlyReportData(gradId, currentMonthId)
       .then(data => { if (!cancelled) setMonthReports({ status: 'ok', data }) })
       .catch(() => { if (!cancelled) setMonthReports({ status: 'error', data: [] }) })
@@ -195,16 +199,16 @@ export default function AdminGraduateDetail() {
             <h2 className="section-title">{t('adminGradDetail.activityThisMonthTitle')}</h2>
             <MonthPicker value={currentMonthId} onChange={setHeatmapMonth} />
           </div>
-          {monthReports.status === 'loading' ? (
-            <div className="card" style={{ padding: 24, color: 'var(--text-muted)' }}>
-              {t('adminGradDetail.loading')}
-            </div>
-          ) : (
-            // Always render the heatmap — even with zero reports it shows the
-            // empty grid (all cells dim), which is more useful at a glance
-            // than a single "no reports yet" line of text.
+          {/*
+            Always render the heatmap — the component handles empty data
+            gracefully (all cells dim). Dropping the conditional avoids
+            the loading-card flash on every month switch. While reports
+            are being fetched, opacity dim makes the in-flight state
+            obvious without a layout swap.
+          */}
+          <div style={{ opacity: monthReports.status === 'loading' ? 0.6 : 1, transition: 'opacity 120ms' }}>
             <ReportHeatmap reports={monthReports.data} monthId={currentMonthId} graduateSlug={g.slug} />
-          )}
+          </div>
         </section>
 
         <div className="detail-grid">
