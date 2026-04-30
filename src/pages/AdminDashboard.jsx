@@ -245,7 +245,11 @@ export default function AdminDashboard() {
                 // get a neutral dash instead of a misleading hourglass.
                 const isActive = g.status === 'active'
                 return (
-                  <Link to={`/admin/graduates/${g.slug}`} className="table-row table-row-link" key={g.id}>
+                  <Link
+                    to={`/admin/graduates/${g.slug}?month=${mode === 'month' ? month : day.slice(0, 7)}`}
+                    className="table-row table-row-link"
+                    key={g.id}
+                  >
                     <span className={`dot ${!isActive ? 'dot-muted' : reported ? 'dot-active' : 'dot-pending'}`} />
                     <span className="cell-name">{displayName(g, dash)}</span>
                     <span style={{ color: 'var(--text-secondary)' }}>{g.country}</span>

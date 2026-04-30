@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getGraduateBySlug, updateGraduateStatus, endSponsorship, updateGraduate, deleteGraduate, getMonthlyReportData } from '../../lib/api.js'
 import GraduateBonusCard from './GraduateBonusCard.jsx'
 import InviteGraduateModal from './InviteGraduateModal.jsx'
 import AssignSponsorModal from './AssignSponsorModal.jsx'
 import ReportHeatmap from '../../components/ReportHeatmap.jsx'
+import MonthPicker from '../../components/MonthPicker.jsx'
 import { formatNumber } from '../../lib/format.js'
-import { monthIdNow, formatMonthId } from '../../lib/months.js'
+import { monthIdNow } from '../../lib/months.js'
 
 export default function AdminGraduateDetail() {
   const { t } = useTranslation()
@@ -21,7 +22,21 @@ export default function AdminGraduateDetail() {
   const [savingFlag, setSavingFlag] = useState(null) // 'video_exempt' | 'voice_fallback_approved' | null
   const [deleting, setDeleting] = useState(false)
   const [monthReports, setMonthReports] = useState({ status: 'idle', data: [] })
-  const currentMonthId = monthIdNow()
+
+  // Month context for the activity heatmap. Read from `?month=YYYY-MM` so
+  // navigating in from the admin dashboard's month view lands on that same
+  // month here. Defaults to the current month otherwise.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const monthFromUrl = searchParams.get('month')
+  const currentMonthId = (monthFromUrl && /^\d{4}-\d{2}$/.test(monthFromUrl))
+    ? monthFromUrl
+    : monthIdNow()
+  const setHeatmapMonth = (m) => {
+    const next = new URLSearchParams(searchParams)
+    if (!m || m === monthIdNow()) next.delete('month')
+    else next.set('month', m)
+    setSearchParams(next, { replace: true })
+  }
 
   const STATUS_LABELS = {
     active: t('graduateStatus.active'),
@@ -178,7 +193,7 @@ export default function AdminGraduateDetail() {
         <section className="section">
           <div className="section-header">
             <h2 className="section-title">{t('adminGradDetail.activityThisMonthTitle')}</h2>
-            <div className="section-sub">{t('adminGradDetail.activityThisMonthSub', { month: formatMonthId(currentMonthId) })}</div>
+            <MonthPicker value={currentMonthId} onChange={setHeatmapMonth} />
           </div>
           {monthReports.status === 'loading' ? (
             <div className="card" style={{ padding: 24, color: 'var(--text-muted)' }}>
