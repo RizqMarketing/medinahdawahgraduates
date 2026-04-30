@@ -233,7 +233,7 @@ export default {
     metStandard: 'Met 132-hour standard',
     pctOfActive: '{{pct}}% of active graduates',
     hrsExcluded: '{{hours}} hrs excluded as non-counted',
-    studentsReached: 'Students reached',
+    studentsReached: 'Student attendances',
     acrossAllActivities: 'across all activities',
     silentGraduates: 'Silent graduates',
     everyoneReported: 'Everyone reported at least once',
@@ -250,7 +250,7 @@ export default {
     rankedByHours: 'Ranked by hours',
     activeDayShort: 'active day',
     activeDaysShort: 'active days',
-    studentsShort: '{{count}} students',
+    studentsShort: '{{count}} attendances',
     hrsNotCounted: '{{hours}} hrs not counted',
     teachingWarn: '⚠ {{pct}}% teaching',
 
@@ -779,7 +779,7 @@ export default {
     countedToward132: 'Counted toward 132',
     activity: 'Activity',
     activities: 'Activities',
-    studentsReached: 'Students reached',
+    studentsReached: 'Student attendances',
     notCountedFlag: '·not counted',
     notCountedTitle: 'Not counted toward 132-hour standard',
     studentsShort: '{{count}} students',
@@ -800,7 +800,7 @@ export default {
     recapHours: '{{hours}} hours of service',
     recapDays: '{{count}} active days',
     recapReports: '{{count}} reports',
-    recapStudents: '{{count}} students reached',
+    recapStudents: '{{count}} student attendances',
     yourGraduate: 'Your graduate',
     active: 'Active',
     fallbackUniversity: 'Islamic University of Madinah',
@@ -826,7 +826,7 @@ export default {
     inPathOfAllah: 'in the path of Allah',
     activeDays: 'Active days',
     yourGradsWork: "of your graduate's work",
-    studentsReached: 'Students reached',
+    studentsReached: 'Student attendances',
     byAllahsPermission: "by Allah's permission",
     impactAyahTranslation: 'And what is with Allah is better and more lasting',
   },
@@ -922,7 +922,7 @@ export default {
     statHours: 'Hours of service',
     statHoursOf: '{{hours}} / {{target}}',
     statActiveDays: 'Active days',
-    statStudents: 'Students reached',
+    statStudents: 'Student attendances',
     statReports: 'Reports filed',
     targetMet: 'Monthly standard met, alhamdulillah',
     targetShortBy: '{{count}} hours short of the {{target}}-hour standard',
@@ -987,7 +987,7 @@ export default {
       '{{name}} — monthly report for {{month}}\n\n' +
       'Hours: {{hours}} / {{target}}\n' +
       'Active days: {{activeDays}}\n' +
-      'Students reached: {{studentsReached}}\n' +
+      'Student attendances: {{studentsReached}}\n' +
       'Reports filed: {{reports}}\n\n' +
       'BarakAllahu fee ‘amalihi.',
   },
@@ -1002,7 +1002,7 @@ export default {
     noReportsThisMonth: 'No reports filed yet for this month.',
     viewFullReport: 'View full report',
     activeDays: 'active days',
-    studentsReached: 'students reached',
+    studentsReached: 'student attendances',
     reportsFiled: 'reports filed',
     couldNotLoad: 'Could not load your graduates',
     headerLink: 'View all my graduates →',

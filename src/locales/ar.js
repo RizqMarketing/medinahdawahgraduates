@@ -236,7 +236,7 @@ export default {
     metStandard: 'بلغوا معيار 132 ساعة',
     pctOfActive: '{{pct}}% من الخريجين النشطين',
     hrsExcluded: '{{hours}} ساعة مستثناة من الاحتساب',
-    studentsReached: 'الطلاب المستفيدون',
+    studentsReached: 'حضور الطلاب',
     acrossAllActivities: 'عبر جميع الأنشطة',
     silentGraduates: 'خريجون صامتون',
     everyoneReported: 'قدّم الجميع تقريراً على الأقل، الحمد لله',
@@ -253,7 +253,7 @@ export default {
     rankedByHours: 'مرتَّبون حسب الساعات',
     activeDayShort: 'يوم نشط',
     activeDaysShort: 'أيام نشطة',
-    studentsShort: '{{count}} طالب',
+    studentsShort: '{{count}} حضور',
     hrsNotCounted: '{{hours}} ساعة غير محتسبة',
     teachingWarn: '⚠ {{pct}}% تعليم',
 
@@ -782,7 +782,7 @@ export default {
     countedToward132: 'المُحتسَب من 132',
     activity: 'نشاط',
     activities: 'أنشطة',
-    studentsReached: 'الطلاب المستفيدون',
+    studentsReached: 'حضور الطلاب',
     notCountedFlag: '·غير محتسب',
     notCountedTitle: 'غير محتسب ضمن معيار 132 ساعة',
     studentsShort: '{{count}} طالب',
@@ -803,7 +803,7 @@ export default {
     recapHours: '{{hours}} ساعة خدمة',
     recapDays: '{{count}} أيام نشطة',
     recapReports: '{{count}} تقارير',
-    recapStudents: '{{count}} طالب مستفيد',
+    recapStudents: '{{count}} حضور طالب',
     yourGraduate: 'خريجك',
     active: 'نشط',
     fallbackUniversity: 'الجامعة الإسلامية بالمدينة المنورة',
@@ -829,7 +829,7 @@ export default {
     inPathOfAllah: 'في سبيل الله',
     activeDays: 'أيام نشطة',
     yourGradsWork: 'من عمل خريجك',
-    studentsReached: 'طلاب مستفيدون',
+    studentsReached: 'حضور الطلاب',
     byAllahsPermission: 'بإذن الله',
     impactAyahTranslation: 'وما عند الله خير وأبقى',
   },
@@ -925,7 +925,7 @@ export default {
     statHours: 'ساعات الخدمة',
     statHoursOf: '{{hours}} / {{target}}',
     statActiveDays: 'الأيام النشطة',
-    statStudents: 'الطلاب المستفيدون',
+    statStudents: 'حضور الطلاب',
     statReports: 'التقارير المُرسَلة',
     targetMet: 'تحقّق المعيار الشهري، الحمد لله',
     targetShortBy: 'ينقص {{count}} ساعة عن المعيار البالغ {{target}} ساعة',
@@ -991,7 +991,7 @@ export default {
       'تقرير {{name}} لشهر {{month}}\n\n' +
       'الساعات: {{hours}} / {{target}}\n' +
       'الأيام النشطة: {{activeDays}}\n' +
-      'الطلاب المستفيدون: {{studentsReached}}\n' +
+      'حضور الطلاب: {{studentsReached}}\n' +
       'التقارير المُرسَلة: {{reports}}\n\n' +
       'بارك الله في عمله.',
   },
@@ -1009,7 +1009,7 @@ export default {
     noReportsThisMonth: 'لم تُرفَع تقارير لهذا الشهر بعد.',
     viewFullReport: 'عرض التقرير الكامل',
     activeDays: 'أيام نشطة',
-    studentsReached: 'طلاب وصلتهم',
+    studentsReached: 'حضور طلاب',
     reportsFiled: 'تقارير مُرسَلة',
     couldNotLoad: 'تعذّر تحميل قائمة الخرّيجين',
     headerLink: 'عرض جميع خرّيجيي ←',
