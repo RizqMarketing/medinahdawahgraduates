@@ -101,7 +101,7 @@ export default function AdminPlans() {
         <p className="page-subtitle">{t('plans.adminSubtitle', { month: monthLabel })}</p>
 
         <div style={{ marginBottom: 24, marginTop: 16 }}>
-          <MonthPicker value={month} onChange={onMonthChange} />
+          <MonthPicker value={month} onChange={onMonthChange} allowFuture />
         </div>
 
         <div className="stats-grid stats-grid-3" style={{ marginBottom: 24 }}>

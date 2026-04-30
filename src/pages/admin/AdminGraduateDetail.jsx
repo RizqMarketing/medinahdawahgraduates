@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getGraduateBySlug, updateGraduateStatus, endSponsorship, updateGraduate, deleteGraduate } from '../../lib/api.js'
+import { getGraduateBySlug, updateGraduateStatus, endSponsorship, updateGraduate, deleteGraduate, getMonthlyReportData } from '../../lib/api.js'
 import GraduateBonusCard from './GraduateBonusCard.jsx'
 import InviteGraduateModal from './InviteGraduateModal.jsx'
 import AssignSponsorModal from './AssignSponsorModal.jsx'
+import ReportHeatmap from '../../components/ReportHeatmap.jsx'
 import { formatNumber } from '../../lib/format.js'
-import { lastMonthId } from '../../lib/months.js'
+import { monthIdNow, formatMonthId } from '../../lib/months.js'
 
 export default function AdminGraduateDetail() {
   const { t } = useTranslation()
@@ -19,6 +20,8 @@ export default function AdminGraduateDetail() {
   const [ending, setEnding] = useState(false)
   const [savingFlag, setSavingFlag] = useState(null) // 'video_exempt' | 'voice_fallback_approved' | null
   const [deleting, setDeleting] = useState(false)
+  const [monthReports, setMonthReports] = useState({ status: 'idle', data: [] })
+  const currentMonthId = monthIdNow()
 
   const STATUS_LABELS = {
     active: t('graduateStatus.active'),
@@ -35,6 +38,20 @@ export default function AdminGraduateDetail() {
   }
 
   useEffect(() => { load() }, [slug])
+
+  // Pull this month's reports for the activity heatmap. Runs separately
+  // from the main load so a slow report query never blocks identity +
+  // credentials from rendering.
+  useEffect(() => {
+    const gradId = state.data?.id
+    if (!gradId) return
+    let cancelled = false
+    setMonthReports(s => ({ ...s, status: 'loading' }))
+    getMonthlyReportData(gradId, currentMonthId)
+      .then(data => { if (!cancelled) setMonthReports({ status: 'ok', data }) })
+      .catch(() => { if (!cancelled) setMonthReports({ status: 'error', data: [] }) })
+    return () => { cancelled = true }
+  }, [state.data?.id, currentMonthId])
 
   const handleEndSponsorship = async (sponsorshipId) => {
     if (!confirm(t('adminGradDetail.confirmEndSponsorship'))) return
@@ -141,7 +158,7 @@ export default function AdminGraduateDetail() {
 
           <div className="detail-actions">
             <Link to={`/admin/graduates/${g.slug}/edit`} className="btn btn-secondary">{t('adminGradDetail.editDetails')}</Link>
-            <Link to={`/graduate/${g.slug}/months/${lastMonthId()}`} className="btn btn-secondary">{t('monthlyReport.eyebrow')}</Link>
+            <Link to={`/graduate/${g.slug}/months/${monthIdNow()}`} className="btn btn-secondary">{t('monthlyReport.eyebrow')}</Link>
             {!hasLogin && (
               <button className="btn btn-primary" onClick={() => setShowInvite(true)}>
                 {t('adminGradDetail.inviteToLogIn')}
@@ -157,6 +174,24 @@ export default function AdminGraduateDetail() {
             </button>
           </div>
         </div>
+
+        <section className="section">
+          <div className="section-header">
+            <h2 className="section-title">{t('adminGradDetail.activityThisMonthTitle')}</h2>
+            <div className="section-sub">{t('adminGradDetail.activityThisMonthSub', { month: formatMonthId(currentMonthId) })}</div>
+          </div>
+          {monthReports.status === 'loading' ? (
+            <div className="card" style={{ padding: 24, color: 'var(--text-muted)' }}>
+              {t('adminGradDetail.loading')}
+            </div>
+          ) : monthReports.data.length === 0 ? (
+            <div className="card" style={{ padding: 24, color: 'var(--text-muted)' }}>
+              {t('adminGradDetail.noActivityThisMonth')}
+            </div>
+          ) : (
+            <ReportHeatmap reports={monthReports.data} monthId={currentMonthId} graduateSlug={g.slug} />
+          )}
+        </section>
 
         <div className="detail-grid">
           <section className="card" style={{ padding: 24 }}>

@@ -397,6 +397,9 @@ export default {
     videoExemptHint: '"Due to the rules of the administration where the graduate is conducting his dawah work, this graduate is not able to record videos during his activities." When toggled, the +1 mandatory-video point is auto-credited each day a report is filed. Only visible to you.',
     voiceFallbackLabel: 'Voice-note fallback approved',
     voiceFallbackHint: 'Legacy flag — audio counts +0.5 toward the mandatory daily proof for every graduate, no flag needed. Kept for historical records. Only visible to you.',
+    activityThisMonthTitle: 'Activity this month',
+    activityThisMonthSub: '{{month}} · click any reported day to open that day\'s full report',
+    noActivityThisMonth: 'No reports filed this month yet.',
   },
 
   bonus: {
