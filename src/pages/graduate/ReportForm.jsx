@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { kindFromMime } from '../../lib/api.js'
 import { CATEGORIES, suggestCategory } from '../../lib/categories.js'
@@ -82,6 +83,10 @@ export default function ReportForm({
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState('')
   const [error, setError] = useState(null)
+  // When the graduate tries to submit a report for a date they've already
+  // filed, we replace the raw Postgres error with a friendly card + a
+  // shortcut to edit the existing report.
+  const [duplicateDate, setDuplicateDate] = useState(null)
   const [dragOver, setDragOver] = useState(false)
 
   const wrapFile = (f, proof_type = null) => ({
@@ -179,6 +184,7 @@ export default function ReportForm({
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
+    setDuplicateDate(null)
 
     if (activities.some(a => !a.activity_type.trim())) {
       return setError(t('reportForm.eachActivityType'))
@@ -211,7 +217,11 @@ export default function ReportForm({
         setStatus,
       })
     } catch (err) {
-      setError(err?.message || t('reportForm.couldNotSave'))
+      if (err?.code === 'duplicate_report') {
+        setDuplicateDate(err.report_date || reportDate)
+      } else {
+        setError(err?.message || t('reportForm.couldNotSave'))
+      }
       setSubmitting(false)
       setStatus('')
     }
@@ -515,6 +525,29 @@ export default function ReportForm({
             placeholder={t('reportForm.overallPlaceholder')} />
         </div>
       </div>
+
+      {duplicateDate && graduate && (
+        <div className="alert-card" style={{ marginBottom: 16 }}>
+          <div className="alert-title">{t('reportForm.duplicateTitle')}</div>
+          <div style={{ marginTop: 8, fontSize: 14, lineHeight: 1.6 }}>
+            {t('reportForm.duplicateBody')}
+          </div>
+          <div className="action-row" style={{ marginTop: 12 }}>
+            <Link
+              to={`/graduate/${graduate.slug}/reports/${duplicateDate}/edit`}
+              className="btn btn-primary"
+            >
+              {t('reportForm.duplicateEditCta')}
+            </Link>
+            <Link
+              to={`/graduate/${graduate.slug}/reports/${duplicateDate}`}
+              className="btn btn-secondary"
+            >
+              {t('reportForm.duplicateViewCta')}
+            </Link>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="alert-card" style={{ marginBottom: 16 }}>

@@ -7,6 +7,7 @@ import {
   getGraduateMonthBreakdown,
   getMyPlan,
   getActiveSponsorForGraduate,
+  translateMonthlyReport,
 } from '../lib/api.js'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import ReportMediaItem from '../components/ReportMediaItem.jsx'
@@ -57,6 +58,16 @@ export default function MonthlyReport() {
   })
   const [copyState, setCopyState] = useState(null) // 'summary' | 'link' | null
 
+  // Report language: 'original' shows whatever the graduate typed (often AR);
+  // 'en' shows the cached English translation when present, falling back to
+  // the original if a row hasn't been translated yet. Persisted across reloads
+  // so a sponsor who prefers English doesn't have to re-toggle every month.
+  const [reportLang, setReportLang] = useState(() => {
+    try { return localStorage.getItem('mdg.reportLang') || 'original' } catch { return 'original' }
+  })
+  const [translating, setTranslating] = useState(false)
+  const [translateError, setTranslateError] = useState(null)
+
   useEffect(() => {
     let cancelled = false
     setState(s => ({ ...s, status: 'loading' }))
@@ -96,6 +107,49 @@ export default function MonthlyReport() {
     [state.reports],
   )
 
+  // True if every non-empty piece of source text already has a cached
+  // translation. When false and the user wants 'en', we trigger the edge
+  // function to fill in the missing translations.
+  const hasAllTranslations = useMemo(() => {
+    for (const r of state.reports || []) {
+      if (r.overall_text && !r.overall_text_en) return false
+      for (const a of r.activities || []) {
+        if (a.notes && !a.notes_en) return false
+      }
+    }
+    return true
+  }, [state.reports])
+
+  const handleLangChange = async (next) => {
+    if (next === reportLang) return
+    setTranslateError(null)
+    if (next === 'original') {
+      setReportLang('original')
+      try { localStorage.setItem('mdg.reportLang', 'original') } catch { /* ignore */ }
+      return
+    }
+    // Switching to English. Translate first if anything's missing.
+    if (!hasAllTranslations && state.graduate) {
+      setTranslating(true)
+      try {
+        await translateMonthlyReport(state.graduate.id, monthId)
+        const fresh = await getMonthlyReportData(state.graduate.id, monthId)
+        setState(s => ({ ...s, reports: fresh }))
+      } catch (err) {
+        setTranslateError(err?.message || t('monthlyReport.translateError'))
+        setTranslating(false)
+        return
+      }
+      setTranslating(false)
+    }
+    setReportLang('en')
+    try { localStorage.setItem('mdg.reportLang', 'en') } catch { /* ignore */ }
+  }
+
+  const showInEnglish = reportLang === 'en'
+  const pickNotes = (a) => (showInEnglish && a.notes_en) ? a.notes_en : a.notes
+  const pickOverall = (r) => (showInEnglish && r.overall_text_en) ? r.overall_text_en : r.overall_text
+
   if (state.status === 'loading') return <LoadingPage />
   if (state.status === 'error') {
     return (
@@ -124,7 +178,7 @@ export default function MonthlyReport() {
 
   const breakdownTotal = breakdown.reduce((s, b) => s + b.hours, 0)
 
-  const showPlanBlock = (role === 'admin' || role === 'graduate')
+  const showPlanBlock = role === 'admin'
   const planExists = !!plan
   const planned = Array.isArray(plan?.planned_activities) ? plan.planned_activities : []
 
@@ -179,12 +233,50 @@ export default function MonthlyReport() {
           )}
         </p>
 
-        <div className="no-print" style={{ marginTop: 12, marginBottom: 4 }}>
+        <div className="no-print" style={{ marginTop: 12, marginBottom: 4, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
           <MonthPicker
             value={monthId}
             onChange={(m) => nav(`/graduate/${graduate.slug}/months/${m}`, { replace: true })}
           />
+          {reports.length > 0 && (
+            <div
+              className="lang-toggle"
+              role="group"
+              aria-label={t('monthlyReport.langToggleLabel')}
+              style={{ opacity: translating ? 0.6 : 1 }}
+            >
+              <button
+                type="button"
+                className={`lang-toggle-option ${reportLang === 'original' ? 'active' : ''}`}
+                onClick={() => handleLangChange('original')}
+                aria-pressed={reportLang === 'original'}
+                disabled={translating}
+              >{t('monthlyReport.langOriginal')}</button>
+              <button
+                type="button"
+                className={`lang-toggle-option ${reportLang === 'en' ? 'active' : ''}`}
+                onClick={() => handleLangChange('en')}
+                aria-pressed={reportLang === 'en'}
+                disabled={translating}
+              >{t('monthlyReport.langEnglish')}</button>
+            </div>
+          )}
+          {translating && (
+            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              {t('monthlyReport.translating')}
+            </span>
+          )}
         </div>
+        {translateError && (
+          <div className="no-print alert-card" style={{ marginBottom: 8 }}>
+            {translateError}
+          </div>
+        )}
+        {reportLang === 'en' && reports.length > 0 && !translating && !translateError && (
+          <div className="no-print" style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+            {t('monthlyReport.translateHint')}
+          </div>
+        )}
 
         {/* Hero card */}
         <article className="card graduate-card" style={{ marginTop: 18 }}>
@@ -268,7 +360,7 @@ export default function MonthlyReport() {
           )}
         </section>
 
-        {/* Plan vs actual — admin & graduate only */}
+        {/* Plan vs actual — admin only */}
         {showPlanBlock && (
           <section className="section">
             <div className="section-header">
@@ -453,7 +545,8 @@ export default function MonthlyReport() {
                         const range = formatTimeRange(a.start_time, a.end_time)
                         const parts = []
                         if (a.students_count > 0) parts.push(t('monthlyReport.studentsCountInline', { count: a.students_count }))
-                        if (a.notes) parts.push(a.notes)
+                        const noteText = pickNotes(a)
+                        if (noteText) parts.push(noteText)
                         const paren = parts.length ? ` (${parts.join('; ')})` : ''
                         const trailing = range ? ` — ${range}` : ` — ${formatHoursMinutes(a.hours)}`
                         return (
@@ -469,19 +562,23 @@ export default function MonthlyReport() {
                         )
                       })}
                     </ul>
-                    {report.overall_text && (
-                      <div style={{
-                        color: 'var(--text-muted)',
-                        fontSize: 12.5,
-                        marginTop: 10,
-                        paddingInlineStart: 12,
-                        borderInlineStart: '2px solid var(--card-border)',
-                        fontStyle: 'italic',
-                        lineHeight: 1.5,
-                      }}>
-                        {report.overall_text}
-                      </div>
-                    )}
+                    {(() => {
+                      const overall = pickOverall(report)
+                      if (!overall) return null
+                      return (
+                        <div style={{
+                          color: 'var(--text-muted)',
+                          fontSize: 12.5,
+                          marginTop: 10,
+                          paddingInlineStart: 12,
+                          borderInlineStart: '2px solid var(--card-border)',
+                          fontStyle: 'italic',
+                          lineHeight: 1.5,
+                        }}>
+                          {overall}
+                        </div>
+                      )
+                    })()}
                   </div>
                 )
               })}

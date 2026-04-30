@@ -321,7 +321,18 @@ export async function createReport({ graduate_id, report_date, location, overall
     })
     .select()
     .single()
-  if (reportErr) throw reportErr
+  if (reportErr) {
+    // Postgres unique-violation on (graduate_id, report_date) — graduate
+    // already filed a report for this date. Surface a typed error so the
+    // form can show a friendly message + edit-existing-report shortcut.
+    if (reportErr.code === '23505') {
+      const e = new Error('A report already exists for this date.')
+      e.code = 'duplicate_report'
+      e.report_date = report_date
+      throw e
+    }
+    throw reportErr
+  }
 
   if (activities?.length) {
     const rows = activities.map((a, i) => ({
@@ -646,8 +657,8 @@ export async function getMonthlyReportData(graduateId, monthId) {
   const { data, error } = await supabase
     .from('reports')
     .select(`
-      id, report_date, location, overall_text, status,
-      activities(hours, students_count, activity_type, category, start_time, end_time, location, notes, position),
+      id, report_date, location, overall_text, overall_text_en, status,
+      activities(hours, students_count, activity_type, category, start_time, end_time, location, notes, notes_en, position),
       media:report_media(id, kind, storage_path, external_url, caption, proof_type)
     `)
     .eq('graduate_id', graduateId)
@@ -751,6 +762,30 @@ export async function bulkInviteGraduates(rows) {
   })
   if (error) {
     let detail = error.message || 'Request failed'
+    try {
+      const res = error.context
+      if (res && typeof res.text === 'function') {
+        const text = await res.text()
+        const body = JSON.parse(text)
+        if (body?.error) detail = body.error
+      }
+    } catch { /* default message */ }
+    throw new Error(detail)
+  }
+  if (data?.error) throw new Error(data.error)
+  return data
+}
+
+// Translate a graduate's monthly report (notes + overall_text) AR → EN.
+// Idempotent: rows already translated are skipped server-side.
+// Returns { ok, translated, pending, errors } — `pending > 0` means the
+// batch cap was hit; call again to finish.
+export async function translateMonthlyReport(graduateId, monthId) {
+  const { data, error } = await supabase.functions.invoke('translate-report', {
+    body: { graduate_id: graduateId, month_id: monthId },
+  })
+  if (error) {
+    let detail = error.message || 'Translation request failed'
     try {
       const res = error.context
       if (res && typeof res.text === 'function') {
