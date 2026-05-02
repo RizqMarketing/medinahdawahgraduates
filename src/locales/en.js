@@ -280,6 +280,13 @@ export default {
       role_sponsor: 'sponsor',
       role_admin: 'admin',
     },
+    viewAsGraduate: 'View as graduate',
+    impersonation: {
+      label: 'Viewing as graduate: {{name}}',
+      back: '← Back to admin',
+      opening: 'Opening…',
+      error: 'Could not open graduate view — {{message}}.',
+    },
   },
 
   category: {

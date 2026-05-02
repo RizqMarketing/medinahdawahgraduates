@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getGraduateBySlug, updateGraduateStatus, endSponsorship, updateGraduate, deleteGraduate, getMonthlyReportData } from '../../lib/api.js'
+import { startImpersonation } from '../../lib/impersonation.js'
 import GraduateBonusCard from './GraduateBonusCard.jsx'
 import InviteGraduateModal from './InviteGraduateModal.jsx'
 import AssignSponsorModal from './AssignSponsorModal.jsx'
@@ -21,6 +22,7 @@ export default function AdminGraduateDetail() {
   const [ending, setEnding] = useState(false)
   const [savingFlag, setSavingFlag] = useState(null) // 'video_exempt' | 'voice_fallback_approved' | null
   const [deleting, setDeleting] = useState(false)
+  const [impersonating, setImpersonating] = useState(false)
   const [monthReports, setMonthReports] = useState({ status: 'idle', data: [] })
 
   // Month context for the activity heatmap. Read from `?month=YYYY-MM` so
@@ -110,6 +112,18 @@ export default function AdminGraduateDetail() {
     }
   }
 
+  const handleViewAsGraduate = async () => {
+    if (impersonating) return
+    setImpersonating(true)
+    try {
+      await startImpersonation(slug)
+      nav('/graduate-home', { replace: true })
+    } catch (err) {
+      alert(t('admin.impersonation.error', { message: err.message || String(err) }))
+      setImpersonating(false)
+    }
+  }
+
   const handleFlagToggle = async (flag, next) => {
     const prev = state.data?.[flag]
     setState(s => ({ ...s, data: { ...s.data, [flag]: next } }))
@@ -178,6 +192,16 @@ export default function AdminGraduateDetail() {
           <div className="detail-actions">
             <Link to={`/admin/graduates/${g.slug}/edit`} className="btn btn-secondary">{t('adminGradDetail.editDetails')}</Link>
             <Link to={`/graduate/${g.slug}/months/${monthIdNow()}`} className="btn btn-secondary">{t('monthlyReport.eyebrow')}</Link>
+            {hasLogin && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleViewAsGraduate}
+                disabled={impersonating}
+              >
+                {impersonating ? t('admin.impersonation.opening') : t('admin.viewAsGraduate')}
+              </button>
+            )}
             {!hasLogin && (
               <button className="btn btn-primary" onClick={() => setShowInvite(true)}>
                 {t('adminGradDetail.inviteToLogIn')}

@@ -283,6 +283,13 @@ export default {
       role_sponsor: 'كافل',
       role_admin: 'مشرف',
     },
+    viewAsGraduate: 'تصفح كالخريج',
+    impersonation: {
+      label: 'تتصفّح كالخريج: {{name}}',
+      back: '← العودة إلى لوحة المشرف',
+      opening: 'جارٍ الفتح…',
+      error: 'تعذّر فتح واجهة الخريج — {{message}}.',
+    },
   },
 
   category: {
