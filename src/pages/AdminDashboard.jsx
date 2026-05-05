@@ -15,13 +15,31 @@ function displayName(g, dash) {
   return g.full_name || g.profile?.full_name || g.slug || dash
 }
 
+// Persist mode/month/day across same-tab navigations so that opening a
+// graduate detail and returning to the dashboard lands on the same period
+// the admin was viewing — not a fresh "today" view. sessionStorage (not
+// localStorage) so a fresh tab/browser session starts on today as expected.
+const DASHBOARD_STATE_KEY = 'admin-dashboard-state-v1'
+function loadDashboardState() {
+  try {
+    const raw = sessionStorage.getItem(DASHBOARD_STATE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
 export default function AdminDashboard() {
   const { t } = useTranslation()
   const [filter, setFilter] = useState('all')
   const [query, setQuery] = useState('')
-  const [mode, setMode] = useState('month') // 'month' | 'day'
-  const [month, setMonth] = useState(monthIdNow())
-  const [day, setDay] = useState(dayIdNow())
+  const [mode, setMode] = useState(() => loadDashboardState()?.mode || 'month') // 'month' | 'day'
+  const [month, setMonth] = useState(() => loadDashboardState()?.month || monthIdNow())
+  const [day, setDay] = useState(() => loadDashboardState()?.day || dayIdNow())
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(DASHBOARD_STATE_KEY, JSON.stringify({ mode, month, day }))
+    } catch {}
+  }, [mode, month, day])
   const [state, setState] = useState({ status: 'loading', graduates: [], rollup: {}, error: null })
 
   useEffect(() => {
