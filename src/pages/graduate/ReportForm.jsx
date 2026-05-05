@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { kindFromMime } from '../../lib/api.js'
 import { CATEGORIES, suggestCategory } from '../../lib/categories.js'
 import { formatHoursMinutes, formatNumber } from '../../lib/format.js'
+import UploadHelpModal from '../../components/UploadHelpModal.jsx'
 
 // Activity-type suggestions — rendered via i18n so both English and Arabic
 // graduates see suggestions in their language.
@@ -88,6 +89,7 @@ export default function ReportForm({
   // shortcut to edit the existing report.
   const [duplicateDate, setDuplicateDate] = useState(null)
   const [dragOver, setDragOver] = useState(false)
+  const [uploadHelpOpen, setUploadHelpOpen] = useState(false)
 
   const wrapFile = (f, proof_type = null) => ({
     file: f,
@@ -382,7 +384,22 @@ export default function ReportForm({
       </div>
 
       <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-        <h2 className="section-title" style={{ marginBottom: 14 }}>{t('reportForm.mediaSection')}</h2>
+        <div className="media-section-header">
+          <h2 className="section-title">{t('reportForm.mediaSection')}</h2>
+          <button
+            type="button"
+            className="upload-help-link"
+            onClick={() => setUploadHelpOpen(true)}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span>{t('reportForm.uploadHelp.link')}</span>
+          </button>
+        </div>
         <p className="form-hint" style={{ marginBottom: 18 }}>
           {t('reportForm.mediaHint')}
         </p>
@@ -565,6 +582,10 @@ export default function ReportForm({
           </button>
         )}
       </div>
+
+      {uploadHelpOpen && (
+        <UploadHelpModal onClose={() => setUploadHelpOpen(false)} />
+      )}
     </form>
   )
 }
