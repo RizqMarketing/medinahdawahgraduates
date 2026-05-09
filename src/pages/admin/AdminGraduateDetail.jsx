@@ -177,7 +177,12 @@ export default function AdminGraduateDetail() {
                 : <span>{(g.full_name || '?').split(/\s+/).map(w => w[0]).slice(0,2).join('').toUpperCase()}</span>}
             </div>
             <div>
-              <p className="eyebrow">{t('adminGradDetail.eyebrow')}</p>
+              <p className="eyebrow">
+                {t('adminGradDetail.eyebrow')}
+                {g.graduate_number != null && (
+                  <> · <bdi>#{g.graduate_number}</bdi></>
+                )}
+              </p>
               <h1 className="page-title" style={{ marginBottom: 6 }}>{g.full_name}</h1>
               <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
                 {g.country}{g.teaching_location ? ` · ${g.teaching_location}` : ''}

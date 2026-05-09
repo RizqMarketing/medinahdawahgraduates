@@ -62,11 +62,14 @@ export default function AssignGraduateModal({ sponsor, onClose, onAssigned }) {
               <select id="grad_pick" className="text-input" value={selectedId}
                 onChange={e => setSelectedId(e.target.value)} required>
                 <option value="">{t('assign.chooseGraduate')}</option>
-                {graduates.map(g => (
-                  <option key={g.id} value={g.id}>
-                    {g.full_name}{g.country ? ` (${g.country})` : ''}
-                  </option>
-                ))}
+                {graduates.map(g => {
+                  const idPrefix = g.graduate_number != null ? `#${g.graduate_number} ` : ''
+                  return (
+                    <option key={g.id} value={g.id}>
+                      {idPrefix}{g.full_name}{g.country ? ` (${g.country})` : ''}
+                    </option>
+                  )
+                })}
               </select>
             </div>
 

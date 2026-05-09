@@ -155,6 +155,9 @@ export default function AdminPlans() {
                   <div className="table-row" key={graduate.id}>
                     <span className="cell-name">
                       <Link to={`/admin/graduates/${graduate.slug}`} style={{ color: 'inherit' }}>
+                        {graduate.graduate_number != null && (
+                          <bdi className="grad-id-badge">#{graduate.graduate_number}</bdi>
+                        )}
                         {displayName(graduate, dash)}
                       </Link>
                     </span>

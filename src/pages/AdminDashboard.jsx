@@ -91,6 +91,8 @@ export default function AdminDashboard() {
 
   const normalized = (s) => (s || '').toLowerCase().trim()
   const q = normalized(query)
+  // Strip a leading "#" so typing "#3" or "3" both match graduate_number 3.
+  const numberQuery = q.replace(/^#/, '')
   const dash = t('common.dash')
   const filtered = rows.filter(r => {
     const reported = rowReported(r)
@@ -102,6 +104,10 @@ export default function AdminDashboard() {
       if (filter === 'pending'  && (r.status !== 'active' || reported)) return false
     }
     if (!q) return true
+    // Exact match on graduate_number so typing "3" finds #3 only, not
+    // #13/#23/#30. Substring on name/country/status as fallback.
+    const numStr = r.graduate_number != null ? String(r.graduate_number) : ''
+    if (numStr && numStr === numberQuery) return true
     return (
       normalized(displayName(r, dash)).includes(q) ||
       normalized(r.country).includes(q) ||
@@ -269,7 +275,12 @@ export default function AdminDashboard() {
                     key={g.id}
                   >
                     <span className={`dot ${!isActive ? 'dot-muted' : reported ? 'dot-active' : 'dot-pending'}`} />
-                    <span className="cell-name">{displayName(g, dash)}</span>
+                    <span className="cell-name">
+                      {g.graduate_number != null && (
+                        <bdi className="grad-id-badge">#{g.graduate_number}</bdi>
+                      )}
+                      {displayName(g, dash)}
+                    </span>
                     <span style={{ color: 'var(--text-secondary)' }}>{g.country}</span>
                     <span className="cell-hours"><bdi>{mode === 'day' ? formatNumber(g.hours) : `${formatNumber(g.hours)}/${formatNumber(g.target_hours_monthly)}`}</bdi></span>
                     <span className="cell-status" style={{

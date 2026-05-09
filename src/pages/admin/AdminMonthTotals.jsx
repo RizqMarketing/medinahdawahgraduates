@@ -197,7 +197,12 @@ export default function AdminMonthTotals() {
 
           {topGraduate && (
             <div className="month-stat month-stat-accent">
-              <div className="month-stat-number" style={{ fontSize: 22 }}>{topGraduate.full_name}</div>
+              <div className="month-stat-number" style={{ fontSize: 22 }}>
+                {topGraduate.graduate_number != null && (
+                  <bdi className="grad-id-badge">#{topGraduate.graduate_number}</bdi>
+                )}
+                {topGraduate.full_name}
+              </div>
               <div className="month-stat-label">{t('admin.topByCountedHours')}</div>
               <div className="month-stat-sub">{t('admin.topSubline', { hours: formatNumber(topGraduate.counted_hours), country: topGraduate.country })}</div>
             </div>
@@ -220,6 +225,9 @@ export default function AdminMonthTotals() {
                   <div className={`leaderboard-rank ${rankClass}`}><bdi>{formatNumber(rank)}</bdi></div>
                   <div className="leaderboard-info">
                     <div className="leaderboard-name">
+                      {g.graduate_number != null && (
+                        <bdi className="grad-id-badge">#{g.graduate_number}</bdi>
+                      )}
                       {g.full_name}
                       {g.lowTeaching && (
                         <span className="teaching-ratio-warn" title={`${formatNumber(g.teaching_hours.toFixed(1))} / ${formatNumber(g.hours.toFixed(1))}`}>

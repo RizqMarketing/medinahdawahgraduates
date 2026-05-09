@@ -90,7 +90,12 @@ export default function SponsorMyGraduates() {
                       : <span>{initialsFrom(g.full_name)}</span>}
                   </div>
                   <div>
-                    <h3>{g.full_name}</h3>
+                    <h3>
+                      {g.graduate_number != null && (
+                        <bdi className="grad-id-badge">#{g.graduate_number}</bdi>
+                      )}
+                      {g.full_name}
+                    </h3>
                     <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
                       {g.teaching_location || g.country}
                     </div>

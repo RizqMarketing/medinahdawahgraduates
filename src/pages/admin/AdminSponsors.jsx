@@ -140,14 +140,24 @@ export default function AdminSponsors() {
                 </div>
                 {filtered.map(s => {
                   const active = (s.sponsorships || []).filter(sp => sp.status === 'active')
-                  const sponsoredName = active[0]?.graduate?.full_name
+                  const sponsoredGrad = active[0]?.graduate
+                  const sponsoredName = sponsoredGrad?.full_name
                   return (
                     <Link key={s.id} to={`/admin/sponsors/${s.id}`} className="table-row table-row-link">
                       <span className={`dot ${active.length ? 'dot-active' : 'dot-pending'}`} />
                       <span className="cell-name">{s.full_name}</span>
                       <span style={{ color: 'var(--text-secondary)' }}>{s.country || dash}</span>
                       <span style={{ color: 'var(--text-secondary)' }}>
-                        {sponsoredName || <em style={{ color: 'var(--text-muted)', fontStyle: 'normal' }}>{dash}</em>}
+                        {sponsoredName ? (
+                          <>
+                            {sponsoredGrad?.graduate_number != null && (
+                              <bdi className="grad-id-badge">#{sponsoredGrad.graduate_number}</bdi>
+                            )}
+                            {sponsoredName}
+                          </>
+                        ) : (
+                          <em style={{ color: 'var(--text-muted)', fontStyle: 'normal' }}>{dash}</em>
+                        )}
                       </span>
                       <span className="icon-flip" style={{ textAlign: 'end', color: 'var(--text-muted)', fontSize: 13 }}>›</span>
                     </Link>

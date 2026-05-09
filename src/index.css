@@ -867,6 +867,22 @@ button {
 .table-row:hover { background: var(--bg-secondary); }
 
 .cell-name { font-weight: 600; color: var(--text-primary); }
+
+/* Graduate ID badge — small "#N" prefix shown next to the graduate name in
+   admin and sponsor lists, so the founder/admin/sponsor can identify a
+   graduate by the number assigned to them in the founder's records. */
+.grad-id-badge {
+  display: inline-block;
+  margin-inline-end: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 0.85em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  vertical-align: 2%;
+}
 .cell-hours { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 .cell-status { text-align: end; font-size: 16px; }
 

@@ -128,6 +128,9 @@ export default function AdminSponsorDetail() {
             ) : active.map(sp => (
               <div key={sp.id} style={{ marginBottom: 12 }}>
                 <Link to={`/admin/graduates/${sp.graduate?.slug}`} className="graduate-pill">
+                  {sp.graduate?.graduate_number != null && (
+                    <bdi className="grad-id-badge">#{sp.graduate.graduate_number}</bdi>
+                  )}
                   <strong>{sp.graduate?.full_name}</strong>
                   <span style={{ color: 'var(--text-secondary)' }}> · {sp.graduate?.country}</span>
                 </Link>
@@ -174,7 +177,12 @@ export default function AdminSponsorDetail() {
               </div>
               {past.map(sp => (
                 <Link key={sp.id} to={`/admin/graduates/${sp.graduate?.slug}`} className="table-row table-row-link">
-                  <span className="cell-name">{sp.graduate?.full_name}</span>
+                  <span className="cell-name">
+                    {sp.graduate?.graduate_number != null && (
+                      <bdi className="grad-id-badge">#{sp.graduate.graduate_number}</bdi>
+                    )}
+                    {sp.graduate?.full_name}
+                  </span>
                   <span style={{ color: 'var(--text-secondary)' }}>{sp.graduate?.country}</span>
                   <span style={{ color: 'var(--text-secondary)' }}>{sp.started_on}</span>
                   <span style={{ color: 'var(--text-secondary)' }}>{sp.ended_on || dash}</span>

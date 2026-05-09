@@ -16,6 +16,9 @@ export default function GraduateForm({
 }) {
   const { t } = useTranslation()
   const [fullName, setFullName] = useState(initial.full_name || '')
+  const [graduateNumber, setGraduateNumber] = useState(
+    initial.graduate_number != null ? String(initial.graduate_number) : ''
+  )
   const [slug, setSlug] = useState(initial.slug || '')
   const [slugTouched, setSlugTouched] = useState(!!initial.slug)
   const [country, setCountry] = useState(initial.country || '')
@@ -59,8 +62,15 @@ export default function GraduateForm({
       .map(s => s.trim())
       .filter(Boolean)
 
+    const trimmedNumber = graduateNumber.trim()
+    const parsedNumber = trimmedNumber === '' ? null : Number(trimmedNumber)
+    if (parsedNumber !== null && (!Number.isInteger(parsedNumber) || parsedNumber < 1)) {
+      return setError(t('adminGradForm.errGraduateNumberInvalid'))
+    }
+
     const payload = {
       full_name: fullName.trim(),
+      graduate_number: parsedNumber,
       slug: slug.trim(),
       country: country.trim(),
       university: university.trim() || 'Islamic University of Madinah',
@@ -79,7 +89,12 @@ export default function GraduateForm({
     try {
       await onSubmit(payload)
     } catch (err) {
-      setError(err?.message || t('adminGradForm.errCouldNotSave'))
+      const msg = err?.message || ''
+      if (msg.includes('graduates_graduate_number_unique_idx') || (err?.code === '23505' && msg.includes('graduate_number'))) {
+        setError(t('adminGradForm.errGraduateNumberTaken', { number: parsedNumber }))
+      } else {
+        setError(msg || t('adminGradForm.errCouldNotSave'))
+      }
       setSubmitting(false)
     }
   }
@@ -101,6 +116,14 @@ export default function GraduateForm({
           <label className="info-label" htmlFor="full_name">{t('adminGradForm.fullName')}</label>
           <input id="full_name" className="text-input" value={fullName}
             onChange={e => setFullName(e.target.value)} required />
+        </div>
+
+        <div className="form-row">
+          <label className="info-label" htmlFor="graduate_number">{t('adminGradForm.graduateNumber')}</label>
+          <input id="graduate_number" className="text-input" type="number" min="1" step="1"
+            value={graduateNumber} onChange={e => setGraduateNumber(e.target.value)}
+            placeholder={t('adminGradForm.graduateNumberPlaceholder')} dir="ltr" />
+          <div className="form-hint">{t('adminGradForm.graduateNumberHint')}</div>
         </div>
 
         <div className="form-row">

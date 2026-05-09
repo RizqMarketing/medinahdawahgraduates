@@ -8,7 +8,7 @@ const roundHours = (n) => Math.round(Number(n || 0) * 100) / 100
 export async function listGraduates() {
   const { data, error } = await supabase
     .from('graduates')
-    .select('id, slug, country, university, gpa, duration_years, status, photo_url, target_hours_monthly')
+    .select('id, slug, graduate_number, country, university, gpa, duration_years, status, photo_url, target_hours_monthly')
     .order('created_at', { ascending: true })
   if (error) throw error
   return data
@@ -39,7 +39,7 @@ export async function listAllGraduatesForAdmin() {
   const { data, error } = await supabase
     .from('graduates')
     .select(`
-      id, slug, full_name, country, status, target_hours_monthly, photo_url,
+      id, slug, graduate_number, full_name, country, status, target_hours_monthly, photo_url,
       profile:profiles(full_name, phone)
     `)
     .order('full_name', { ascending: true })
@@ -138,7 +138,7 @@ export async function getMySponsorship() {
       sponsorships:sponsorships(
         id, status, started_on, ended_on, monthly_amount_usd,
         graduate:graduates(
-          id, slug, full_name, country, photo_url, story,
+          id, slug, graduate_number, full_name, country, photo_url, story,
           focus_areas, target_hours_monthly, teaching_location,
           university, duration_years, gpa, graduation_year, graduation_month
         )
@@ -461,7 +461,7 @@ export async function getReportDetail(reportId) {
       *,
       activities(*),
       media:report_media(*),
-      graduate:graduates(id, slug, full_name, country, photo_url, target_hours_monthly, profile:profiles(id))
+      graduate:graduates(id, slug, graduate_number, full_name, country, photo_url, target_hours_monthly, profile:profiles(id))
     `)
     .eq('id', reportId)
     .single()
@@ -476,7 +476,7 @@ export async function getReportBySlugAndDate(graduateSlug, reportDate) {
       *,
       activities(*),
       media:report_media(*),
-      graduate:graduates!inner(id, slug, full_name, country, photo_url, target_hours_monthly, profile:profiles(id))
+      graduate:graduates!inner(id, slug, graduate_number, full_name, country, photo_url, target_hours_monthly, profile:profiles(id))
     `)
     .eq('graduate.slug', graduateSlug)
     .eq('report_date', reportDate)
@@ -492,7 +492,7 @@ export async function getReportForEditBySlugAndDate(graduateSlug, reportDate) {
       *,
       activities(*),
       media:report_media(*),
-      graduate:graduates!inner(id, slug, full_name)
+      graduate:graduates!inner(id, slug, graduate_number, full_name)
     `)
     .eq('graduate.slug', graduateSlug)
     .eq('report_date', reportDate)
@@ -508,7 +508,7 @@ export async function listAllSponsors() {
     .select(`
       id, full_name, country, phone, created_at, profile_id,
       profile:profiles(id, full_name),
-      sponsorships:sponsorships(id, status, graduate:graduates(id, slug, full_name, country))
+      sponsorships:sponsorships(id, status, graduate:graduates(id, slug, graduate_number, full_name, country))
     `)
     .order('full_name', { ascending: true })
   if (error) throw error
@@ -533,7 +533,7 @@ export async function getSponsorById(id) {
       profile:profiles(id, full_name, phone),
       sponsorships:sponsorships(
         id, status, started_on, ended_on, monthly_amount_usd,
-        graduate:graduates(id, slug, full_name, country, photo_url)
+        graduate:graduates(id, slug, graduate_number, full_name, country, photo_url)
       )
     `)
     .eq('id', id)
@@ -557,7 +557,7 @@ export async function listUnsponsoredGraduates() {
   const { data, error } = await supabase
     .from('graduates')
     .select(`
-      id, slug, full_name, country, status, photo_url,
+      id, slug, graduate_number, full_name, country, status, photo_url,
       sponsorships:sponsorships(status)
     `)
     .in('status', ['active', 'seeking'])
