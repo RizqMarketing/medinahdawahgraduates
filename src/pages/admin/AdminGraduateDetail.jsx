@@ -24,6 +24,10 @@ export default function AdminGraduateDetail() {
   const [deleting, setDeleting] = useState(false)
   const [impersonating, setImpersonating] = useState(false)
   const [monthReports, setMonthReports] = useState({ status: 'idle', data: [] })
+  const [idEditing, setIdEditing] = useState(false)
+  const [idDraft, setIdDraft] = useState('')
+  const [idSaving, setIdSaving] = useState(false)
+  const [idError, setIdError] = useState(null)
 
   // Month context for the activity heatmap. Read from `?month=YYYY-MM` so
   // navigating in from the admin dashboard's month view lands on that same
@@ -124,6 +128,48 @@ export default function AdminGraduateDetail() {
     }
   }
 
+  const startIdEdit = () => {
+    setIdError(null)
+    setIdDraft(state.data?.graduate_number != null ? String(state.data.graduate_number) : '')
+    setIdEditing(true)
+  }
+
+  const cancelIdEdit = () => {
+    setIdEditing(false)
+    setIdError(null)
+    setIdDraft('')
+  }
+
+  const saveId = async () => {
+    const trimmed = idDraft.trim()
+    const parsed = trimmed === '' ? null : Number(trimmed)
+    if (parsed !== null && (!Number.isInteger(parsed) || parsed < 1)) {
+      setIdError(t('adminGradForm.errGraduateNumberInvalid'))
+      return
+    }
+    if (parsed === state.data?.graduate_number) {
+      cancelIdEdit()
+      return
+    }
+    setIdSaving(true)
+    setIdError(null)
+    try {
+      const updated = await updateGraduate(state.data.id, { graduate_number: parsed })
+      setState(s => ({ ...s, data: { ...s.data, graduate_number: updated.graduate_number } }))
+      setIdEditing(false)
+      setIdDraft('')
+    } catch (err) {
+      const msg = err?.message || ''
+      if (msg.includes('graduates_graduate_number_unique_idx') || (err?.code === '23505' && msg.includes('graduate_number'))) {
+        setIdError(t('adminGradForm.errGraduateNumberTaken', { number: parsed }))
+      } else {
+        setIdError(msg || t('adminGradForm.errCouldNotSave'))
+      }
+    } finally {
+      setIdSaving(false)
+    }
+  }
+
   const handleFlagToggle = async (flag, next) => {
     const prev = state.data?.[flag]
     setState(s => ({ ...s, data: { ...s.data, [flag]: next } }))
@@ -179,10 +225,59 @@ export default function AdminGraduateDetail() {
             <div>
               <p className="eyebrow">
                 {t('adminGradDetail.eyebrow')}
-                {g.graduate_number != null && (
-                  <> · <bdi>#{g.graduate_number}</bdi></>
+                {' · '}
+                {idEditing ? (
+                  <span className="id-edit-inline" dir="ltr">
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      className="id-edit-input"
+                      value={idDraft}
+                      onChange={e => setIdDraft(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') { e.preventDefault(); saveId() }
+                        else if (e.key === 'Escape') { e.preventDefault(); cancelIdEdit() }
+                      }}
+                      placeholder={t('adminGradDetail.idEditPlaceholder')}
+                      autoFocus
+                      disabled={idSaving}
+                      aria-label={t('adminGradDetail.idEditAriaLabel')}
+                    />
+                    <button
+                      type="button"
+                      className="id-edit-btn id-edit-save"
+                      onClick={saveId}
+                      disabled={idSaving}
+                    >
+                      {idSaving ? t('adminGradDetail.savingShort') : t('adminGradDetail.idEditSave')}
+                    </button>
+                    <button
+                      type="button"
+                      className="id-edit-btn id-edit-cancel"
+                      onClick={cancelIdEdit}
+                      disabled={idSaving}
+                    >
+                      {t('adminGradDetail.idEditCancel')}
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="id-edit-trigger"
+                    onClick={startIdEdit}
+                    title={t('adminGradDetail.idEditAriaLabel')}
+                  >
+                    {g.graduate_number != null
+                      ? <bdi>#{g.graduate_number}</bdi>
+                      : <span className="id-edit-placeholder">{t('adminGradDetail.idSetLink')}</span>}
+                    <span className="id-edit-pencil" aria-hidden="true">✎</span>
+                  </button>
                 )}
               </p>
+              {idError && (
+                <div className="id-edit-error">{idError}</div>
+              )}
               <h1 className="page-title" style={{ marginBottom: 6 }}>{g.full_name}</h1>
               <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
                 {g.country}{g.teaching_location ? ` · ${g.teaching_location}` : ''}

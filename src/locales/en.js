@@ -407,6 +407,11 @@ export default {
     activityThisMonthTitle: 'Activity',
     activityThisMonthSub: '{{month}} · click any reported day to open that day\'s full report',
     noActivityThisMonth: 'No reports filed this month yet.',
+    idEditAriaLabel: 'Edit ID number',
+    idEditPlaceholder: 'ID',
+    idEditSave: 'Save',
+    idEditCancel: 'Cancel',
+    idSetLink: 'Set ID',
   },
 
   bonus: {

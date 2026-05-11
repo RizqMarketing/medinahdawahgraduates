@@ -410,6 +410,11 @@ export default {
     activityThisMonthTitle: 'النشاط',
     activityThisMonthSub: '{{month}} · اضغط على أي يوم مُرسَل لفتح تقرير ذلك اليوم بالكامل',
     noActivityThisMonth: 'لم تُرسَل أي تقارير هذا الشهر بعد.',
+    idEditAriaLabel: 'تعديل رقم الخريج',
+    idEditPlaceholder: 'الرقم',
+    idEditSave: 'حفظ',
+    idEditCancel: 'إلغاء',
+    idSetLink: 'تعيين رقم',
   },
 
   bonus: {
